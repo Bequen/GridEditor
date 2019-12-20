@@ -1,0 +1,301 @@
+The system is: Linux - 5.4.1-137.current - x86_64
+Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+Compiler: /usr/bin/cc 
+Build flags: 
+Id flags:  
+
+The output was:
+0
+
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+
+The C compiler identification is GNU, found in "/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/3.16.0/CompilerIdC/a.out"
+
+Determining if the C compiler works passed with the following output:
+Change Dir: /home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake cmTC_402ef/fast && /usr/bin/gmake -f CMakeFiles/cmTC_402ef.dir/build.make CMakeFiles/cmTC_402ef.dir/build
+gmake[1]: Entering directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_402ef.dir/testCCompiler.c.o
+/usr/bin/cc    -o CMakeFiles/cmTC_402ef.dir/testCCompiler.c.o   -c /home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp/testCCompiler.c
+Linking C executable cmTC_402ef
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_402ef.dir/link.txt --verbose=1
+/usr/bin/cc      -rdynamic CMakeFiles/cmTC_402ef.dir/testCCompiler.c.o  -o cmTC_402ef 
+gmake[1]: Leaving directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+
+
+
+Detecting C compiler ABI info compiled with the following output:
+Change Dir: /home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake cmTC_09811/fast && /usr/bin/gmake -f CMakeFiles/cmTC_09811.dir/build.make CMakeFiles/cmTC_09811.dir/build
+gmake[1]: Entering directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o
+/usr/bin/cc   -v -o CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o   -c /usr/share/cmake-3.16/Modules/CMakeCCompilerABI.c
+Using built-in specs.
+COLLECT_GCC=/usr/bin/cc
+Target: x86_64-solus-linux
+Configured with: ../configure --prefix=/usr --with-pkgversion=Solus --libdir=/usr/lib64 --libexecdir=/usr/lib64 --with-system-zlib --enable-shared --enable-threads=posix --enable-gnu-indirect-function --enable-__cxa_atexit --enable-plugin --enable-gold --enable-ld=default --enable-clocale=gnu --enable-multilib --with-multilib-list=m32,m64 --enable-lto --with-gcc-major-version-only --with-bugurl=https://dev.getsol.us/ --with-arch_32=i686 --enable-linker-build-id --with-linker-hash-style=gnu --with-gnu-ld --build=x86_64-solus-linux --target=x86_64-solus-linux --enable-languages=c,c++,fortran
+Thread model: posix
+gcc version 9.2.0 (Solus) 
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64'
+ /usr/lib64/gcc/x86_64-solus-linux/9/cc1 -quiet -v /usr/share/cmake-3.16/Modules/CMakeCCompilerABI.c -quiet -dumpbase CMakeCCompilerABI.c -mtune=generic -march=x86-64 -auxbase-strip CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o -version -o /tmp/cc0vAlZM.s
+GNU C17 (Solus) version 9.2.0 (x86_64-solus-linux)
+	compiled by GNU C version 9.2.0, GMP version 6.1.2, MPFR version 4.0.2, MPC version 1.1.0, isl version isl-0.21-GMP
+
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+ignoring nonexistent directory "/usr/local/include"
+ignoring nonexistent directory "/usr/lib64/gcc/x86_64-solus-linux/9/../../../../x86_64-solus-linux/include"
+#include "..." search starts here:
+#include <...> search starts here:
+ /usr/lib64/gcc/x86_64-solus-linux/9/include
+ /usr/lib64/gcc/x86_64-solus-linux/9/include-fixed
+ /usr/include
+End of search list.
+GNU C17 (Solus) version 9.2.0 (x86_64-solus-linux)
+	compiled by GNU C version 9.2.0, GMP version 6.1.2, MPFR version 4.0.2, MPC version 1.1.0, isl version isl-0.21-GMP
+
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+Compiler executable checksum: c5ab9092c676a712230a4d7751f4b934
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64'
+ as -v --64 -o CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o /tmp/cc0vAlZM.s
+GNU assembler version 2.32 (x86_64-solus-linux) using BFD version (GNU Binutils) 2.32
+COMPILER_PATH=/usr/lib64/gcc/x86_64-solus-linux/9/:/usr/lib64/gcc/x86_64-solus-linux/9/:/usr/lib64/gcc/x86_64-solus-linux/:/usr/lib64/gcc/x86_64-solus-linux/9/:/usr/lib64/gcc/x86_64-solus-linux/
+LIBRARY_PATH=/usr/lib64/gcc/x86_64-solus-linux/9/:/usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/lib64/gcc/x86_64-solus-linux/9/../../../:/lib/:/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64'
+Linking C executable cmTC_09811
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_09811.dir/link.txt --verbose=1
+/usr/bin/cc     -v -rdynamic CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o  -o cmTC_09811 
+Using built-in specs.
+COLLECT_GCC=/usr/bin/cc
+COLLECT_LTO_WRAPPER=/usr/lib64/gcc/x86_64-solus-linux/9/lto-wrapper
+Target: x86_64-solus-linux
+Configured with: ../configure --prefix=/usr --with-pkgversion=Solus --libdir=/usr/lib64 --libexecdir=/usr/lib64 --with-system-zlib --enable-shared --enable-threads=posix --enable-gnu-indirect-function --enable-__cxa_atexit --enable-plugin --enable-gold --enable-ld=default --enable-clocale=gnu --enable-multilib --with-multilib-list=m32,m64 --enable-lto --with-gcc-major-version-only --with-bugurl=https://dev.getsol.us/ --with-arch_32=i686 --enable-linker-build-id --with-linker-hash-style=gnu --with-gnu-ld --build=x86_64-solus-linux --target=x86_64-solus-linux --enable-languages=c,c++,fortran
+Thread model: posix
+gcc version 9.2.0 (Solus) 
+COMPILER_PATH=/usr/lib64/gcc/x86_64-solus-linux/9/:/usr/lib64/gcc/x86_64-solus-linux/9/:/usr/lib64/gcc/x86_64-solus-linux/:/usr/lib64/gcc/x86_64-solus-linux/9/:/usr/lib64/gcc/x86_64-solus-linux/
+LIBRARY_PATH=/usr/lib64/gcc/x86_64-solus-linux/9/:/usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/lib64/gcc/x86_64-solus-linux/9/../../../:/lib/:/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-rdynamic' '-o' 'cmTC_09811' '-mtune=generic' '-march=x86-64'
+ /usr/lib64/gcc/x86_64-solus-linux/9/collect2 -plugin /usr/lib64/gcc/x86_64-solus-linux/9/liblto_plugin.so -plugin-opt=/usr/lib64/gcc/x86_64-solus-linux/9/lto-wrapper -plugin-opt=-fresolution=/tmp/ccpy572Q.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -export-dynamic -dynamic-linker /usr/lib64/ld-linux-x86-64.so.2 -o cmTC_09811 /usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64/crt1.o /usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64/crti.o /usr/lib64/gcc/x86_64-solus-linux/9/crtbegin.o -L/usr/lib64/gcc/x86_64-solus-linux/9 -L/usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/lib64/gcc/x86_64-solus-linux/9/../../.. CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib64/gcc/x86_64-solus-linux/9/crtend.o /usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64/crtn.o
+COLLECT_GCC_OPTIONS='-v' '-rdynamic' '-o' 'cmTC_09811' '-mtune=generic' '-march=x86-64'
+gmake[1]: Leaving directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+
+
+
+Parsed C implicit include dir info from above output: rv=done
+  found start of include info
+  found start of implicit include info
+    add: [/usr/lib64/gcc/x86_64-solus-linux/9/include]
+    add: [/usr/lib64/gcc/x86_64-solus-linux/9/include-fixed]
+    add: [/usr/include]
+  end of search list found
+  collapse include dir [/usr/lib64/gcc/x86_64-solus-linux/9/include] ==> [/usr/lib64/gcc/x86_64-solus-linux/9/include]
+  collapse include dir [/usr/lib64/gcc/x86_64-solus-linux/9/include-fixed] ==> [/usr/lib64/gcc/x86_64-solus-linux/9/include-fixed]
+  collapse include dir [/usr/include] ==> [/usr/include]
+  implicit include dirs: [/usr/lib64/gcc/x86_64-solus-linux/9/include;/usr/lib64/gcc/x86_64-solus-linux/9/include-fixed;/usr/include]
+
+
+Parsed C implicit link information from above output:
+  link line regex: [^( *|.*[/\])(ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command(s):/usr/bin/gmake cmTC_09811/fast && /usr/bin/gmake -f CMakeFiles/cmTC_09811.dir/build.make CMakeFiles/cmTC_09811.dir/build]
+  ignore line: [gmake[1]: Entering directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp']
+  ignore line: [Building C object CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o]
+  ignore line: [/usr/bin/cc   -v -o CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o   -c /usr/share/cmake-3.16/Modules/CMakeCCompilerABI.c]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/usr/bin/cc]
+  ignore line: [Target: x86_64-solus-linux]
+  ignore line: [Configured with: ../configure --prefix=/usr --with-pkgversion=Solus --libdir=/usr/lib64 --libexecdir=/usr/lib64 --with-system-zlib --enable-shared --enable-threads=posix --enable-gnu-indirect-function --enable-__cxa_atexit --enable-plugin --enable-gold --enable-ld=default --enable-clocale=gnu --enable-multilib --with-multilib-list=m32,m64 --enable-lto --with-gcc-major-version-only --with-bugurl=https://dev.getsol.us/ --with-arch_32=i686 --enable-linker-build-id --with-linker-hash-style=gnu --with-gnu-ld --build=x86_64-solus-linux --target=x86_64-solus-linux --enable-languages=c,c++,fortran]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 9.2.0 (Solus) ]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64']
+  ignore line: [ /usr/lib64/gcc/x86_64-solus-linux/9/cc1 -quiet -v /usr/share/cmake-3.16/Modules/CMakeCCompilerABI.c -quiet -dumpbase CMakeCCompilerABI.c -mtune=generic -march=x86-64 -auxbase-strip CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o -version -o /tmp/cc0vAlZM.s]
+  ignore line: [GNU C17 (Solus) version 9.2.0 (x86_64-solus-linux)]
+  ignore line: [	compiled by GNU C version 9.2.0  GMP version 6.1.2  MPFR version 4.0.2  MPC version 1.1.0  isl version isl-0.21-GMP]
+  ignore line: []
+  ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+  ignore line: [ignoring nonexistent directory "/usr/local/include"]
+  ignore line: [ignoring nonexistent directory "/usr/lib64/gcc/x86_64-solus-linux/9/../../../../x86_64-solus-linux/include"]
+  ignore line: [#include "..." search starts here:]
+  ignore line: [#include <...> search starts here:]
+  ignore line: [ /usr/lib64/gcc/x86_64-solus-linux/9/include]
+  ignore line: [ /usr/lib64/gcc/x86_64-solus-linux/9/include-fixed]
+  ignore line: [ /usr/include]
+  ignore line: [End of search list.]
+  ignore line: [GNU C17 (Solus) version 9.2.0 (x86_64-solus-linux)]
+  ignore line: [	compiled by GNU C version 9.2.0  GMP version 6.1.2  MPFR version 4.0.2  MPC version 1.1.0  isl version isl-0.21-GMP]
+  ignore line: []
+  ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+  ignore line: [Compiler executable checksum: c5ab9092c676a712230a4d7751f4b934]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64']
+  ignore line: [ as -v --64 -o CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o /tmp/cc0vAlZM.s]
+  ignore line: [GNU assembler version 2.32 (x86_64-solus-linux) using BFD version (GNU Binutils) 2.32]
+  ignore line: [COMPILER_PATH=/usr/lib64/gcc/x86_64-solus-linux/9/:/usr/lib64/gcc/x86_64-solus-linux/9/:/usr/lib64/gcc/x86_64-solus-linux/:/usr/lib64/gcc/x86_64-solus-linux/9/:/usr/lib64/gcc/x86_64-solus-linux/]
+  ignore line: [LIBRARY_PATH=/usr/lib64/gcc/x86_64-solus-linux/9/:/usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/lib64/gcc/x86_64-solus-linux/9/../../../:/lib/:/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64']
+  ignore line: [Linking C executable cmTC_09811]
+  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_09811.dir/link.txt --verbose=1]
+  ignore line: [/usr/bin/cc     -v -rdynamic CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o  -o cmTC_09811 ]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/usr/bin/cc]
+  ignore line: [COLLECT_LTO_WRAPPER=/usr/lib64/gcc/x86_64-solus-linux/9/lto-wrapper]
+  ignore line: [Target: x86_64-solus-linux]
+  ignore line: [Configured with: ../configure --prefix=/usr --with-pkgversion=Solus --libdir=/usr/lib64 --libexecdir=/usr/lib64 --with-system-zlib --enable-shared --enable-threads=posix --enable-gnu-indirect-function --enable-__cxa_atexit --enable-plugin --enable-gold --enable-ld=default --enable-clocale=gnu --enable-multilib --with-multilib-list=m32,m64 --enable-lto --with-gcc-major-version-only --with-bugurl=https://dev.getsol.us/ --with-arch_32=i686 --enable-linker-build-id --with-linker-hash-style=gnu --with-gnu-ld --build=x86_64-solus-linux --target=x86_64-solus-linux --enable-languages=c,c++,fortran]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 9.2.0 (Solus) ]
+  ignore line: [COMPILER_PATH=/usr/lib64/gcc/x86_64-solus-linux/9/:/usr/lib64/gcc/x86_64-solus-linux/9/:/usr/lib64/gcc/x86_64-solus-linux/:/usr/lib64/gcc/x86_64-solus-linux/9/:/usr/lib64/gcc/x86_64-solus-linux/]
+  ignore line: [LIBRARY_PATH=/usr/lib64/gcc/x86_64-solus-linux/9/:/usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/lib64/gcc/x86_64-solus-linux/9/../../../:/lib/:/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-rdynamic' '-o' 'cmTC_09811' '-mtune=generic' '-march=x86-64']
+  link line: [ /usr/lib64/gcc/x86_64-solus-linux/9/collect2 -plugin /usr/lib64/gcc/x86_64-solus-linux/9/liblto_plugin.so -plugin-opt=/usr/lib64/gcc/x86_64-solus-linux/9/lto-wrapper -plugin-opt=-fresolution=/tmp/ccpy572Q.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -export-dynamic -dynamic-linker /usr/lib64/ld-linux-x86-64.so.2 -o cmTC_09811 /usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64/crt1.o /usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64/crti.o /usr/lib64/gcc/x86_64-solus-linux/9/crtbegin.o -L/usr/lib64/gcc/x86_64-solus-linux/9 -L/usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/lib64/gcc/x86_64-solus-linux/9/../../.. CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib64/gcc/x86_64-solus-linux/9/crtend.o /usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64/crtn.o]
+    arg [/usr/lib64/gcc/x86_64-solus-linux/9/collect2] ==> ignore
+    arg [-plugin] ==> ignore
+    arg [/usr/lib64/gcc/x86_64-solus-linux/9/liblto_plugin.so] ==> ignore
+    arg [-plugin-opt=/usr/lib64/gcc/x86_64-solus-linux/9/lto-wrapper] ==> ignore
+    arg [-plugin-opt=-fresolution=/tmp/ccpy572Q.res] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+    arg [-plugin-opt=-pass-through=-lc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+    arg [--build-id] ==> ignore
+    arg [--eh-frame-hdr] ==> ignore
+    arg [--hash-style=gnu] ==> ignore
+    arg [-m] ==> ignore
+    arg [elf_x86_64] ==> ignore
+    arg [-export-dynamic] ==> ignore
+    arg [-dynamic-linker] ==> ignore
+    arg [/usr/lib64/ld-linux-x86-64.so.2] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTC_09811] ==> ignore
+    arg [/usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64/crt1.o] ==> ignore
+    arg [/usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64/crti.o] ==> ignore
+    arg [/usr/lib64/gcc/x86_64-solus-linux/9/crtbegin.o] ==> ignore
+    arg [-L/usr/lib64/gcc/x86_64-solus-linux/9] ==> dir [/usr/lib64/gcc/x86_64-solus-linux/9]
+    arg [-L/usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64] ==> dir [/usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64]
+    arg [-L/lib/../lib64] ==> dir [/lib/../lib64]
+    arg [-L/usr/lib/../lib64] ==> dir [/usr/lib/../lib64]
+    arg [-L/usr/lib64/gcc/x86_64-solus-linux/9/../../..] ==> dir [/usr/lib64/gcc/x86_64-solus-linux/9/../../..]
+    arg [CMakeFiles/cmTC_09811.dir/CMakeCCompilerABI.c.o] ==> ignore
+    arg [-lgcc] ==> lib [gcc]
+    arg [--push-state] ==> ignore
+    arg [--as-needed] ==> ignore
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [--pop-state] ==> ignore
+    arg [-lc] ==> lib [c]
+    arg [-lgcc] ==> lib [gcc]
+    arg [--push-state] ==> ignore
+    arg [--as-needed] ==> ignore
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [--pop-state] ==> ignore
+    arg [/usr/lib64/gcc/x86_64-solus-linux/9/crtend.o] ==> ignore
+    arg [/usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64/crtn.o] ==> ignore
+  collapse library dir [/usr/lib64/gcc/x86_64-solus-linux/9] ==> [/usr/lib64/gcc/x86_64-solus-linux/9]
+  collapse library dir [/usr/lib64/gcc/x86_64-solus-linux/9/../../../../lib64] ==> [/usr/lib64]
+  collapse library dir [/lib/../lib64] ==> [/lib64]
+  collapse library dir [/usr/lib/../lib64] ==> [/usr/lib64]
+  collapse library dir [/usr/lib64/gcc/x86_64-solus-linux/9/../../..] ==> [/usr/lib64]
+  implicit libs: [gcc;gcc_s;c;gcc;gcc_s]
+  implicit dirs: [/usr/lib64/gcc/x86_64-solus-linux/9;/usr/lib64;/lib64]
+  implicit fwks: []
+
+
+Determining if the include file pthread.h exists passed with the following output:
+Change Dir: /home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake cmTC_5cace/fast && /usr/bin/gmake -f CMakeFiles/cmTC_5cace.dir/build.make CMakeFiles/cmTC_5cace.dir/build
+gmake[1]: Entering directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_5cace.dir/CheckIncludeFile.c.o
+/usr/bin/cc    -o CMakeFiles/cmTC_5cace.dir/CheckIncludeFile.c.o   -c /home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+Linking C executable cmTC_5cace
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5cace.dir/link.txt --verbose=1
+/usr/bin/cc      -rdynamic CMakeFiles/cmTC_5cace.dir/CheckIncludeFile.c.o  -o cmTC_5cace 
+gmake[1]: Leaving directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the function pthread_create exists in the pthread passed with the following output:
+Change Dir: /home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake cmTC_90675/fast && /usr/bin/gmake -f CMakeFiles/cmTC_90675.dir/build.make CMakeFiles/cmTC_90675.dir/build
+gmake[1]: Entering directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_90675.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_90675.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_90675
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_90675.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_90675.dir/CheckFunctionExists.c.o  -o cmTC_90675  -lpthread 
+gmake[1]: Leaving directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the function XOpenDisplay exists in the /usr/lib/libX11.so;/usr/lib/libXext.so passed with the following output:
+Change Dir: /home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake cmTC_170fb/fast && /usr/bin/gmake -f CMakeFiles/cmTC_170fb.dir/build.make CMakeFiles/cmTC_170fb.dir/build
+gmake[1]: Entering directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_170fb.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=XOpenDisplay   -o CMakeFiles/cmTC_170fb.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_170fb
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_170fb.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=XOpenDisplay    -rdynamic CMakeFiles/cmTC_170fb.dir/CheckFunctionExists.c.o  -o cmTC_170fb  /usr/lib/libX11.so /usr/lib/libXext.so 
+gmake[1]: Leaving directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the function gethostbyname exists passed with the following output:
+Change Dir: /home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake cmTC_176ad/fast && /usr/bin/gmake -f CMakeFiles/cmTC_176ad.dir/build.make CMakeFiles/cmTC_176ad.dir/build
+gmake[1]: Entering directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_176ad.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=gethostbyname   -o CMakeFiles/cmTC_176ad.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_176ad
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_176ad.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=gethostbyname    -rdynamic CMakeFiles/cmTC_176ad.dir/CheckFunctionExists.c.o  -o cmTC_176ad 
+gmake[1]: Leaving directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the function connect exists passed with the following output:
+Change Dir: /home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake cmTC_2e618/fast && /usr/bin/gmake -f CMakeFiles/cmTC_2e618.dir/build.make CMakeFiles/cmTC_2e618.dir/build
+gmake[1]: Entering directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_2e618.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=connect   -o CMakeFiles/cmTC_2e618.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_2e618
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2e618.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=connect    -rdynamic CMakeFiles/cmTC_2e618.dir/CheckFunctionExists.c.o  -o cmTC_2e618 
+gmake[1]: Leaving directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the function remove exists passed with the following output:
+Change Dir: /home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake cmTC_90d87/fast && /usr/bin/gmake -f CMakeFiles/cmTC_90d87.dir/build.make CMakeFiles/cmTC_90d87.dir/build
+gmake[1]: Entering directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_90d87.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=remove   -o CMakeFiles/cmTC_90d87.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_90d87
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_90d87.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=remove    -rdynamic CMakeFiles/cmTC_90d87.dir/CheckFunctionExists.c.o  -o cmTC_90d87 
+gmake[1]: Leaving directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the function shmat exists passed with the following output:
+Change Dir: /home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake cmTC_9ca39/fast && /usr/bin/gmake -f CMakeFiles/cmTC_9ca39.dir/build.make CMakeFiles/cmTC_9ca39.dir/build
+gmake[1]: Entering directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_9ca39.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=shmat   -o CMakeFiles/cmTC_9ca39.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_9ca39
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_9ca39.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=shmat    -rdynamic CMakeFiles/cmTC_9ca39.dir/CheckFunctionExists.c.o  -o cmTC_9ca39 
+gmake[1]: Leaving directory '/home/martin/Projects/Towards/third-party/glfw/CMakeFiles/CMakeTmp'
+
+
+
