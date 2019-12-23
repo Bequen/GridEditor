@@ -11,6 +11,9 @@ namespace RenderLib {
     void bind_vertex_array(uint32_t VAO);
     void draw_triangles(uint32_t triangles);
 
+    void culling(uint32_t mode);
+    void front_face(uint32_t face);
+
     uint32_t create_buffer_stream(uint32_t target, uint32_t size, void* data);
 
     void* map_buffer_stream(uint32_t target, uint32_t buffer, uint32_t offset, uint32_t size);
@@ -18,4 +21,5 @@ namespace RenderLib {
 
     void draw_voxel(uint32_t program, float x, float y, float z);
     void draw_voxel(uint32_t program, glm::vec3 position);
+    void draw_voxel(uint32_t program, glm::vec3 position, glm::vec3 scale);
 };

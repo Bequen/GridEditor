@@ -47,7 +47,12 @@ class Editor {
 
         double* deltaTime;
 
+        uint32_t gridTexture;
+
         void init();
         void update();
         void terminate();
+
+        void solve_voxel_placing();
+        void solve_mouse();
 };
