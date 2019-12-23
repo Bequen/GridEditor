@@ -3,11 +3,21 @@
 #include <cstdint>
 
 #include "Window.h"
+#include "Rendering/RenderingPipeline.h"
+#include "Editor/Editor.h"
 
+/**
+ * desc :   Where all the things happens
+ * info :   Application class takes responsibility for entire runtime, it manages the main loop, initialization and even cleanup
+ */ 
 class Application {
     Window window;
+    Editor editor;
+
 
     public:
+        double deltaTime;
+
         /**
          * desc :   Initializes the application and every component it needs
          * info :   This function starts the whole application

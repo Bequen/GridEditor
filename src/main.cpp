@@ -5,8 +5,11 @@
 #endif
 
 #include <avg/Debug.h>
+
 #include "System/Application.h"
 #include "Editor/MainWindow.h"
+#include "System/string256.h"
+#include "System/ContentPipeline.h"
 
 /**
   * @brief  Entry point for this application

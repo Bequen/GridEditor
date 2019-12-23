@@ -104,6 +104,8 @@ void Window::init(char* name, int32_t width, int32_t height) {
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
     glfwSwapInterval(1);
+
+    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
 }
 
 void Window::change_size(uint32_t size) {
@@ -126,6 +128,10 @@ void Window::change_size(uint32_t size) {
     }
 }
 
+void Window::set_cursor_pos(float x, float y) {
+    glfwSetCursorPos(window, x, y);
+}
+
 void Window::update() {
     glfwPollEvents(); // Try switching with glfwWaitEvents();
     glfwSwapBuffers(window);
@@ -138,4 +144,21 @@ void Window::terminate() {
 
 bool Window::should_close() {
     return glfwWindowShouldClose(window);
+}
+
+bool Window::is_key_down(uint32_t key) {
+    return glfwGetKey(window, key) == GLFW_PRESS;
+}
+
+bool Window::is_mouse_button_down(uint32_t button) {
+    return glfwGetMouseButton(window, button) == GLFW_PRESS;
+}
+
+glm::vec3 Window::get_normalized_cursor_pos() {
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+
+    glm::vec3 result = glm::vec3((2.0f * (float)x) / width - 1.0f, 1.0f - (2.0f * (float)y) / height, 1.0f);
+
+    return result;
 }
