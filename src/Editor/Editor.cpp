@@ -19,11 +19,24 @@ void Editor::init() {
 
     camera->projection = glm::perspective(glm::radians(45.0f), 720.0f / 480.0f, 0.1f, 1000.0f);
 
+    drawing = false;
+
     grid.set(0, 2);
     grid.set(1, 2);
     grid.set(2, 2);
 
+    palette = new RGB[256];
+    RGB col; col.r = 255; col.g = 0; col.b = 0;
+    palette[0] = col;
+    col.b = 255;
+    col.r = 0;
+    palette[1] = col;
+    col.g = 255;
+    palette[2] = col;
+    palette[3] = col;
+
     gridTexture = TextureLib::create_texture_3d(32, 32, 32, grid.grid);
+    paletteTexture = TextureLib::create_texture_1d(256, GL_RGB, GL_RGB, palette);
 
     panSpeed = 10.0f;
     rotationSpeed = 50.0f;
@@ -41,12 +54,13 @@ void Editor::init() {
 
 void Editor::update() {
     solve_mouse();
-    TextureLib::update_texture_3d(gridTexture, 32, 32, 32, grid.grid);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_3D, gridTexture);
-    ShaderLib::uniform_int32(render.shader, "grid", 0);
+    update_palette();
+    update_grid();
 
-    if(window.is_key_down(GLFW_KEY_W)) {
+    std::cout << "\33[2KFPS: " << 1000.0f / (float)*deltaTime << "\r";
+    std::flush(std::cout);
+
+    /* if(window.is_key_down(GLFW_KEY_W)) {
         //camPosition = camPosition + glm::vec3(0.0f, 0.0f, 10.0f * *deltaTime);
         //camPosition += camDirection * 10.0f * (float)*deltaTime;
         //camera->view = glm::translate(camera->view, glm::vec3(0.0f, 0.0f, 10.0f * *deltaTime));
@@ -62,8 +76,142 @@ void Editor::update() {
         //camPosition += glm::cross(camDirection, glm::vec3(0.0f, 1.0f, 0.0f)) * 10.0f * (float)*deltaTime;
         //camPosition = camPosition + glm::vec3(-10.0f * *deltaTime, 0.0f, 0.0f);
         //camera->view = glm::translate(camera->view, glm::vec3(-10.0f * *deltaTime, 0.0f, 0.0f));
+    } */
+
+    solve_camera();
+
+    solve_voxel_placing();
+
+    RenderLib::draw_voxel(render.shader, /* (camOrigin + (-camDirection * camOffset)) + ray.direction * 20.0f */glm::vec3(0.0f, 0.0f, 0.0f));
+
+    render.update();
+}
+
+void Editor::terminate() {
+
+}
+
+void Editor::solve_voxel_placing() {
+    Ray ray;
+    ray.create_camera_ray(window, *camera);
+
+    float step = 0.1f;
+    //std::cout << "\33[2K" << camera->view[3].x << " " << camera->view[3].y << " " << camera->view[3].z << "\r";
+    //std:flush(std::cout);
+
+    if(!drawing && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1) && window.is_key_down(GLFW_KEY_LEFT_SHIFT)) {
+        drawing = true;
+        float distance = 0.0f;
+
+        while(distance < 100.0f) {
+            distance += step;
+            glm::vec3 point = (camOrigin + (-camDirection * camOffset)) + ray.direction * distance;
+
+            if(grid.point_intersection(point)) {
+                if(grid.get(point) > 0) {
+                    ERROR("DrawingLine");
+                    lineStart = (camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step);
+                    break;
+                }
+            } else {
+                if(grid.point_intersection((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step))) {
+                    ERROR("DrawingLine");
+                    lineStart = (camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step);
+                    break;
+                }
+            }
+        }
+    } else if(drawing && !window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
+        drawing = false;
+        float distance = 0.0f;
+        step = 0.01f;
+        while(distance < 100.0f) {
+            distance += step;
+            glm::vec3 point = (camOrigin + (-camDirection * camOffset)) + ray.direction * distance;
+
+            if(grid.point_intersection(point)) {
+                if(grid.get(point) > 0) {
+                    lineEnd = (camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step);
+                    break;
+                }
+            } else {
+                if(grid.point_intersection((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step))) {
+                    lineEnd = (camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step);
+                    break;
+                }
+            }
+        }
+        ERROR("Finished Drawing");
+        ERROR("From : " << lineStart.x << " " << lineStart.y << " " << lineStart.z);
+        ERROR("To : " << lineEnd.x << " " << lineEnd.y << " " << lineEnd.z);
+
+        distance = 0.0f;
+        while(distance < 100.0f) {
+            distance += step;
+            glm::vec3 point = lineStart + (lineEnd - lineStart) * distance;
+
+            grid.set(point, 1);
+            
+        }
+        
     }
 
+    else if(!drawing && glfwGetTime() > lastPlace + placeDelay) {
+        float distance = 0.0f;
+        while(distance < 100.0f) {
+            distance += step;
+            glm::vec3 point = (camOrigin + (-camDirection * camOffset)) + ray.direction * distance;
+
+            if(grid.point_intersection(point)) {
+                if(grid.get(point) > 0) {
+                    if(window.is_key_down(GLFW_KEY_LEFT_CONTROL) && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
+                        grid.set(point, 0);
+                        lastPlace = glfwGetTime();
+                    } else if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
+                        grid.set((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step), 1);
+                        lastPlace = glfwGetTime();
+                    }
+                    update_grid();
+                    break;
+                }
+            } else {
+                if(grid.point_intersection((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step))) {
+                    if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1) && !window.is_key_down(GLFW_KEY_LEFT_CONTROL)) {
+                        grid.set((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step), 1);
+                        lastPlace = glfwGetTime();
+                    }
+                    update_grid();
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void Editor::solve_mouse() {
+    glm::vec3 cursor = window.get_normalized_cursor_pos();
+    mouseDeltaX = mouseLastX - cursor.x;
+    mouseDeltaY = mouseLastY - cursor.y;
+
+    mouseLastX = cursor.x;
+    mouseLastY = cursor.y;
+}
+
+void Editor::update_grid() {
+    TextureLib::update_texture_3d(gridTexture, 32, 32, 32, grid.grid);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, gridTexture);
+    ShaderLib::uniform_int32(render.shader, "grid", 0);
+}
+
+void Editor::update_palette() {
+    TextureLib::update_texture_1d(paletteTexture, 256, palette);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_1D, paletteTexture);
+    ShaderLib::uniform_int32(render.shader, "palette", 1);
+}
+
+void Editor::solve_camera() {
     // Camera Panning
     if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_3) && window.is_key_down(GLFW_KEY_LEFT_SHIFT)) {
         camOrigin += (float)mouseDeltaY * panSpeed * glm::normalize(glm::vec3(camera->view[0][1], camera->view[1][1], camera->view[2][1]));
@@ -80,60 +228,4 @@ void Editor::update() {
     }
 
     camera->view = glm::lookAt(camOrigin + (-camDirection * camOffset), camOrigin, glm::vec3(0.0f, 1.0f, 0.0f));
-
-    solve_voxel_placing();
-
-    RenderLib::draw_voxel(render.shader, /* (camOrigin + (-camDirection * camOffset)) + ray.direction * 20.0f */glm::vec3(0.0f, 0.0f, 0.0f));
-
-    render.update();
-}
-
-void Editor::terminate() {
-
-}
-
-void Editor::solve_voxel_placing() {
-    Ray ray;
-    ray.create_camera_ray(window, *camera);
-    std::cout << "\33[2K" << camera->view[3].x << " " << camera->view[3].y << " " << camera->view[3].z << "\r";
-    std:flush(std::cout);
-
-    float step = 0.1f;
-    float distance = 0.0f;
-    if(glfwGetTime() > lastPlace + placeDelay) {
-        while(distance < 100.0f) {
-            distance += step;
-            glm::vec3 point = (camOrigin + (-camDirection * camOffset)) + ray.direction * distance;
-
-            if(grid.point_intersection(point)) {
-                if(grid.get(point) > 0) {
-                    if(window.is_key_down(GLFW_KEY_LEFT_CONTROL) && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
-                        grid.set(point, 0);
-                        lastPlace = glfwGetTime();
-                    } else if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
-                        grid.set((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step), 1);
-                        lastPlace = glfwGetTime();
-                    }
-                    break;
-                }
-            } else {
-                if(grid.point_intersection((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step))) {
-                    if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1) && !window.is_key_down(GLFW_KEY_LEFT_CONTROL)) {
-                        grid.set((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step), 1);
-                        lastPlace = glfwGetTime();
-                    }
-                    break;
-                }
-            }
-        }
-    }
-}
-
-void Editor::solve_mouse() {
-    glm::vec3 cursor = window.get_normalized_cursor_pos();
-    mouseDeltaX = mouseLastX - cursor.x;
-    mouseDeltaY = mouseLastY - cursor.y;
-
-    mouseLastX = cursor.x;
-    mouseLastY = cursor.y;
 }

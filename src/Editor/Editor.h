@@ -4,6 +4,7 @@
 #include "System/Window.h"
 #include "System/Grid.h"
 #include "Rendering/RenderingPipeline.h"
+#include "Color.h"
 
 #define STATE_NONE 0x0000
 #define STATE_PRESS 0x0001
@@ -16,6 +17,7 @@ class Editor {
 
         Window window;
         Grid<int8_t> grid = Grid<int8_t>(32);
+        RGB* palette;
 
         uint32_t program;
         uint32_t VAO;
@@ -48,6 +50,11 @@ class Editor {
         double* deltaTime;
 
         uint32_t gridTexture;
+        uint32_t paletteTexture;
+
+        uint32_t drawing;
+        glm::vec3 lineStart;
+        glm::vec3 lineEnd;
 
         void init();
         void update();
@@ -55,4 +62,8 @@ class Editor {
 
         void solve_voxel_placing();
         void solve_mouse();
+        void solve_camera();
+
+        void update_grid();
+        void update_palette();
 };

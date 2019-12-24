@@ -103,7 +103,7 @@ void Window::init(char* name, int32_t width, int32_t height) {
 
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
-    glfwSwapInterval(1);
+    //glfwSwapInterval(1);
 
     //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
 }
