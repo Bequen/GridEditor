@@ -106,15 +106,19 @@ void ShaderLib::program_use(uint32_t program) {
 
 
 void ShaderLib::uniform_mat4(uint32_t program, char* name, float* data) {
+    glUseProgram(program);
     glUniformMatrix4fv(glGetUniformLocation(program, name), 1, GL_FALSE, data);
 }
 
 void ShaderLib::uniform_vec3(uint32_t program, char* name, float* data) {
+    glUseProgram(program);
     glUniform3fv(glGetUniformLocation(program, name), 1, data);
 } void ShaderLib::uniform_vec4(uint32_t program, char* name, float* data) {
+    glUseProgram(program);
     glUniform4fv(glGetUniformLocation(program, name), 1, data);
 }
 
 void ShaderLib::uniform_int32(uint32_t program, char* name, int32_t data) {
+    glUseProgram(program);
     glUniform1i(glGetUniformLocation(program, name), data);
 }

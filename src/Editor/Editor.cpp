@@ -50,12 +50,13 @@ void Editor::init() {
     //camera->view = glm::lookAt(camPosition, camPosition + camDirection, glm::vec3(0.0f, 1.0f, 0.0f));
 
     rotationMode = 0;
+
+    update_palette();
+    update_grid();
 }
 
 void Editor::update() {
     solve_mouse();
-    update_palette();
-    update_grid();
 
     std::cout << "\33[2KFPS: " << 1000.0f / (float)*deltaTime << "\r";
     std::flush(std::cout);
@@ -94,10 +95,7 @@ void Editor::terminate() {
 void Editor::solve_voxel_placing() {
     Ray ray;
     ray.create_camera_ray(window, *camera);
-
     float step = 0.1f;
-    //std::cout << "\33[2K" << camera->view[3].x << " " << camera->view[3].y << " " << camera->view[3].z << "\r";
-    //std:flush(std::cout);
 
     if(!drawing && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1) && window.is_key_down(GLFW_KEY_LEFT_SHIFT)) {
         drawing = true;
@@ -109,13 +107,11 @@ void Editor::solve_voxel_placing() {
 
             if(grid.point_intersection(point)) {
                 if(grid.get(point) > 0) {
-                    ERROR("DrawingLine");
                     lineStart = (camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step);
                     break;
                 }
             } else {
                 if(grid.point_intersection((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step))) {
-                    ERROR("DrawingLine");
                     lineStart = (camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step);
                     break;
                 }
@@ -141,19 +137,16 @@ void Editor::solve_voxel_placing() {
                 }
             }
         }
-        ERROR("Finished Drawing");
-        ERROR("From : " << lineStart.x << " " << lineStart.y << " " << lineStart.z);
-        ERROR("To : " << lineEnd.x << " " << lineEnd.y << " " << lineEnd.z);
 
         distance = 0.0f;
-        while(distance < 100.0f) {
+        glm::vec3 lineDir = (lineEnd - lineStart);
+
+        while(distance < glm::length(lineDir)) {
             distance += step;
-            glm::vec3 point = lineStart + (lineEnd - lineStart) * distance;
+            glm::vec3 point = lineStart + glm::normalize(lineDir) * distance;
 
             grid.set(point, 1);
-            
         }
-        
     }
 
     else if(!drawing && glfwGetTime() > lastPlace + placeDelay) {

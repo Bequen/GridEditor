@@ -15,6 +15,7 @@ class RenderingPipeline {
 
     public:
         uint32_t shader;
+        uint32_t boxShader;
 
         void init(Grid<int8_t>* grid);
         void update();

@@ -15,6 +15,7 @@ void RenderingPipeline::init(Grid<int8_t>* grid) {
 
     voxel = RenderLib::create_voxel();
     shader = ShaderLib::program_create("default/default");
+    boxShader = ShaderLib::program_create("box");
     ShaderLib::program_use(shader);
 }
 
@@ -30,8 +31,8 @@ void RenderingPipeline::update() {
         }
     }
 
-    //RenderLib::culling(GL_FRONT);
-    //RenderLib::draw_voxel(shader, glm::vec3((float)0, (float)0, (float)0), glm::vec3(grid->size, grid->size, grid->size));
+    RenderLib::culling(GL_FRONT);
+    //RenderLib::draw_voxel(boxShader, glm::vec3((float)0, (float)0, (float)0), glm::vec3(grid->size, grid->size, grid->size));
 }
 
 void RenderingPipeline::terminate() {
