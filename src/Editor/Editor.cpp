@@ -40,6 +40,7 @@ void Editor::init() {
     camOffset = 10.0f;
     camera->view = glm::translate(glm::mat4(1.0f), camPosition);
     placeDelay = 0.1f;
+    rectangle = 0;
     //camera->view = glm::lookAt(camPosition, camPosition + camDirection, glm::vec3(0.0f, 1.0f, 0.0f));
 
     rotationMode = 0;
@@ -64,12 +65,13 @@ void Editor::update() {
 
 void Editor::draw_ui() {
     draw_palette();
+    draw_toolbar();
 }
 
 void Editor::draw_palette() {
-    ImGui::Begin("Pallette", nullptr, ImGuiWindowFlags_MenuBar);
+    ImGui::Begin("Pallette", nullptr, ImGuiWindowFlags_NoMove);
 
-    ImGui::BeginChild("PickerWindow", ImVec2(250.0f, 250.0f), true);
+    ImGui::BeginChild("PickerWindow", ImVec2(200.0f, 200.0f), true);
     if(ImGui::ColorPicker3("picker", &palette[colorSelected].r, ImGuiColorEditFlags_PickerHueWheel))
         update_palette();
     ImGui::EndChild();
@@ -85,11 +87,34 @@ void Editor::draw_palette() {
         if(rowSize > 0) {
             if(i % rowSize)
                 ImGui::SameLine((i % rowSize) * (buttonSize + padding) + padding);
-            if(ImGui::ColorButton(label, ImVec4(palette[i].r, palette[i].g, palette[i].b, 1.0f), 0, ImVec2(buttonSize, buttonSize)))
+            if(ImGui::ColorButton(label, ImVec4(palette[i].r, palette[i].g, palette[i].b, 1.0f), 0, ImVec2(buttonSize, buttonSize))) {
                 colorSelected = i;
+                colorCache = i;
+            }
         }
     }
     ImGui::EndChild();
+
+    ImGui::End();
+}
+
+void Editor::draw_toolbar() {
+    ImGui::Begin("Toolbar");
+
+    const char* items[] = { "Cube", "Line", "Circle" };
+
+    if (ImGui::BeginCombo("##combo", items[rectangle])) // The second parameter is the label previewed before opening the combo.
+    {
+        for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+        {
+            bool is_selected = (rectangle == n); // You can store your selection however you want, outside or inside your objects
+            if (ImGui::Selectable(items[n], is_selected))
+                rectangle = n;
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+        }
+        ImGui::EndCombo();
+    }
 
     ImGui::End();
 }
@@ -102,6 +127,12 @@ void Editor::solve_voxel_placing() {
     Ray ray;
     ray.create_camera_ray(window, *camera);
     float step = 0.1f;
+
+    if(window.is_key_down(GLFW_KEY_LEFT_CONTROL)) {
+        colorSelected = 0;
+    } else {
+        colorSelected = colorCache;
+    }
 
     if(!drawing && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1) && window.is_key_down(GLFW_KEY_LEFT_SHIFT)) {
         drawing = true;
@@ -143,8 +174,9 @@ void Editor::solve_voxel_placing() {
                 }
             }
         }
+        solve_rectangle(lineStart, lineEnd);
 
-        distance = 0.0f;
+        /* distance = 0.0f;
         glm::vec3 lineDir = (lineEnd - lineStart);
 
         while(distance < glm::length(lineDir)) {
@@ -152,7 +184,7 @@ void Editor::solve_voxel_placing() {
             glm::vec3 point = lineStart + glm::normalize(lineDir) * distance;
 
             grid.set(point, colorSelected);
-        }
+        } */
     }
 
     else if(!drawing && glfwGetTime() > lastPlace + placeDelay) {
@@ -183,6 +215,28 @@ void Editor::solve_voxel_placing() {
                     break;
                 }
             }
+        }
+    }
+}
+
+void Editor::solve_rectangle(glm::vec3 start, glm::vec3 end) {
+    switch(rectangle) {
+        case RECTANGLE_CUBE: {
+            ERROR("Making cube");
+            glm::vec3 size = end - start;
+            start.x = start.x < end.x ? start.x : end.x;
+            start.y = start.y < end.y ? start.y : end.y;
+            start.z = start.z < end.z ? start.z : end.z;
+
+            for(uint32_t z = 0; z < std::abs(size.z); z++) {
+                for(uint32_t y = 0; y < std::abs(size.y); y++) {
+                    for(uint32_t x = 0; x < std::abs(size.x); x++) {
+                        grid.set(start + glm::vec3(x, y, z), colorSelected);
+                    }
+                }
+            }
+            ERROR("Finished cube");
+            break;
         }
     }
 }

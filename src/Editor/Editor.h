@@ -11,6 +11,10 @@
 #define STATE_HOVER 0x0002
 #define STATE_RELEASE 0x0003
 
+#define RECTANGLE_CUBE      0x0000
+#define RECTANGLE_LINE      0x0001
+#define RECTANGLE_CIRCLE    0x0002
+
 class Editor {
     public:
         Camera* camera;
@@ -19,6 +23,7 @@ class Editor {
         Grid<int8_t> grid = Grid<int8_t>(32);
         RGB32* palette;
         uint32_t colorSelected;
+        uint32_t colorCache;
 
         uint32_t program;
         uint32_t VAO;
@@ -57,6 +62,8 @@ class Editor {
         glm::vec3 lineStart;
         glm::vec3 lineEnd;
 
+        uint32_t rectangle;
+
         void init();
         void update();
         void terminate();
@@ -64,12 +71,14 @@ class Editor {
         void solve_voxel_placing();
         void solve_mouse();
         void solve_camera();
+        void solve_rectangle(glm::vec3 start, glm::vec3 end);
 
         void update_grid();
         void update_palette();
 
         void draw_ui();
         void draw_palette();
+        void draw_toolbar();
 
         void resize_callback(int32_t width, int32_t height);
 };
