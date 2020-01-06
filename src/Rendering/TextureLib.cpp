@@ -7,7 +7,7 @@ uint32_t TextureLib::create_texture_1d(uint32_t width, uint32_t internalFormat, 
     glGenTextures(1, &result);
 
     glBindTexture(GL_TEXTURE_1D, result);
-    glTexImage1D(GL_TEXTURE_1D, 0, internalFormat, width, 0, format, GL_UNSIGNED_BYTE, data);
+    glTexImage1D(GL_TEXTURE_1D, 0, internalFormat, width, 0, format, GL_FLOAT, data);
 
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -20,7 +20,7 @@ uint32_t TextureLib::create_texture_1d(uint32_t width, uint32_t internalFormat, 
 
 void TextureLib::update_texture_1d(uint32_t texture, uint32_t width, void* data) {
     glBindTexture(GL_TEXTURE_1D, texture);
-    glTexSubImage1D(GL_TEXTURE_1D, 0, 0, width, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glTexSubImage1D(GL_TEXTURE_1D, 0, 0, width, GL_RGB, GL_FLOAT, data);
 }
 
 

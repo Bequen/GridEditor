@@ -10,9 +10,9 @@
 
 class Window {
     private:
-        GLFWwindow* window;
 
     public:
+        GLFWwindow* window;
         int32_t width;
         int32_t height;
 

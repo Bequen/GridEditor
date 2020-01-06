@@ -14,7 +14,6 @@ class Application {
     Window window;
     Editor editor;
 
-
     public:
         double deltaTime;
 

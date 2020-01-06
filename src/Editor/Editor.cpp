@@ -1,5 +1,9 @@
 #include "Editor.h"
 
+#include "ImGUI/imgui.h"
+#include "ImGUI/imgui_impl_glfw.h"
+#include "ImGUI/imgui_impl_opengl3.h"
+
 #include "Rendering/RenderLib.h"
 #include <avg/Debug.h>
 #include <glm/gtx/rotate_vector.hpp>
@@ -17,29 +21,18 @@ void Editor::init() {
 
     RenderLib::buffer_binding_range(cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
 
-    camera->projection = glm::perspective(glm::radians(45.0f), 720.0f / 480.0f, 0.1f, 1000.0f);
+    camera->projection = glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 1000.0f);
+    colorSelected = 0;
 
     drawing = false;
 
-    grid.set(0, 2);
-    grid.set(1, 2);
-    grid.set(2, 2);
-
-    palette = new RGB[256];
-    RGB col; col.r = 255; col.g = 0; col.b = 0;
-    palette[0] = col;
-    col.b = 255;
-    col.r = 0;
-    palette[1] = col;
-    col.g = 255;
-    palette[2] = col;
-    palette[3] = col;
-
+    palette = new RGB32[256];
+    memset(palette, 0, sizeof(RGB32) * 256);
     gridTexture = TextureLib::create_texture_3d(32, 32, 32, grid.grid);
     paletteTexture = TextureLib::create_texture_1d(256, GL_RGB, GL_RGB, palette);
 
     panSpeed = 10.0f;
-    rotationSpeed = 50.0f;
+    rotationSpeed = 100.0f;
     origin = glm::vec3(0.0f);
     camDirection = glm::vec3(0.0f, 0.0f, 1.0f);
     camPosition = glm::vec3(0.0f, 0.0f, -10.0f);
@@ -58,34 +51,47 @@ void Editor::init() {
 void Editor::update() {
     solve_mouse();
 
-    std::cout << "\33[2KFPS: " << 1000.0f / (float)*deltaTime << "\r";
-    std::flush(std::cout);
-
-    /* if(window.is_key_down(GLFW_KEY_W)) {
-        //camPosition = camPosition + glm::vec3(0.0f, 0.0f, 10.0f * *deltaTime);
-        //camPosition += camDirection * 10.0f * (float)*deltaTime;
-        //camera->view = glm::translate(camera->view, glm::vec3(0.0f, 0.0f, 10.0f * *deltaTime));
-    } if(window.is_key_down(GLFW_KEY_S)) {
-        //camPosition = camPosition + glm::vec3(0.0f, 0.0f, -10.0f * *deltaTime);
-        //camPosition += -camDirection * 10.0f * (float)*deltaTime;
-        //camera->view = glm::translate(camera->view, glm::vec3(0.0f, 0.0f, -10.0f * *deltaTime));
-    } if(window.is_key_down(GLFW_KEY_A)) {
-        //camPosition += -glm::cross(camDirection, glm::vec3(0.0f, 1.0f, 0.0f)) * 10.0f * (float)*deltaTime;
-        //camPosition = camPosition + glm::vec3(10.0f * *deltaTime, 0.0f, 0.0f);
-        //camera->view = glm::translate(camera->view, glm::vec3(10.0f * *deltaTime, 0.0f, 0.0f));
-    } if(window.is_key_down(GLFW_KEY_D)) {
-        //camPosition += glm::cross(camDirection, glm::vec3(0.0f, 1.0f, 0.0f)) * 10.0f * (float)*deltaTime;
-        //camPosition = camPosition + glm::vec3(-10.0f * *deltaTime, 0.0f, 0.0f);
-        //camera->view = glm::translate(camera->view, glm::vec3(-10.0f * *deltaTime, 0.0f, 0.0f));
-    } */
-
-    solve_camera();
-
-    solve_voxel_placing();
+    if(!ImGui::IsAnyWindowHovered() && !ImGui::IsAnyWindowFocused()) {
+        solve_camera();
+        solve_voxel_placing();
+    }
 
     RenderLib::draw_voxel(render.shader, /* (camOrigin + (-camDirection * camOffset)) + ray.direction * 20.0f */glm::vec3(0.0f, 0.0f, 0.0f));
 
     render.update();
+    draw_ui();
+}
+
+void Editor::draw_ui() {
+    draw_palette();
+}
+
+void Editor::draw_palette() {
+    ImGui::Begin("Pallette", nullptr, ImGuiWindowFlags_MenuBar);
+
+    ImGui::BeginChild("PickerWindow", ImVec2(250.0f, 250.0f), true);
+    if(ImGui::ColorPicker3("picker", &palette[colorSelected].r, ImGuiColorEditFlags_PickerHueWheel))
+        update_palette();
+    ImGui::EndChild();
+
+    ImGui::BeginChild("PaletteWindow", ImVec2(0.0f, 0.0f), true);
+    float buttonSize = 20.0f;
+    float padding = 5.0f;
+
+    float size = ImGui::GetWindowContentRegionWidth();
+    int rowSize = (int)std::floor(size / (buttonSize + padding));
+    for(uint32_t i = 0; i < 256; i++) {
+        const char* label = std::to_string(i).c_str();
+        if(rowSize > 0) {
+            if(i % rowSize)
+                ImGui::SameLine((i % rowSize) * (buttonSize + padding) + padding);
+            if(ImGui::ColorButton(label, ImVec4(palette[i].r, palette[i].g, palette[i].b, 1.0f), 0, ImVec2(buttonSize, buttonSize)))
+                colorSelected = i;
+        }
+    }
+    ImGui::EndChild();
+
+    ImGui::End();
 }
 
 void Editor::terminate() {
@@ -145,7 +151,7 @@ void Editor::solve_voxel_placing() {
             distance += step;
             glm::vec3 point = lineStart + glm::normalize(lineDir) * distance;
 
-            grid.set(point, 1);
+            grid.set(point, colorSelected);
         }
     }
 
@@ -161,7 +167,7 @@ void Editor::solve_voxel_placing() {
                         grid.set(point, 0);
                         lastPlace = glfwGetTime();
                     } else if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
-                        grid.set((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step), 1);
+                        grid.set((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step), colorSelected);
                         lastPlace = glfwGetTime();
                     }
                     update_grid();
@@ -170,7 +176,7 @@ void Editor::solve_voxel_placing() {
             } else {
                 if(grid.point_intersection((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step))) {
                     if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1) && !window.is_key_down(GLFW_KEY_LEFT_CONTROL)) {
-                        grid.set((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step), 1);
+                        grid.set((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step), colorSelected);
                         lastPlace = glfwGetTime();
                     }
                     update_grid();
@@ -221,4 +227,12 @@ void Editor::solve_camera() {
     }
 
     camera->view = glm::lookAt(camOrigin + (-camDirection * camOffset), camOrigin, glm::vec3(0.0f, 1.0f, 0.0f));
+}
+
+void Editor::resize_callback(int32_t width, int32_t height) {
+    this->window.width = width;
+    this->window.height = height;
+
+    glViewport(0, 0, width, height);
+    camera->projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 1000.0f);
 }

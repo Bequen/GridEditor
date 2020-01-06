@@ -17,7 +17,8 @@ class Editor {
 
         Window window;
         Grid<int8_t> grid = Grid<int8_t>(32);
-        RGB* palette;
+        RGB32* palette;
+        uint32_t colorSelected;
 
         uint32_t program;
         uint32_t VAO;
@@ -66,4 +67,9 @@ class Editor {
 
         void update_grid();
         void update_palette();
+
+        void draw_ui();
+        void draw_palette();
+
+        void resize_callback(int32_t width, int32_t height);
 };

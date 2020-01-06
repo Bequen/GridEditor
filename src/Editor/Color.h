@@ -5,3 +5,7 @@
 struct RGB {
     int8_t r, g, b;
 };
+
+struct RGB32 {
+    float r, g, b;
+};

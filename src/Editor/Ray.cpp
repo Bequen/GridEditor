@@ -8,7 +8,7 @@ void Ray::create_camera_ray(Window window, Camera camera) {
     mouse.z = -1.0f;
 
     glm::vec4 eye = glm::inverse(camera.projection) * (mouse);
-    eye.z = -1.0f;  
+    eye.z = -1.0f;
     eye.w = 0.0f;
 
     eye = glm::inverse(camera.view) * eye;
@@ -16,5 +16,4 @@ void Ray::create_camera_ray(Window window, Camera camera) {
 
     this->origin = glm::vec3(camera.view[0][3], camera.view[1][3], camera.view[2][3]);
     this->direction = glm::vec3(eye);
-    //this->origin = glm::vec3(camera.view[3]);
 }

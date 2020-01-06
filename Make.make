@@ -1,5 +1,5 @@
 # Name of the project
-PROJECT_NAME=Towards
+PROJECT_NAME=GridEditor
 
 # Directory of the .cpp and .h files.
 # Use both the same if you don't divide and have all in one
@@ -8,7 +8,7 @@ INCLUDE_DIR=src/
 LIB_DIR=deps/
 
 # If your source files have some sub directories, specify them here 
-FILES_SUB_DIRS=System Rendering Editor
+FILES_SUB_DIRS=System Rendering Editor ImGUI ImGUI/GL
 
 # Where libraries, other than those in /usr/lib64/ are put
 THIRD_PARTY=./third-party/

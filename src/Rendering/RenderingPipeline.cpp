@@ -32,7 +32,7 @@ void RenderingPipeline::update() {
     }
 
     RenderLib::culling(GL_FRONT);
-    //RenderLib::draw_voxel(boxShader, glm::vec3((float)0, (float)0, (float)0), glm::vec3(grid->size, grid->size, grid->size));
+    RenderLib::draw_voxel(boxShader, glm::vec3((float)0, (float)0, (float)0), glm::vec3(grid->size, grid->size, grid->size));
 }
 
 void RenderingPipeline::terminate() {
