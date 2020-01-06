@@ -126,8 +126,9 @@ void Editor::terminate() {
 void Editor::solve_voxel_placing() {
     Ray ray;
     ray.create_camera_ray(window, *camera);
-    float step = 0.1f;
+    float step = 0.01f;
 
+    // If the user wants to delete stuff
     if(window.is_key_down(GLFW_KEY_LEFT_CONTROL)) {
         colorSelected = 0;
     } else {
