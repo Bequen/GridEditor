@@ -63,6 +63,8 @@ class Editor {
         glm::vec3 lineEnd;
 
         uint32_t rectangle;
+        glm::vec3* extrudeSelect;
+        uint32_t extrudeIndex;
 
         void init();
         void update();
@@ -72,6 +74,9 @@ class Editor {
         void solve_mouse();
         void solve_camera();
         void solve_rectangle(glm::vec3 start, glm::vec3 end);
+
+        void extrude(glm::vec3 position, glm::vec3 normal);
+        void flood_fill(glm::vec3 position, glm::vec3 normal);
 
         void update_grid();
         void update_palette();

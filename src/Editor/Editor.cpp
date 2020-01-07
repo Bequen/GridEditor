@@ -11,6 +11,7 @@
 #include "Ray.h"
 #include "Rendering/TextureLib.h"
 #include "Rendering/ShaderLib.h"
+#include <csignal>
 
 void Editor::init() {
     grid = Grid<int8_t>(32);
@@ -44,6 +45,8 @@ void Editor::init() {
     //camera->view = glm::lookAt(camPosition, camPosition + camDirection, glm::vec3(0.0f, 1.0f, 0.0f));
 
     rotationMode = 0;
+    extrudeSelect = new glm::vec3(grid.size * grid.size);
+    extrudeIndex = 0;
 
     update_palette();
     update_grid();
@@ -135,7 +138,7 @@ void Editor::solve_voxel_placing() {
         colorSelected = colorCache;
     }
 
-    if(!drawing && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1) && window.is_key_down(GLFW_KEY_LEFT_SHIFT)) {
+    if(!drawing && !window.is_key_down(GLFW_KEY_E) && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1) && window.is_key_down(GLFW_KEY_LEFT_SHIFT)) {
         drawing = true;
         float distance = 0.0f;
 
@@ -155,7 +158,7 @@ void Editor::solve_voxel_placing() {
                 }
             }
         }
-    } else if(drawing && !window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
+    } else if(drawing && !window.is_key_down(GLFW_KEY_E) && !window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
         drawing = false;
         float distance = 0.0f;
         step = 0.01f;
@@ -188,7 +191,7 @@ void Editor::solve_voxel_placing() {
         } */
     }
 
-    else if(!drawing && glfwGetTime() > lastPlace + placeDelay) {
+    else if(!drawing && !window.is_key_down(GLFW_KEY_E) && glfwGetTime() > lastPlace + placeDelay) {
         float distance = 0.0f;
         while(distance < 100.0f) {
             distance += step;
@@ -218,6 +221,71 @@ void Editor::solve_voxel_placing() {
             }
         }
     }
+
+    if(window.is_key_down(GLFW_KEY_E)) {
+        ray.create_camera_ray(window, *camera);
+        float distance = 0.0f;
+        float step = 0.01f;
+        ERROR("FLOOD FILL");
+
+        while(distance < 100.0f) {
+            distance += step;
+            if(grid.get((camOrigin + (-camDirection * camOffset)) + ray.direction * distance) > 0) {
+                glm::vec3 position = (camOrigin + (-camDirection * camOffset)) + ray.direction * distance;
+                position.x = std::floor(position.x);
+                position.y = std::floor(position.y);
+                position.z = std::floor(position.z);
+                glm::vec3 normal = (camOrigin + (-camDirection * camOffset)) + (ray.direction * (distance - step));
+                normal.x = std::floor(normal.x);
+                normal.y = std::floor(normal.y);
+                normal.z = std::floor(normal.z);
+
+                normal = normal - position;
+
+                ERROR("Flood fill on " << position.x << "|" << position.y << "|" << position.z << "\n" <<
+                        normal.x << "|" << normal.y << "|" << normal.z);
+
+                flood_fill(position, normal);
+
+                break;
+            }
+        }
+    }
+}
+
+void Editor::extrude(glm::vec3 position, glm::vec3 normal) {
+    
+}
+
+void Editor::flood_fill(glm::vec3 position, glm::vec3 normal) {
+    if(position.x < 0 || position.x > grid.size ||
+        position.y  < 0 || position.y > grid.size ||
+        position.z < 0 || position.z > grid.size) {
+        return;
+    } if(grid.get(position) <= 0)
+        return;
+    if(grid.get(position) == colorSelected)
+        return;
+
+    glm::vec3 right = glm::vec3((1.0f - std::abs(normal.x)), (1.0f - std::abs(normal.y)), (1.0f - std::abs(normal.z)));
+    for(uint32_t i = 0; i < 3; i++) {
+        if(right[i] == 1.0f) {
+            right[i] = 0.0f;
+            break;
+        }
+    }
+    
+    glm::vec3 forward = glm::cross(right, normal);
+    if(grid.get(position + normal) <= 0) {
+        grid.set(position, colorSelected);
+
+        flood_fill(position + right, normal);
+        flood_fill(position + forward, normal);
+        flood_fill(position - right, normal);
+        flood_fill(position - forward, normal);
+    }
+
+    return;
 }
 
 void Editor::solve_rectangle(glm::vec3 start, glm::vec3 end) {
