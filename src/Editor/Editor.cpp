@@ -8,7 +8,7 @@
 #include <avg/Debug.h>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "Ray.h"
+
 #include "Rendering/TextureLib.h"
 #include "Rendering/ShaderLib.h"
 #include <csignal>
@@ -47,6 +47,7 @@ void Editor::init() {
     rotationMode = 0;
     extrudeSelect = new glm::vec3(grid.size * grid.size);
     extrudeIndex = 0;
+    drawMode = DRAW_MODE_BRUSH;
 
     update_palette();
     update_grid();
@@ -106,15 +107,15 @@ void Editor::draw_toolbar() {
 
     const char* items[] = { "Cube", "Line", "Circle" };
 
-    if (ImGui::BeginCombo("##combo", items[rectangle])) // The second parameter is the label previewed before opening the combo.
+    if (ImGui::BeginCombo("##combo", items[rectangle]))
     {
         for (int n = 0; n < IM_ARRAYSIZE(items); n++)
         {
-            bool is_selected = (rectangle == n); // You can store your selection however you want, outside or inside your objects
+            bool is_selected = (rectangle == n);
             if (ImGui::Selectable(items[n], is_selected))
                 rectangle = n;
             if (is_selected)
-                ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+                ImGui::SetItemDefaultFocus();
         }
         ImGui::EndCombo();
     }
@@ -129,16 +130,42 @@ void Editor::terminate() {
 void Editor::solve_voxel_placing() {
     Ray ray;
     ray.create_camera_ray(window, *camera);
+    ray.origin = (camOrigin + (-camDirection * camOffset));
     float step = 0.01f;
 
     // If the user wants to delete stuff
-    if(window.is_key_down(GLFW_KEY_LEFT_CONTROL)) {
+    if(window.is_key_down(GLFW_KEY_LEFT_CONTROL))
         colorSelected = 0;
-    } else {
+    else
         colorSelected = colorCache;
+
+    if(window.is_key_down(GLFW_KEY_LEFT_SHIFT))
+        drawMode = DRAW_MODE_SHAPE;
+    else
+        drawMode = DRAW_MODE_BRUSH;
+
+    if(drawMode == DRAW_MODE_SHAPE) {
+        if(!drawing && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
+            drawing = true;
+
+            lineStart = ray_cast(ray);
+        } else if(drawing && !window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
+            drawing = false;
+
+            lineEnd = ray_cast(ray);
+
+            solve_rectangle(lineStart, lineEnd);
+            update_grid();
+        }
+    } else {
+        if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
+            ERROR("Placing " << ray_cast(ray).x << "|" << ray_cast(ray).y << "|" << ray_cast(ray).z);
+            grid.set(ray_cast(ray), colorSelected);
+            update_grid();
+        } 
     }
 
-    if(!drawing && !window.is_key_down(GLFW_KEY_E) && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1) && window.is_key_down(GLFW_KEY_LEFT_SHIFT)) {
+    /* if(!drawing && !window.is_key_down(GLFW_KEY_E) && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1) && window.is_key_down(GLFW_KEY_LEFT_SHIFT)) {
         drawing = true;
         float distance = 0.0f;
 
@@ -178,17 +205,8 @@ void Editor::solve_voxel_placing() {
                 }
             }
         }
+
         solve_rectangle(lineStart, lineEnd);
-
-        /* distance = 0.0f;
-        glm::vec3 lineDir = (lineEnd - lineStart);
-
-        while(distance < glm::length(lineDir)) {
-            distance += step;
-            glm::vec3 point = lineStart + glm::normalize(lineDir) * distance;
-
-            grid.set(point, colorSelected);
-        } */
     }
 
     else if(!drawing && !window.is_key_down(GLFW_KEY_E) && glfwGetTime() > lastPlace + placeDelay) {
@@ -250,6 +268,27 @@ void Editor::solve_voxel_placing() {
                 break;
             }
         }
+    } */
+}
+
+glm::vec3 Editor::ray_cast(Ray ray) {
+    float distance = 0.0f;
+    float step = 0.1f;
+
+    while(distance < 100.0f) {
+        distance += step;
+        if(grid.point_intersection(ray.origin + ray.direction * distance)) {
+            if(grid.get(ray.origin + ray.direction * distance) > 0) {
+                if(window.is_key_down(GLFW_KEY_LEFT_CONTROL))
+                    return ray.origin + ray.direction * (distance);
+                else
+                    return ray.origin + ray.direction * (distance - step);
+            }
+        } else {
+            if(grid.point_intersection(ray.origin + ray.direction * (distance - step))) {
+                return ray.origin + ray.direction * (distance - step);
+            }
+        }
     }
 }
 
@@ -291,20 +330,20 @@ void Editor::flood_fill(glm::vec3 position, glm::vec3 normal) {
 void Editor::solve_rectangle(glm::vec3 start, glm::vec3 end) {
     switch(rectangle) {
         case RECTANGLE_CUBE: {
-            ERROR("Making cube");
-            glm::vec3 size = end - start;
-            start.x = start.x < end.x ? start.x : end.x;
-            start.y = start.y < end.y ? start.y : end.y;
-            start.z = start.z < end.z ? start.z : end.z;
+            if(start.x > end.x)
+                std::swap(start.x, end.x);
+            if(start.y > end.y)
+                std::swap(start.y, end.y);
+            if(start.z > end.z)
+                std::swap(start.z, end.z);
 
-            for(uint32_t z = 0; z < std::abs(size.z); z++) {
-                for(uint32_t y = 0; y < std::abs(size.y); y++) {
-                    for(uint32_t x = 0; x < std::abs(size.x); x++) {
-                        grid.set(start + glm::vec3(x, y, z), colorSelected);
+            for(float x = std::floor(start.x); x <= std::floor(end.x); x++) {
+                for(float y = std::floor(start.y); y <= std::floor(end.y); y++) {
+                    for(float z = std::floor(start.z); z <= std::floor(end.z); z++) {
+                        grid.set(glm::vec3(x, y, z), colorSelected);
                     }
                 }
             }
-            ERROR("Finished cube");
             break;
         }
     }

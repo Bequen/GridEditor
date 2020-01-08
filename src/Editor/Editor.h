@@ -5,6 +5,7 @@
 #include "System/Grid.h"
 #include "Rendering/RenderingPipeline.h"
 #include "Color.h"
+#include "Ray.h"
 
 #define STATE_NONE 0x0000
 #define STATE_PRESS 0x0001
@@ -14,6 +15,9 @@
 #define RECTANGLE_CUBE      0x0000
 #define RECTANGLE_LINE      0x0001
 #define RECTANGLE_CIRCLE    0x0002
+
+#define DRAW_MODE_BRUSH 0x0000
+#define DRAW_MODE_SHAPE 0x0001
 
 class Editor {
     public:
@@ -66,6 +70,8 @@ class Editor {
         glm::vec3* extrudeSelect;
         uint32_t extrudeIndex;
 
+        uint32_t drawMode;
+
         void init();
         void update();
         void terminate();
@@ -77,6 +83,7 @@ class Editor {
 
         void extrude(glm::vec3 position, glm::vec3 normal);
         void flood_fill(glm::vec3 position, glm::vec3 normal);
+        glm::vec3 ray_cast(Ray ray);
 
         void update_grid();
         void update_palette();
