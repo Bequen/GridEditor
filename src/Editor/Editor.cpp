@@ -14,8 +14,20 @@
 #include <csignal>
 
 void Editor::init() {
+    cacheSize = 32;
+
     grid = Grid<int8_t>(32);
-    render.init(&grid);
+    cacheIndex = 0;
+    cache = new Grid<int8_t>[cacheSize];
+    for(uint32_t i = 0; i < cacheSize; i++) {
+        cache[i].init(cacheSize);
+    }
+    SUCCESS("Cache initialized");
+    undoCount = 0;
+    usedCache = 0;
+    render.init(&cache[cacheIndex]);
+    undoState = STATE_NONE;
+    edit = false;
 
     uint32_t cameraBuffer = RenderLib::create_buffer_stream(0, sizeof(glm::mat4) * 2, nullptr);
     camera = (Camera*)RenderLib::map_buffer_stream(0, cameraBuffer, 0, sizeof(glm::mat4) * 2);
@@ -43,7 +55,6 @@ void Editor::init() {
     rectangle = 0;
     camera->view = glm::lookAt(camOrigin + (-camDirection * camOffset), camOrigin, glm::vec3(0.0f, 1.0f, 0.0f));
 
-    rotationMode = 0;
     extrudeSelect = new glm::vec3(grid.size * grid.size);
     extrudeIndex = 0;
     drawMode = DRAW_MODE_BRUSH;
@@ -54,8 +65,9 @@ void Editor::init() {
 
 void Editor::update() {
     solve_mouse();
+    solve_input();
 
-    if(!ImGui::IsAnyWindowHovered() && !ImGui::IsAnyWindowFocused()) {
+    if(!ImGui::IsAnyWindowHovered() && !ImGui::IsAnyItemHovered()) {
         solve_camera();
         solve_voxel_placing();
     }
@@ -155,13 +167,22 @@ void Editor::solve_voxel_placing() {
 
             solve_rectangle(shapeStart, shapeEnd);
             update_grid();
+
+            if(edit)
+                update_cache();
         }
     } else {
         if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
             ERROR("Placing " << ray_cast(ray).x << "|" << ray_cast(ray).y << "|" << ray_cast(ray).z);
-            grid.set(ray_cast(ray), colorSelected);
+            if(cache[cacheIndex].point_intersection(ray_cast(ray))) {
+                cache[cacheIndex].set(ray_cast(ray), colorSelected);
+                edit = true;
+            }
             update_grid();
-        } 
+        } else {
+            if(edit)
+                update_cache();
+        }
     }
 
     if(window.is_key_down(GLFW_KEY_E)) {
@@ -201,23 +222,19 @@ glm::vec3 Editor::ray_cast(Ray ray) {
 
     while(distance < 100.0f) {
         distance += step;
-        if(grid.point_intersection(ray.origin + ray.direction * distance)) {
-            if(grid.get(ray.origin + ray.direction * distance) > 0) {
+        if(cache[(cacheIndex - 1) % cacheSize].point_intersection(ray.origin + ray.direction * distance)) {
+            if(cache[(cacheIndex - 1) % cacheSize].get(ray.origin + ray.direction * distance) > 0) {
                 if(window.is_key_down(GLFW_KEY_LEFT_CONTROL))
                     return ray.origin + ray.direction * (distance);
                 else
                     return ray.origin + ray.direction * (distance - step);
             }
         } else {
-            if(grid.point_intersection(ray.origin + ray.direction * (distance - step))) {
+            if(cache[(cacheIndex - 1) % cacheSize].point_intersection(ray.origin + ray.direction * (distance - step))) {
                 return ray.origin + ray.direction * (distance - step);
             }
         }
     }
-}
-
-void Editor::extrude(glm::vec3 position, glm::vec3 normal) {
-    
 }
 
 void Editor::flood_fill(glm::vec3 position, glm::vec3 normal) {
@@ -239,8 +256,8 @@ void Editor::flood_fill(glm::vec3 position, glm::vec3 normal) {
     }
     
     glm::vec3 forward = glm::cross(right, normal);
-    if(grid.get(position + normal) <= 0) {
-        grid.set(position, colorSelected);
+    if(cache[cacheIndex].get(position + normal) <= 0) {
+        cache[cacheIndex].set(position, colorSelected);
 
         flood_fill(position + right, normal);
         flood_fill(position + forward, normal);
@@ -249,6 +266,18 @@ void Editor::flood_fill(glm::vec3 position, glm::vec3 normal) {
     }
 
     return;
+}
+
+void Editor::solve_input() {
+    if(window.is_key_down(GLFW_KEY_LEFT_CONTROL) && window.is_key_down(GLFW_KEY_Z)) {
+        if(undoState == STATE_NONE) {
+            undoState = STATE_PRESS;
+            undo();
+        }
+    } else {
+        if(undoState == STATE_PRESS)
+            undoState = STATE_NONE;
+    }
 }
 
 void Editor::solve_rectangle(glm::vec3 start, glm::vec3 end) {
@@ -261,14 +290,15 @@ void Editor::solve_rectangle(glm::vec3 start, glm::vec3 end) {
             for(float x = std::floor(start.x); x <= std::floor(end.x); x++) {
                 for(float y = std::floor(start.y); y <= std::floor(end.y); y++) {
                     for(float z = std::floor(start.z); z <= std::floor(end.z); z++) {
-                        grid.set(glm::vec3(x, y, z), colorSelected);
+                        if(cache[cacheIndex].set(glm::vec3(x, y, z), colorSelected))
+                            edit = true;
                     }
                 }
             }
             break;
         } case RECTANGLE_LINE: {
             glm::vec3 direction = end - start;
-            float length = direction.length();
+            float length = glm::length(direction);
             direction = glm::normalize(direction);
 
             float distance = 0.0f;
@@ -277,7 +307,8 @@ void Editor::solve_rectangle(glm::vec3 start, glm::vec3 end) {
             while(distance < length) {
                 distance += step;
 
-                grid.set(start + direction * distance, colorSelected);
+                if(cache[cacheIndex].set(start + direction * distance, colorSelected))
+                    edit = true;
             }
             break;
         }
@@ -294,7 +325,7 @@ void Editor::solve_mouse() {
 }
 
 void Editor::update_grid() {
-    TextureLib::update_texture_3d(gridTexture, 32, 32, 32, grid.grid);
+    TextureLib::update_texture_3d(gridTexture, 32, 32, 32, cache[cacheIndex].grid);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, gridTexture);
     ShaderLib::uniform_int32(render.shader, "grid", 0);
@@ -305,6 +336,41 @@ void Editor::update_palette() {
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_1D, paletteTexture);
     ShaderLib::uniform_int32(render.shader, "palette", 1);
+}
+
+void Editor::update_cache() {
+    ERROR("New cache");
+    if(undoCount > 0) {
+        ERROR("Resetting cache");
+        undoCount = 0;
+        usedCache = 0;
+    }
+
+    uint32_t original = cacheIndex;
+
+    cacheIndex++;
+    cacheIndex %= cacheSize;
+    memcpy(cache[cacheIndex].grid, cache[original].grid, std::pow(32, 3));
+
+    render.grid = &cache[cacheIndex];
+
+    if(usedCache < cacheSize)
+        usedCache++;
+
+    edit = false;
+}
+
+void Editor::undo() {
+    if(undoCount < usedCache) {
+        undoCount++;
+        cacheIndex--;
+        cacheIndex %= cacheSize;
+        render.grid = &cache[cacheIndex];
+    }
+}
+
+void Editor::redo() {
+
 }
 
 void Editor::solve_camera() {
