@@ -34,15 +34,14 @@ void Editor::init() {
 
     panSpeed = 10.0f;
     rotationSpeed = 100.0f;
-    origin = glm::vec3(0.0f);
-    camDirection = glm::vec3(0.0f, 0.0f, 1.0f);
-    camPosition = glm::vec3(0.0f, 0.0f, -10.0f);
-    camOrigin = glm::vec3(0.0f, 0.0f, 0.0f);
-    camOffset = 10.0f;
-    camera->view = glm::translate(glm::mat4(1.0f), camPosition);
+    camDirection = glm::normalize(glm::vec3(1.0f, -1.0f, 1.0f));
+
+    camOrigin = glm::vec3(grid.size / 2.0f, 0.0f, grid.size / 2.0f);
+    camOffset = 20.0f;
+
     placeDelay = 0.1f;
     rectangle = 0;
-    //camera->view = glm::lookAt(camPosition, camPosition + camDirection, glm::vec3(0.0f, 1.0f, 0.0f));
+    camera->view = glm::lookAt(camOrigin + (-camDirection * camOffset), camOrigin, glm::vec3(0.0f, 1.0f, 0.0f));
 
     rotationMode = 0;
     extrudeSelect = new glm::vec3(grid.size * grid.size);
@@ -148,13 +147,13 @@ void Editor::solve_voxel_placing() {
         if(!drawing && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
             drawing = true;
 
-            lineStart = ray_cast(ray);
+            shapeStart = ray_cast(ray);
         } else if(drawing && !window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
             drawing = false;
 
-            lineEnd = ray_cast(ray);
+            shapeEnd = ray_cast(ray);
 
-            solve_rectangle(lineStart, lineEnd);
+            solve_rectangle(shapeStart, shapeEnd);
             update_grid();
         }
     } else {
@@ -163,81 +162,6 @@ void Editor::solve_voxel_placing() {
             grid.set(ray_cast(ray), colorSelected);
             update_grid();
         } 
-    }
-
-    /* if(!drawing && !window.is_key_down(GLFW_KEY_E) && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1) && window.is_key_down(GLFW_KEY_LEFT_SHIFT)) {
-        drawing = true;
-        float distance = 0.0f;
-
-        while(distance < 100.0f) {
-            distance += step;
-            glm::vec3 point = (camOrigin + (-camDirection * camOffset)) + ray.direction * distance;
-
-            if(grid.point_intersection(point)) {
-                if(grid.get(point) > 0) {
-                    lineStart = (camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step);
-                    break;
-                }
-            } else {
-                if(grid.point_intersection((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step))) {
-                    lineStart = (camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step);
-                    break;
-                }
-            }
-        }
-    } else if(drawing && !window.is_key_down(GLFW_KEY_E) && !window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
-        drawing = false;
-        float distance = 0.0f;
-        step = 0.01f;
-        while(distance < 100.0f) {
-            distance += step;
-            glm::vec3 point = (camOrigin + (-camDirection * camOffset)) + ray.direction * distance;
-
-            if(grid.point_intersection(point)) {
-                if(grid.get(point) > 0) {
-                    lineEnd = (camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step);
-                    break;
-                }
-            } else {
-                if(grid.point_intersection((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step))) {
-                    lineEnd = (camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step);
-                    break;
-                }
-            }
-        }
-
-        solve_rectangle(lineStart, lineEnd);
-    }
-
-    else if(!drawing && !window.is_key_down(GLFW_KEY_E) && glfwGetTime() > lastPlace + placeDelay) {
-        float distance = 0.0f;
-        while(distance < 100.0f) {
-            distance += step;
-            glm::vec3 point = (camOrigin + (-camDirection * camOffset)) + ray.direction * distance;
-
-            if(grid.point_intersection(point)) {
-                if(grid.get(point) > 0) {
-                    if(window.is_key_down(GLFW_KEY_LEFT_CONTROL) && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
-                        grid.set(point, 0);
-                        lastPlace = glfwGetTime();
-                    } else if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
-                        grid.set((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step), colorSelected);
-                        lastPlace = glfwGetTime();
-                    }
-                    update_grid();
-                    break;
-                }
-            } else {
-                if(grid.point_intersection((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step))) {
-                    if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1) && !window.is_key_down(GLFW_KEY_LEFT_CONTROL)) {
-                        grid.set((camOrigin + (-camDirection * camOffset)) + ray.direction * (distance - step), colorSelected);
-                        lastPlace = glfwGetTime();
-                    }
-                    update_grid();
-                    break;
-                }
-            }
-        }
     }
 
     if(window.is_key_down(GLFW_KEY_E)) {
@@ -268,7 +192,7 @@ void Editor::solve_voxel_placing() {
                 break;
             }
         }
-    } */
+    }
 }
 
 glm::vec3 Editor::ray_cast(Ray ray) {
@@ -330,12 +254,9 @@ void Editor::flood_fill(glm::vec3 position, glm::vec3 normal) {
 void Editor::solve_rectangle(glm::vec3 start, glm::vec3 end) {
     switch(rectangle) {
         case RECTANGLE_CUBE: {
-            if(start.x > end.x)
-                std::swap(start.x, end.x);
-            if(start.y > end.y)
-                std::swap(start.y, end.y);
-            if(start.z > end.z)
-                std::swap(start.z, end.z);
+            if(start.x > end.x) { std::swap(start.x, end.x); }
+            if(start.y > end.y) { std::swap(start.y, end.y); }
+            if(start.z > end.z) { std::swap(start.z, end.z); }
 
             for(float x = std::floor(start.x); x <= std::floor(end.x); x++) {
                 for(float y = std::floor(start.y); y <= std::floor(end.y); y++) {
@@ -343,6 +264,20 @@ void Editor::solve_rectangle(glm::vec3 start, glm::vec3 end) {
                         grid.set(glm::vec3(x, y, z), colorSelected);
                     }
                 }
+            }
+            break;
+        } case RECTANGLE_LINE: {
+            glm::vec3 direction = end - start;
+            float length = direction.length();
+            direction = glm::normalize(direction);
+
+            float distance = 0.0f;
+            float step = 0.1f;
+
+            while(distance < length) {
+                distance += step;
+
+                grid.set(start + direction * distance, colorSelected);
             }
             break;
         }

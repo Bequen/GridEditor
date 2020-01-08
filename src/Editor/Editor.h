@@ -25,6 +25,7 @@ class Editor {
 
         Window window;
         Grid<int8_t> grid = Grid<int8_t>(32);
+
         RGB32* palette;
         uint32_t colorSelected;
         uint32_t colorCache;
@@ -34,13 +35,7 @@ class Editor {
 
         RenderingPipeline render;
 
-        glm::vec3 origin;
-        float distance = 0;
-        glm::vec3 rotation;
-
         glm::vec3 camDirection;
-        glm::vec3 camPosition;
-        
         float camOffset;
         glm::vec3 camOrigin;
 
@@ -54,17 +49,15 @@ class Editor {
         float panSpeed = 10.0f;
 
         uint32_t rotationMode = 0;
-
         uint32_t state = 0;
-
         double* deltaTime;
 
         uint32_t gridTexture;
         uint32_t paletteTexture;
 
         uint32_t drawing;
-        glm::vec3 lineStart;
-        glm::vec3 lineEnd;
+        glm::vec3 shapeStart;
+        glm::vec3 shapeEnd;
 
         uint32_t rectangle;
         glm::vec3* extrudeSelect;
