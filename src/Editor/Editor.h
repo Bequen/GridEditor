@@ -70,6 +70,7 @@ class Editor {
 
         uint32_t undoState;
         uint32_t undoCount;
+        uint32_t redoState;
 
         void init();
         void update();
@@ -95,6 +96,7 @@ class Editor {
         void draw_ui();
         void draw_palette();
         void draw_toolbar();
+        void draw_scene_setup();
 
         void resize_callback(int32_t width, int32_t height);
 };

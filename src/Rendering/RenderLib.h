@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Quad.h"
 #include <cstdint>
 #include <glm/glm.hpp>
 
@@ -8,6 +9,10 @@ namespace RenderLib {
     void update();
 
     uint32_t create_voxel();
+    uint32_t create_quad_top();
+    uint32_t create_quad_side();
+    uint32_t create_quad_forward();
+    
     void bind_vertex_array(uint32_t VAO);
     void draw_triangles(uint32_t triangles);
 
@@ -22,4 +27,6 @@ namespace RenderLib {
     void draw_voxel(uint32_t program, float x, float y, float z);
     void draw_voxel(uint32_t program, glm::vec3 position);
     void draw_voxel(uint32_t program, glm::vec3 position, glm::vec3 scale);
+    void draw_quad_y(Quad quad);
+    void draw_quad_x(Quad quad);
 };

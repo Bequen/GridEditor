@@ -139,12 +139,67 @@ uint32_t RenderLib::create_voxel() {
     return result;
 }
 
+uint32_t RenderLib::create_quad_top() {
+    uint32_t result;
+    glGenVertexArrays(1, &result);
+    glBindVertexArray(result);
+    
+    uint32_t VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    #pragma region DATA
+    float vertices[] = { 
+        0.0f,   1.0f,   0.0f,
+        0.0f,   0.0f,   0.0f,
+        1.0f,   0.0f,   0.0f,
+        0.0f,   1.0f,   0.0f,
+        1.0f,   0.0f,   0.0f,
+        1.0f,   1.0f,   0.0f,
+
+        0.0f,   0.0f,   1.0f,
+        0.0f,   0.0f,   0.0f,
+        1.0f,   0.0f,   0.0f,
+        0.0f,   0.0f,   1.0f,
+        1.0f,   0.0f,   0.0f,
+        1.0f,   0.0f,   1.0f,
+    };
+
+    float normals[] = {
+        0.0f,   0.0f,   1.0f,
+        0.0f,   0.0f,   1.0f,
+        0.0f,   0.0f,   1.0f,
+        0.0f,   0.0f,   1.0f,
+        0.0f,   0.0f,   1.0f,
+        0.0f,   0.0f,   1.0f,
+
+        0.0f,   1.0f,   0.0f,
+        0.0f,   1.0f,   0.0f,
+        0.0f,   1.0f,   0.0f,
+        0.0f,   1.0f,   0.0f,
+        0.0f,   1.0f,   0.0f,
+        0.0f,   1.0f,   0.0f,
+    };
+    #pragma endregion
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices) + sizeof(normals), nullptr, GL_STATIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices), sizeof(normals), normals);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(sizeof(vertices)));
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
+    return result;
+}
+
 void RenderLib::bind_vertex_array(uint32_t VAO) {
     glBindVertexArray(VAO);
 }
 
 void RenderLib::draw_triangles(uint32_t triangles) {
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glDrawArrays(GL_TRIANGLES, 0, triangles);
 }
 
 uint32_t RenderLib::create_buffer_stream(uint32_t target, uint32_t size, void* data) {
@@ -193,6 +248,24 @@ void RenderLib::draw_voxel(uint32_t program, float x, float y, float z) {
     ShaderLib::uniform_mat4(program, "model", &model[0][0]);
 
     glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+void RenderLib::draw_quad_y(Quad quad) {
+    GLint program;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+
+    ShaderLib::uniform_vec3(program, "position", &quad.x);
+    ShaderLib::uniform_vec2(program, "scale", &quad.w);
+
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+} void RenderLib::draw_quad_x(Quad quad) {
+    GLint program;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+
+    ShaderLib::uniform_vec3(program, "position", &quad.x);
+    ShaderLib::uniform_vec2(program, "scale", &quad.w);
+
+    glDrawArrays(GL_TRIANGLES, 6, 6);
 }
 
 void RenderLib::culling(uint32_t mode) {

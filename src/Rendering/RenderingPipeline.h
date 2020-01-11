@@ -16,6 +16,11 @@ class RenderingPipeline {
         Grid<int8_t>* grid;
         uint32_t shader;
         uint32_t boxShader;
+        uint32_t skyShader;
+        glm::vec4 skyColor;
+
+        uint32_t topQuadVAO;
+        uint32_t quadProgram;
 
         void init(Grid<int8_t>* grid);
         void update();

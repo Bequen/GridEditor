@@ -34,7 +34,7 @@ void Editor::init() {
 
     RenderLib::buffer_binding_range(cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
 
-    camera->projection = glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 1000.0f);
+    camera->projection = glm::perspective(glm::radians(45.0f), 720.0f / 480.0f, 0.1f, 1000.0f);
     colorSelected = 0;
 
     drawing = false;
@@ -46,14 +46,14 @@ void Editor::init() {
 
     panSpeed = 10.0f;
     rotationSpeed = 100.0f;
-    camDirection = glm::normalize(glm::vec3(1.0f, -1.0f, 1.0f));
+    camDirection = glm::normalize(glm::vec3(1.0f, 1.0f, -1.0f));
 
-    camOrigin = glm::vec3(grid.size / 2.0f, 0.0f, grid.size / 2.0f);
+    camOrigin = glm::vec3(grid.size / 2.0f, grid.size / 2.0f, 0.0f);
     camOffset = 20.0f;
 
     placeDelay = 0.1f;
     rectangle = 0;
-    camera->view = glm::lookAt(camOrigin + (-camDirection * camOffset), camOrigin, glm::vec3(0.0f, 1.0f, 0.0f));
+    camera->view = glm::lookAt(camOrigin + (-camDirection * camOffset), camOrigin, glm::vec3(0.0f, 0.0f, 1.0f));
 
     extrudeSelect = new glm::vec3(grid.size * grid.size);
     extrudeIndex = 0;
@@ -81,6 +81,7 @@ void Editor::update() {
 void Editor::draw_ui() {
     draw_palette();
     draw_toolbar();
+    draw_scene_setup();
 }
 
 void Editor::draw_palette() {
@@ -134,6 +135,16 @@ void Editor::draw_toolbar() {
     ImGui::End();
 }
 
+void Editor::draw_scene_setup() {
+    ImGui::Begin("Scene Setup");
+
+    ImGui::BeginChild("Lighting");
+    ImGui::ColorPicker4("Sky Color", &render.skyColor.r);
+    ImGui::EndChild();
+
+    ImGui::End();
+}
+
 void Editor::terminate() {
 
 }
@@ -173,7 +184,6 @@ void Editor::solve_voxel_placing() {
         }
     } else {
         if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
-            ERROR("Placing " << ray_cast(ray).x << "|" << ray_cast(ray).y << "|" << ray_cast(ray).z);
             if(cache[cacheIndex].point_intersection(ray_cast(ray))) {
                 cache[cacheIndex].set(ray_cast(ray), colorSelected);
                 edit = true;
@@ -269,14 +279,22 @@ void Editor::flood_fill(glm::vec3 position, glm::vec3 normal) {
 }
 
 void Editor::solve_input() {
-    if(window.is_key_down(GLFW_KEY_LEFT_CONTROL) && window.is_key_down(GLFW_KEY_Z)) {
+    if(window.is_key_down(GLFW_KEY_LEFT_CONTROL) && window.is_key_down(GLFW_KEY_Z) && !window.is_key_down(GLFW_KEY_LEFT_SHIFT)) {
         if(undoState == STATE_NONE) {
             undoState = STATE_PRESS;
             undo();
         }
     } else {
-        if(undoState == STATE_PRESS)
-            undoState = STATE_NONE;
+        undoState = STATE_NONE;
+    }
+
+    if(window.is_key_down(GLFW_KEY_LEFT_CONTROL) && window.is_key_down(GLFW_KEY_LEFT_SHIFT) && window.is_key_down(GLFW_KEY_Z)) {
+        if(redoState == STATE_NONE) {
+            redoState = STATE_PRESS;
+            redo();
+        }
+    } else {
+        redoState = STATE_NONE;
     }
 }
 
@@ -370,7 +388,12 @@ void Editor::undo() {
 }
 
 void Editor::redo() {
-
+    if(undoCount > 0) {
+        undoCount--;
+        cacheIndex++;
+        cacheIndex %= cacheSize;
+        render.grid = &cache[cacheIndex];
+    }
 }
 
 void Editor::solve_camera() {
@@ -385,11 +408,11 @@ void Editor::solve_camera() {
     } 
     // Camera Rotation
     else if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_3)) {
-        camDirection = glm::rotate(camDirection, (float)mouseDeltaX * rotationSpeed * (float)*deltaTime, glm::vec3(0.0f, 1.0f, 0.0f));
+        camDirection = glm::rotate(camDirection, (float)mouseDeltaX * rotationSpeed * (float)*deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
         camDirection = glm::rotate(camDirection, (float)mouseDeltaY * rotationSpeed * (float)*deltaTime, -glm::normalize(glm::vec3(camera->view[0][0], camera->view[1][0], camera->view[2][0])));
     }
 
-    camera->view = glm::lookAt(camOrigin + (-camDirection * camOffset), camOrigin, glm::vec3(0.0f, 1.0f, 0.0f));
+    camera->view = glm::lookAt(camOrigin + (-camDirection * camOffset), camOrigin, glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
 void Editor::resize_callback(int32_t width, int32_t height) {
