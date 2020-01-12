@@ -2,6 +2,7 @@
 
 #include <glad/glad.h>
 #include <iostream>
+#include <avg/Debug.h>
 #include "ShaderLib.h"
 
 void GLAPIENTRY
@@ -163,6 +164,36 @@ uint32_t RenderLib::create_quad_top() {
         0.0f,   0.0f,   1.0f,
         1.0f,   0.0f,   0.0f,
         1.0f,   0.0f,   1.0f,
+
+        0.0f,   0.0f,   1.0f,
+        0.0f,   0.0f,   0.0f,
+        0.0f,   1.0f,   0.0f,
+        0.0f,   0.0f,   1.0f,
+        0.0f,   1.0f,   0.0f,
+        0.0f,   1.0f,   1.0f,
+
+
+        // Opposite direction
+        0.0f,   1.0f,   0.0f,
+        0.0f,   0.0f,   0.0f,
+        1.0f,   0.0f,   0.0f,
+        0.0f,   1.0f,   0.0f,
+        1.0f,   0.0f,   0.0f,
+        1.0f,   1.0f,   0.0f,
+
+        0.0f,   0.0f,   1.0f,
+        0.0f,   0.0f,   0.0f,
+        1.0f,   0.0f,   0.0f,
+        0.0f,   0.0f,   1.0f,
+        1.0f,   0.0f,   0.0f,
+        1.0f,   0.0f,   1.0f,
+
+        0.0f,   0.0f,   1.0f,
+        0.0f,   0.0f,   0.0f,
+        0.0f,   1.0f,   0.0f,
+        0.0f,   0.0f,   1.0f,
+        0.0f,   1.0f,   0.0f,
+        0.0f,   1.0f,   1.0f,
     };
 
     float normals[] = {
@@ -179,6 +210,36 @@ uint32_t RenderLib::create_quad_top() {
         0.0f,   1.0f,   0.0f,
         0.0f,   1.0f,   0.0f,
         0.0f,   1.0f,   0.0f,
+
+        1.0f,   0.0f,   0.0f,
+        1.0f,   0.0f,   0.0f,
+        1.0f,   0.0f,   0.0f,
+        1.0f,   0.0f,   0.0f,
+        1.0f,   0.0f,   0.0f,
+        1.0f,   0.0f,   0.0f,
+
+
+
+        0.0f,   0.0f,   -1.0f,
+        0.0f,   0.0f,   -1.0f,
+        0.0f,   0.0f,   -1.0f,
+        0.0f,   0.0f,   -1.0f,
+        0.0f,   0.0f,   -1.0f,
+        0.0f,   0.0f,   -1.0f,
+
+        0.0f,   -1.0f,   0.0f,
+        0.0f,   -1.0f,   0.0f,
+        0.0f,   -1.0f,   0.0f,
+        0.0f,   -1.0f,   0.0f,
+        0.0f,   -1.0f,   0.0f,
+        0.0f,   -1.0f,   0.0f,
+
+        -1.0f,   0.0f,   0.0f,
+        -1.0f,   0.0f,   0.0f,
+        -1.0f,   0.0f,   0.0f,
+        -1.0f,   0.0f,   0.0f,
+        -1.0f,   0.0f,   0.0f,
+        -1.0f,   0.0f,   0.0f,
     };
     #pragma endregion
 
@@ -250,22 +311,57 @@ void RenderLib::draw_voxel(uint32_t program, float x, float y, float z) {
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
-void RenderLib::draw_quad_y(Quad quad) {
+
+void RenderLib::draw_quad_z(Quad quad, uint32_t negative) {
     GLint program;
     glGetIntegerv(GL_CURRENT_PROGRAM, &program);
 
     ShaderLib::uniform_vec3(program, "position", &quad.x);
-    ShaderLib::uniform_vec2(program, "scale", &quad.w);
+/*     quad.d = quad.h;
+    quad.h = quad.z + 1.0f; */
+    quad.h = quad.z + 1.0f;
+    ShaderLib::uniform_vec3(program, "scale", &quad.w);
 
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-} void RenderLib::draw_quad_x(Quad quad) {
+    glDrawArrays(GL_TRIANGLES, 0 + negative * 18, 6);
+} void RenderLib::draw_quad_y(Quad quad, uint32_t negative) {
     GLint program;
     glGetIntegerv(GL_CURRENT_PROGRAM, &program);
 
-    ShaderLib::uniform_vec3(program, "position", &quad.x);
-    ShaderLib::uniform_vec2(program, "scale", &quad.w);
+    float x = quad.x;
+    float y = quad.y;
+    float z = quad.z;
 
-    glDrawArrays(GL_TRIANGLES, 6, 6);
+    quad.x = x;
+    quad.y = z;
+    quad.z = y;
+    quad.h = quad.d;
+    quad.d = quad.y + 1.0f;
+    ShaderLib::uniform_vec3(program, "position", &quad.x);
+
+    ShaderLib::uniform_vec3(program, "scale", &quad.w);
+
+    glDrawArrays(GL_TRIANGLES, 6 + negative * 18, 6);
+} void RenderLib::draw_quad_x(Quad quad, uint32_t negative) {
+    GLint program;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+
+    quad.h = quad.d;
+    quad.d = quad.w;
+    quad.w = quad.x + 1.0f;
+    float x = quad.x;
+    float y = quad.y;
+    float z = quad.z;
+
+    quad.x = z;
+    quad.y = x;
+    quad.z = y;
+
+    ERROR(quad.w << "|" << quad.d << "|" << quad.h << ":" << quad.x << "|" << quad.y << "|" << quad.z);
+
+    ShaderLib::uniform_vec3(program, "position", &quad.x);
+    ShaderLib::uniform_vec3(program, "scale", &quad.w);
+
+    glDrawArrays(GL_TRIANGLES, 12 + negative * 18, 6);
 }
 
 void RenderLib::culling(uint32_t mode) {

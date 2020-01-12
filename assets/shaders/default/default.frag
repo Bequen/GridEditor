@@ -13,7 +13,7 @@ uniform sampler3D grid;
 uniform sampler1D palette;
 
 void main() {
-    vec4 lightDir = normalize(vec4(1.0, 10.0, 1.0, 1.0));
+    vec4 lightDir = normalize(vec4(1.0, 1.0, 10.0, 1.0));
     //int value = int(texelFetch(grid, ivec3(pos.x, pos.y, pos.z), 0).r * 255.0);
 
     //fragColor = vec4(texelFetch(palette, value, 0).rgb * dot(vec3(lightDir), normal), 1.0);

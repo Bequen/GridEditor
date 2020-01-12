@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "System/Grid.h"
+#include "Quad.h"
 
 class RenderingPipeline {
     private:
@@ -25,4 +26,7 @@ class RenderingPipeline {
         void init(Grid<int8_t>* grid);
         void update();
         void terminate();
+
+        void solve_greedy_meshing(Quad**& quads, uint32_t*& counts);
+        void greedy_meshing();
 };

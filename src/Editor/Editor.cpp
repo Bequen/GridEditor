@@ -46,7 +46,7 @@ void Editor::init() {
 
     panSpeed = 10.0f;
     rotationSpeed = 100.0f;
-    camDirection = glm::normalize(glm::vec3(1.0f, 1.0f, -1.0f));
+    camDirection = glm::normalize(glm::vec3(1.0f, 0.0f, -1.0f));
 
     camOrigin = glm::vec3(grid.size / 2.0f, grid.size / 2.0f, 0.0f);
     camOffset = 20.0f;

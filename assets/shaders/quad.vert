@@ -9,15 +9,20 @@ layout(binding = 0, std140) uniform Camera {
 };
 
 uniform vec3 position;
-uniform vec2 scale;
+uniform vec3 scale;
 
 out vec3 normal;
 out vec4 color;
 
 void main() {
     normal = vNormal;
-    color = vec4(1.0, 0.0, 0.0, 1.0);
+    if(scale.x > 0 && scale.y > 0)
+        color = vec4(1.0, 0.0, 0.0, 1.0);
+    else if(scale.x > 0 && scale.y <= 0)
+        color = vec4(0.0, 1.0, 0.0, 1.0);
+    else if(scale.x <= 0 && scale.y > 0)
+        color = vec4(0.0, 0.0, 1.0, 1.0);
 
-
-    gl_Position = projection * view * vec4(vPos * vec3(scale.x - position.x, 1.0, scale.y) + position, 1.0);
+    vec3 quadScale = vec3(scale.x - position.x, scale.y - position.y, scale.z - position.z);
+    gl_Position = projection * view * vec4(vPos * quadScale + position + vec3(max(normal.x, 0.0), max(normal.y, 0.0), max(normal.z, 0.0)), 1.0);
 }

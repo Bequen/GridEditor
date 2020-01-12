@@ -27,6 +27,10 @@ namespace RenderLib {
     void draw_voxel(uint32_t program, float x, float y, float z);
     void draw_voxel(uint32_t program, glm::vec3 position);
     void draw_voxel(uint32_t program, glm::vec3 position, glm::vec3 scale);
-    void draw_quad_y(Quad quad);
-    void draw_quad_x(Quad quad);
+
+
+
+    void draw_quad_z(Quad quad, uint32_t negative);
+    void draw_quad_y(Quad quad, uint32_t negative);
+    void draw_quad_x(Quad quad, uint32_t negative);
 };
