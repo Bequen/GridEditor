@@ -39,14 +39,14 @@ void Editor::init() {
 
     drawing = false;
 
-    palette = new RGB32[256];
+    palette = (RGB32*)malloc(sizeof(RGB32) * 256);
     memset(palette, 0, sizeof(RGB32) * 256);
     gridTexture = TextureLib::create_texture_3d(32, 32, 32, grid.grid);
     paletteTexture = TextureLib::create_texture_1d(256, GL_RGB, GL_RGB, palette);
 
     panSpeed = 10.0f;
     rotationSpeed = 100.0f;
-    camDirection = glm::normalize(glm::vec3(1.0f, 0.0f, -1.0f));
+    camDirection = glm::normalize(glm::vec3(0.0f, 1.0f, -1.0f));
 
     camOrigin = glm::vec3(grid.size / 2.0f, grid.size / 2.0f, 0.0f);
     camOffset = 20.0f;
@@ -88,6 +88,9 @@ void Editor::draw_palette() {
     ImGui::Begin("Pallette", nullptr, ImGuiWindowFlags_NoMove);
 
     ImGui::BeginChild("PickerWindow", ImVec2(200.0f, 200.0f), true);
+    // Stupid workaround
+    if(colorSelected > 255)
+        colorSelected = 1;
     if(ImGui::ColorPicker3("picker", &palette[colorSelected].r, ImGuiColorEditFlags_PickerHueWheel))
         update_palette();
     ImGui::EndChild();

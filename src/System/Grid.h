@@ -51,7 +51,12 @@ struct Grid {
     T get(uint32_t index) {
         return grid[index];
     } T get(uint32_t x, uint32_t y, uint32_t z) {
-        return grid[x + y * size + z * (size * size)];
+        if(x >= 0 && x < size &&
+            y >= 0 && y < size &&
+            z >= 0 && z < size)
+            return grid[x + y * size + z * (size * size)];
+        else
+            return -1;
     } int32_t get(glm::vec3 position) {
         if(position.x >= 0.0f && position.x < size &&
             position.y >= 0.0f && position.y < size &&

@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include "System/ContentPipeline.h"
 #include <avg/Debug.h>
+#include <csignal>
 
 #include <iostream>
 
@@ -47,7 +48,6 @@ uint32_t ShaderLib::program_create(char* name) {
             glDeleteShader(fragment);
 
             delete [] info;
-
             return FAILED_LINKING_PROGRAM;
         }
     #endif

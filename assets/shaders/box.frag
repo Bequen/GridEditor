@@ -14,8 +14,8 @@ vec2 brickTile(vec2 _st, float _zoom){
 
 float box(vec2 _st, vec2 _size){
     _size = _size * 0.05;
-    vec2 uv = smoothstep(_size, _size + vec2(1e-2), _st);
-    uv *= smoothstep(_size, _size+vec2(1e-2), vec2(1.0)-_st);
+    vec2 uv = smoothstep(_size, _size + vec2(1e-1), _st);
+    uv *= smoothstep(_size, _size+vec2(1e-1), vec2(1.0)-_st);
     return uv.x * uv.y;
 }
 

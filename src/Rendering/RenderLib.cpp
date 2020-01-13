@@ -312,14 +312,36 @@ void RenderLib::draw_voxel(uint32_t program, float x, float y, float z) {
 }
 
 
+glm::vec3 RenderLib::get_adjacent_voxel(uint32_t dir, float x, float y, float z, float normal) {
+    glm::vec3 pos[3] = { {x, y, z + normal}, {x, z + normal, y}, {z + normal, x, y} };
+    return pos[dir];
+}
+
+glm::vec3 RenderLib::get_voxel(uint32_t dir, float x, float y, float z) {
+    glm::vec3 pos[3] = { {x, y, z}, {x, z, y}, {z, x, y} };
+    return pos[dir];
+}
+
+void RenderLib::draw_quad(Quad quad, uint32_t dir, uint32_t negative) {
+    switch(dir) {
+        case DIR_X:
+            draw_quad_x(quad, negative);
+            break;
+        case DIR_Y:
+            draw_quad_y(quad, negative);
+            break;
+        case DIR_Z:
+            draw_quad_z(quad, negative);
+            break;
+    }
+}
+
 void RenderLib::draw_quad_z(Quad quad, uint32_t negative) {
     GLint program;
     glGetIntegerv(GL_CURRENT_PROGRAM, &program);
 
-    ShaderLib::uniform_vec3(program, "position", &quad.x);
-/*     quad.d = quad.h;
-    quad.h = quad.z + 1.0f; */
     quad.h = quad.z + 1.0f;
+    ShaderLib::uniform_vec3(program, "position", &quad.x);
     ShaderLib::uniform_vec3(program, "scale", &quad.w);
 
     glDrawArrays(GL_TRIANGLES, 0 + negative * 18, 6);
@@ -355,8 +377,6 @@ void RenderLib::draw_quad_z(Quad quad, uint32_t negative) {
     quad.x = z;
     quad.y = x;
     quad.z = y;
-
-    ERROR(quad.w << "|" << quad.d << "|" << quad.h << ":" << quad.x << "|" << quad.y << "|" << quad.z);
 
     ShaderLib::uniform_vec3(program, "position", &quad.x);
     ShaderLib::uniform_vec3(program, "scale", &quad.w);
