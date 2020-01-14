@@ -59,16 +59,17 @@ void Editor::init() {
     extrudeIndex = 0;
     drawMode = DRAW_MODE_BRUSH;
 
-    lights = new Light[MAX_LIGHT_COUNT];
-
     Light sun;
     sun.ambient = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     sun.position = glm::vec4(0.0f, 0.0f, 0.0f, LIGHT_TYPE_DIRECTIONAL);
     sun.direction = glm::normalize(glm::vec4(1.0f, 0.8f, 2.0f, 1.0f));
-    lights[0] = sun;
-    lightCount = 0;
-    lightBuffer = RenderLib::create_buffer_dynamic(GL_UNIFORM_BUFFER, sizeof(Light) * MAX_LIGHT_COUNT, lights);
-    RenderLib::buffer_binding_range(lightBuffer, 2, 0, sizeof(Light) * MAX_LIGHT_COUNT);
+    lightBuffer.lights[0] = sun;
+    lightBuffer.lightCount = 0;
+    lightBuffer.skyColor = glm::vec4(1.0, 1.0, 1.0, 1.0);
+    lightBuffer.lightBuffer = RenderLib::create_buffer_dynamic(GL_UNIFORM_BUFFER, sizeof(Light) * MAX_LIGHT_COUNT + sizeof(glm::vec4), nullptr);
+    RenderLib::buffer_binding_range(lightBuffer.lightBuffer, 2, 0, sizeof(Light) * MAX_LIGHT_COUNT + sizeof(glm::vec4));
+    update_lights();
+    update_sky_color();
 
     update_palette();
     update_grid();
@@ -77,6 +78,7 @@ void Editor::init() {
 void Editor::update() {
     solve_mouse();
     solve_input();
+
 
     if(!ImGui::IsAnyWindowHovered() && !ImGui::IsAnyItemHovered()) {
         solve_camera();
@@ -153,7 +155,10 @@ void Editor::draw_scene_setup() {
     ImGui::Begin("Scene Setup");
 
     ImGui::BeginChild("Lighting");
-    ImGui::ColorPicker4("Sky Color", &render.skyColor.r);
+    if(ImGui::ColorPicker4("Sky Color", &lightBuffer.skyColor.r)) {
+        render.skyColor = lightBuffer.skyColor;
+        update_sky_color();
+    }
     ImGui::EndChild();
 
     ImGui::End();
@@ -362,6 +367,20 @@ void Editor::solve_mouse() {
 
     mouseLastX = cursor.x;
     mouseLastY = cursor.y;
+}
+
+void Editor::update_lights() {
+    void* pointer = RenderLib::map_buffer_range(lightBuffer.lightBuffer, GL_UNIFORM_BUFFER, 0, sizeof(Light) * MAX_LIGHT_COUNT);
+    memcpy(pointer, lightBuffer.lights, sizeof(Light) * MAX_LIGHT_COUNT);
+
+    RenderLib::unmap_buffer(GL_UNIFORM_BUFFER);
+}
+
+void Editor::update_sky_color() {
+    void* pointer = RenderLib::map_buffer_range(lightBuffer.lightBuffer, GL_UNIFORM_BUFFER, sizeof(Light) * MAX_LIGHT_COUNT, sizeof(glm::vec4));
+    memcpy(pointer, &lightBuffer.skyColor.x, sizeof(glm::vec4));
+
+    RenderLib::unmap_buffer(GL_UNIFORM_BUFFER);
 }
 
 void Editor::update_grid() {

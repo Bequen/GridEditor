@@ -287,6 +287,16 @@ uint32_t RenderLib::create_buffer_dynamic(uint32_t target, uint32_t size, void* 
     return result;
 }
 
+void* RenderLib::map_buffer_range(uint32_t buffer, uint32_t target, uint32_t offset, uint32_t size) {
+    glBindBuffer(target, buffer);
+    void* result = glMapBufferRange(target, offset, size, GL_MAP_WRITE_BIT);
+    return result;
+}
+
+void RenderLib::unmap_buffer(uint32_t target) {
+    glUnmapBuffer(target);
+}
+
 void* RenderLib::map_buffer_stream(uint32_t target, uint32_t buffer, uint32_t offset, uint32_t size) {
     glBindBuffer(GL_UNIFORM_BUFFER, buffer);
     void* pointer = glMapBufferRange(GL_UNIFORM_BUFFER, offset, size, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);

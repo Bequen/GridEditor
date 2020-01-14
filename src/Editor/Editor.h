@@ -6,6 +6,7 @@
 #include "Rendering/RenderingPipeline.h"
 #include "Color.h"
 #include "Ray.h"
+#include "Rendering/LightBuffer.h"
 #include "Rendering/Light.h"
 
 #define STATE_NONE          0x0000
@@ -77,9 +78,7 @@ class Editor {
         uint32_t undoCount;
         uint32_t redoState;
 
-        Light* lights;
-        uint32_t lightCount;
-        uint32_t lightBuffer;
+        LightBuffer lightBuffer;
 
         void init();
         void update();
@@ -99,6 +98,7 @@ class Editor {
         void update_palette();
         void update_cache();
         void update_lights();
+        void update_sky_color();
 
         void undo();
         void redo();

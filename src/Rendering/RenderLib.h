@@ -25,6 +25,9 @@ namespace RenderLib {
     void culling(uint32_t mode);
     void front_face(uint32_t face);
 
+    void* map_buffer_range(uint32_t buffer, uint32_t target, uint32_t offset, uint32_t size);
+    void unmap_buffer(uint32_t target);
+
     uint32_t create_buffer_stream(uint32_t target, uint32_t size, void* data);
     uint32_t create_buffer_dynamic(uint32_t target, uint32_t size, void* data);
 
