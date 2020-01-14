@@ -6,6 +6,7 @@
 #include "Rendering/RenderingPipeline.h"
 #include "Color.h"
 #include "Ray.h"
+#include "Rendering/Light.h"
 
 #define STATE_NONE          0x0000
 #define STATE_PRESS         0x0001
@@ -18,6 +19,8 @@
 
 #define DRAW_MODE_BRUSH 0x0000
 #define DRAW_MODE_SHAPE 0x0001
+
+#define MAX_LIGHT_COUNT 32
 
 class Editor {
     public:
@@ -66,11 +69,17 @@ class Editor {
         glm::vec3* extrudeSelect;
         uint32_t extrudeIndex;
 
+        uint32_t polygonMode;
+
         uint32_t drawMode;
 
         uint32_t undoState;
         uint32_t undoCount;
         uint32_t redoState;
+
+        Light* lights;
+        uint32_t lightCount;
+        uint32_t lightBuffer;
 
         void init();
         void update();
@@ -89,6 +98,7 @@ class Editor {
         void update_grid();
         void update_palette();
         void update_cache();
+        void update_lights();
 
         void undo();
         void redo();

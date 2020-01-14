@@ -19,6 +19,10 @@ MessageCallback( GLenum source,
             type, severity, message );
 }
 
+void RenderLib::polygon_mode(uint32_t mode) {
+    glPolygonMode(GL_FRONT_AND_BACK, mode);
+}
+
 void RenderLib::init() {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -269,6 +273,16 @@ uint32_t RenderLib::create_buffer_stream(uint32_t target, uint32_t size, void* d
     glGenBuffers(1, &result);
     glBindBuffer(GL_UNIFORM_BUFFER, result);
     glBufferStorage(GL_UNIFORM_BUFFER, size, data, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+
+    return result;
+}
+
+uint32_t RenderLib::create_buffer_dynamic(uint32_t target, uint32_t size, void* data) {
+    uint32_t result;
+
+    glGenBuffers(1, &result);
+    glBindBuffer(GL_UNIFORM_BUFFER, result);
+    glBufferStorage(GL_UNIFORM_BUFFER, size, data, GL_MAP_WRITE_BIT);
 
     return result;
 }

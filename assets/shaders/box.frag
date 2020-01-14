@@ -13,7 +13,7 @@ vec2 brickTile(vec2 _st, float _zoom){
 }
 
 float box(vec2 _st, vec2 _size){
-    _size = _size * 0.05;
+    _size = _size * 0.025;
     vec2 uv = smoothstep(_size, _size + vec2(1e-1), _st);
     uv *= smoothstep(_size, _size+vec2(1e-1), vec2(1.0)-_st);
     return uv.x * uv.y;
@@ -32,6 +32,6 @@ void main() {
 
     st = brickTile(st, 32.0);
 
-    color = vec4(0.0, 0.0, 0.0, 1.0 - box(st,vec2(0.9)));
+    color = vec4(0.0, 0.0, 0.0, 1.0 - box(st,vec2(0.5)));
     //color = vec4(1.0, 0.0, 0.0, 1.0);
 }

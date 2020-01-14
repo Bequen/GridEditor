@@ -59,6 +59,17 @@ void Editor::init() {
     extrudeIndex = 0;
     drawMode = DRAW_MODE_BRUSH;
 
+    lights = new Light[MAX_LIGHT_COUNT];
+
+    Light sun;
+    sun.ambient = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    sun.position = glm::vec4(0.0f, 0.0f, 0.0f, LIGHT_TYPE_DIRECTIONAL);
+    sun.direction = glm::normalize(glm::vec4(1.0f, 0.8f, 2.0f, 1.0f));
+    lights[0] = sun;
+    lightCount = 0;
+    lightBuffer = RenderLib::create_buffer_dynamic(GL_UNIFORM_BUFFER, sizeof(Light) * MAX_LIGHT_COUNT, lights);
+    RenderLib::buffer_binding_range(lightBuffer, 2, 0, sizeof(Light) * MAX_LIGHT_COUNT);
+
     update_palette();
     update_grid();
 }
@@ -282,22 +293,27 @@ void Editor::flood_fill(glm::vec3 position, glm::vec3 normal) {
 }
 
 void Editor::solve_input() {
-    if(window.is_key_down(GLFW_KEY_LEFT_CONTROL) && window.is_key_down(GLFW_KEY_Z) && !window.is_key_down(GLFW_KEY_LEFT_SHIFT)) {
-        if(undoState == STATE_NONE) {
-            undoState = STATE_PRESS;
-            undo();
-        }
+    if(window.is_key_down(GLFW_KEY_Z) && !window.is_key_down(GLFW_KEY_LEFT_SHIFT) && !window.is_key_down(GLFW_KEY_LEFT_CONTROL)) {
+        polygonMode = polygonMode == GL_FILL ? GL_LINE : GL_FILL;
+        RenderLib::polygon_mode(polygonMode);
     } else {
-        undoState = STATE_NONE;
-    }
+        if(window.is_key_down(GLFW_KEY_LEFT_CONTROL) && window.is_key_down(GLFW_KEY_Z) && !window.is_key_down(GLFW_KEY_LEFT_SHIFT)) {
+            if(undoState == STATE_NONE) {
+                undoState = STATE_PRESS;
+                undo();
+            }
+        } else {
+            undoState = STATE_NONE;
+        }
 
-    if(window.is_key_down(GLFW_KEY_LEFT_CONTROL) && window.is_key_down(GLFW_KEY_LEFT_SHIFT) && window.is_key_down(GLFW_KEY_Z)) {
-        if(redoState == STATE_NONE) {
-            redoState = STATE_PRESS;
-            redo();
+        if(window.is_key_down(GLFW_KEY_LEFT_CONTROL) && window.is_key_down(GLFW_KEY_LEFT_SHIFT) && window.is_key_down(GLFW_KEY_Z)) {
+            if(redoState == STATE_NONE) {
+                redoState = STATE_PRESS;
+                redo();
+            }
+        } else {
+            redoState = STATE_NONE;
         }
-    } else {
-        redoState = STATE_NONE;
     }
 }
 

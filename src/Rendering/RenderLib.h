@@ -12,6 +12,8 @@ namespace RenderLib {
     void init();
     void update();
 
+    void polygon_mode(uint32_t mode);
+
     uint32_t create_voxel();
     uint32_t create_quad_top();
     uint32_t create_quad_side();
@@ -24,6 +26,7 @@ namespace RenderLib {
     void front_face(uint32_t face);
 
     uint32_t create_buffer_stream(uint32_t target, uint32_t size, void* data);
+    uint32_t create_buffer_dynamic(uint32_t target, uint32_t size, void* data);
 
     void* map_buffer_stream(uint32_t target, uint32_t buffer, uint32_t offset, uint32_t size);
     void buffer_binding_range(uint32_t buffer, uint32_t binding, uint32_t offset, uint32_t size);

@@ -49,11 +49,10 @@ void RenderingPipeline::update() {
     } */
 
     // Greedy
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     RenderLib::bind_vertex_array(topQuadVAO);
     ShaderLib::program_use(quadProgram);
 
-    #pragma region Z AXIS 
+    #pragma region Greedy Meshing
     for(uint32_t z = 0; z < grid->size; z++) {
         QuadBuffer buffers[3] = { QuadBuffer(32), QuadBuffer(32), QuadBuffer(32) };
 
@@ -132,8 +131,6 @@ void RenderingPipeline::update() {
     }
     #pragma endregion
 
-    
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glEnable(GL_CULL_FACE);
     RenderLib::bind_vertex_array(voxel);
 
