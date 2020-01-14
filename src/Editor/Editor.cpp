@@ -293,10 +293,13 @@ void Editor::flood_fill(glm::vec3 position, glm::vec3 normal) {
 }
 
 void Editor::solve_input() {
-    if(window.is_key_down(GLFW_KEY_Z) && !window.is_key_down(GLFW_KEY_LEFT_SHIFT) && !window.is_key_down(GLFW_KEY_LEFT_CONTROL)) {
-        polygonMode = polygonMode == GL_FILL ? GL_LINE : GL_FILL;
-        RenderLib::polygon_mode(polygonMode);
+    if(!polygonMode && window.is_key_down(GLFW_KEY_Z) && !window.is_key_down(GLFW_KEY_LEFT_SHIFT) && !window.is_key_down(GLFW_KEY_LEFT_CONTROL)) {
+        render.polygonMode = 1 - render.polygonMode;
+        polygonMode = true;
     } else {
+        if(!window.is_key_down(GLFW_KEY_Z)) {
+            polygonMode = false;
+        }
         if(window.is_key_down(GLFW_KEY_LEFT_CONTROL) && window.is_key_down(GLFW_KEY_Z) && !window.is_key_down(GLFW_KEY_LEFT_SHIFT)) {
             if(undoState == STATE_NONE) {
                 undoState = STATE_PRESS;

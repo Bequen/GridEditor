@@ -27,6 +27,8 @@ void RenderingPipeline::init(Grid<int8_t>* grid) {
         raise(SIGINT);
     }
     ShaderLib::program_use(shader);
+
+    polygonMode = 0;
 }
 
 void RenderingPipeline::update() {
@@ -51,6 +53,9 @@ void RenderingPipeline::update() {
     // Greedy
     RenderLib::bind_vertex_array(topQuadVAO);
     ShaderLib::program_use(quadProgram);
+    if(polygonMode == 1) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
 
     #pragma region Greedy Meshing
     for(uint32_t z = 0; z < grid->size; z++) {
@@ -130,6 +135,10 @@ void RenderingPipeline::update() {
         }
     }
     #pragma endregion
+
+    if(polygonMode == 1) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
 
     glEnable(GL_CULL_FACE);
     RenderLib::bind_vertex_array(voxel);

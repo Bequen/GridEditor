@@ -22,6 +22,7 @@ class RenderingPipeline {
 
         uint32_t topQuadVAO;
         uint32_t quadProgram;
+        uint32_t polygonMode;
 
         void init(Grid<int8_t>* grid);
         void update();
