@@ -43,6 +43,9 @@ void RenderLib::update() {
     glClearColor(0.2, 0.0, 0.5, 1.0);
 }
 
+
+
+#pragma region CREATE PRIMITIVES
 uint32_t RenderLib::create_voxel() {
     uint32_t result;
     glGenVertexArrays(1, &result);
@@ -144,7 +147,7 @@ uint32_t RenderLib::create_voxel() {
     return result;
 }
 
-uint32_t RenderLib::create_quad_top() {
+uint32_t RenderLib::create_quad() {
     uint32_t result;
     glGenVertexArrays(1, &result);
     glBindVertexArray(result);
@@ -258,6 +261,7 @@ uint32_t RenderLib::create_quad_top() {
 
     return result;
 }
+#pragma endregion
 
 void RenderLib::bind_vertex_array(uint32_t VAO) {
     glBindVertexArray(VAO);
@@ -287,20 +291,27 @@ uint32_t RenderLib::create_buffer_dynamic(uint32_t target, uint32_t size, void* 
     return result;
 }
 
+
+
+#pragma region BUFFER MAPPING
 void* RenderLib::map_buffer_range(uint32_t buffer, uint32_t target, uint32_t offset, uint32_t size) {
     glBindBuffer(target, buffer);
     void* result = glMapBufferRange(target, offset, size, GL_MAP_WRITE_BIT);
     return result;
 }
 
+void* RenderLib::map_buffer_stream_range(uint32_t buffer, uint32_t target, uint32_t offset, uint32_t size) {
+    glBindBuffer(target, buffer);
+    void* result = glMapBufferRange(target, offset, size, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+    return result;
+}
+
 void RenderLib::unmap_buffer(uint32_t target) {
     glUnmapBuffer(target);
 }
+#pragma endregion
 
-void* RenderLib::map_buffer_stream(uint32_t target, uint32_t buffer, uint32_t offset, uint32_t size) {
-    glBindBuffer(GL_UNIFORM_BUFFER, buffer);
-    void* pointer = glMapBufferRange(GL_UNIFORM_BUFFER, offset, size, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
-}
+
 
 void RenderLib::buffer_binding_range(uint32_t buffer, uint32_t binding, uint32_t offset, uint32_t size) {
     glBindBufferRange(GL_UNIFORM_BUFFER, binding, buffer, offset, size);

@@ -1,11 +1,11 @@
 #include "ShaderLib.h"
 
-#include <glad/glad.h>
 #include "System/ContentPipeline.h"
-#include <avg/Debug.h>
-#include <csignal>
 
+#include <glad/glad.h>
+#include <csignal>
 #include <iostream>
+#include <avg/Debug.h>
 
 uint32_t ShaderLib::program_create(char* name) {
     MESSAGE("Creating program " << name);
@@ -15,8 +15,7 @@ uint32_t ShaderLib::program_create(char* name) {
     string256 path = ContentPipeline::asset_path("shaders/", name, ".vert");
     uint32_t vertex = shader_create(GL_VERTEX_SHADER, path.str);
 
-    if(vertex == FAILED_SHADER_COMPILATION)
-        return FAILED_SHADER_VERTEX;
+    assert_msg(vertex != FAILED_SHADER_COMPILATION, "Failed compiling the vertex shader");
 
     path.length = 0;
 
@@ -24,8 +23,7 @@ uint32_t ShaderLib::program_create(char* name) {
     path = ContentPipeline::asset_path("shaders/", name, ".frag");
     uint32_t fragment = shader_create(GL_FRAGMENT_SHADER, path.str);
 
-    if(fragment == FAILED_SHADER_COMPILATION)
-        return FAILED_SHADER_FRAGMENT;
+    assert_msg(fragment != FAILED_SHADER_COMPILATION, "Failed compiling the fragment shader");
 
     glAttachShader(program, vertex);
     glAttachShader(program, fragment);
@@ -48,7 +46,7 @@ uint32_t ShaderLib::program_create(char* name) {
             glDeleteShader(fragment);
 
             delete [] info;
-            return FAILED_LINKING_PROGRAM;
+            assert_msg(false, "Program linking error");
         }
     #endif
 

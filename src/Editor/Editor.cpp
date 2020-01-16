@@ -30,7 +30,7 @@ void Editor::init() {
     edit = false;
 
     uint32_t cameraBuffer = RenderLib::create_buffer_stream(0, sizeof(glm::mat4) * 2, nullptr);
-    camera = (Camera*)RenderLib::map_buffer_stream(0, cameraBuffer, 0, sizeof(glm::mat4) * 2);
+    camera = (Camera*)RenderLib::map_buffer_range(0, cameraBuffer, 0, sizeof(glm::mat4) * 2);
 
     RenderLib::buffer_binding_range(cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
 
@@ -78,7 +78,6 @@ void Editor::init() {
 void Editor::update() {
     solve_mouse();
     solve_input();
-
 
     if(!ImGui::IsAnyWindowHovered() && !ImGui::IsAnyItemHovered()) {
         solve_camera();
