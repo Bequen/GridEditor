@@ -23,12 +23,120 @@ void RenderingPipeline::init(Grid<int8_t>* grid) {
     boxShader = ShaderLib::program_create("box");
     skyShader = ShaderLib::program_create("skybox");
     quadProgram = shader;
-    if(quadProgram == FAILED_LINKING_PROGRAM) {
-        raise(SIGINT);
-    }
+
     ShaderLib::program_use(shader);
 
     polygonMode = 0;
+}
+
+void RenderingPipeline::draw_scene(Scene scene) {
+    assert_msg(scene.grids, "Scene Grids are not initialized");
+    assert_msg(scene.lights, "Scene Lights are not initialized");
+
+    glDepthMask(GL_FALSE);
+    ShaderLib::uniform_vec4(skyShader, "skyColor", &skyColor.x);
+    RenderLib::draw_voxel(skyShader, glm::vec3(-100.0f, -100.0f, -100.0f), glm::vec3(200.0f, 200.0f, 200.0f));
+    glDepthMask(GL_TRUE);
+
+    RenderLib::culling(GL_BACK);
+    glDisable(GL_CULL_FACE);
+
+    RenderLib::bind_vertex_array(topQuadVAO);
+    ShaderLib::program_use(quadProgram);
+    if(polygonMode == 1)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    for(uint32_t i = 0; i < scene.gridCount; i++) {
+        draw_grid(scene.grids[i].cache[scene.grids[i].cacheIndex]);
+    }
+
+    if(polygonMode == 1)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    glEnable(GL_CULL_FACE);
+    RenderLib::bind_vertex_array(voxel);
+
+    RenderLib::culling(GL_FRONT);
+    RenderLib::draw_voxel(boxShader, glm::vec3((float)0, (float)0, (float)0), glm::vec3(32, 32, 32));
+}
+
+void RenderingPipeline::draw_grid(Grid<int8_t> grid) {
+    for(uint32_t z = 0; z < grid.size; z++) {
+        QuadBuffer buffers[3] = { QuadBuffer(32), QuadBuffer(32), QuadBuffer(32) };
+
+        for(uint32_t y = 0; y < grid.size; y++) {
+            for(uint32_t p = 0; p < 3; p++) {
+                for(uint32_t i = 0; i < 2; i++) {
+                    buffers[p].streak[i] = false;
+                    buffers[p].quadIndex[i] = 0;
+
+                    buffers[p].quads[i][y] = new Quad[grid.size];
+                    buffers[p].counts[i][y] = 0;
+                }
+            }
+
+            float dirs[2] = {1.0f, -1.0f};
+
+            for(uint32_t x = 0; x < grid.size; x++) {
+                for(uint32_t p = 0; p < 3; p++) {
+                    for(uint32_t i = 0; i < 2; i++) {
+                        int32_t voxel = grid.get(RenderLib::get_voxel(p, x, y, z));
+                        int32_t adjacentVoxel = grid.get(RenderLib::get_adjacent_voxel(p, x, y, z, dirs[i]));
+                        if(!buffers[p].streak[i]) {
+                            if(voxel > 0 && adjacentVoxel <= 0) {
+                                buffers[p].streak[i] = true;
+                                buffers[p].quads[i][y][buffers[p].quadIndex[i]] = Quad(x, y, z, y + 1, voxel);
+                            }
+                        } else {
+                            if(voxel != buffers[p].quads[i][y][buffers[p].quadIndex[i]].brush || adjacentVoxel > 0) {
+                                buffers[p].streak[i] = false;
+
+                                buffers[p].quads[i][y][buffers[p].quadIndex[i]].w = x;
+                                buffers[p].counts[i][y]++;
+                                buffers[p].quadIndex[i]++;
+
+                                if(voxel > 0 && adjacentVoxel <= 0) { 
+                                    buffers[p].streak[i] = true;
+                                    buffers[p].quads[i][y][buffers[p].quadIndex[i]] = Quad(x, y, z, y + 1, voxel);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            for(uint32_t p = 0; p < 3; p++) {
+                for(uint32_t i = 0; i < 2; i++) {
+                    if(buffers[p].streak[i]) {
+                        buffers[p].streak[i] = false;
+
+                        buffers[p].quads[i][y][buffers[p].quadIndex[i]].w = grid.size;
+                        buffers[p].counts[i][y]++;
+                        buffers[p].quadIndex[i]++;
+                    }
+                }
+            }
+        }
+
+        for(uint32_t p = 0; p < 3; p++) {
+            for(uint32_t i = 0; i < 2; i++) {
+                solve_greedy_meshing(buffers[p].quads[i], buffers[p].counts[i], 32);
+            }
+        }
+
+        for(uint32_t p = 0; p < 3; p++) {
+            for(uint32_t i = 0; i < 2; i++) {
+                for(uint32_t y = 0; y < grid.size; y++) {
+                    for(uint32_t x = 0; x < buffers[p].counts[i][y]; x++) {
+                        if(buffers[p].quads[i][y][x].d > 0)
+                            RenderLib::draw_quad(buffers[p].quads[i][y][x], p, i);
+                    }
+                    delete [] buffers[p].quads[i][y];
+                }
+                delete [] buffers[p].counts[i];
+            }
+        }
+    }
 }
 
 void RenderingPipeline::update() {
@@ -116,7 +224,7 @@ void RenderingPipeline::update() {
 
         for(uint32_t p = 0; p < 3; p++) {
             for(uint32_t i = 0; i < 2; i++) {
-                solve_greedy_meshing(buffers[p].quads[i], buffers[p].counts[i]);
+                solve_greedy_meshing(buffers[p].quads[i], buffers[p].counts[i], 32);
             }
         }
 
@@ -145,8 +253,8 @@ void RenderingPipeline::update() {
     RenderLib::draw_voxel(boxShader, glm::vec3((float)0, (float)0, (float)0), glm::vec3(grid->size, grid->size, grid->size));
 }
 
-void RenderingPipeline::solve_greedy_meshing(Quad**& quads, uint32_t*& counts) {
-    for(uint32_t y = 1; y < grid->size; y++) {
+void RenderingPipeline::solve_greedy_meshing(Quad**& quads, uint32_t*& counts, uint32_t size) {
+    for(uint32_t y = 1; y < size; y++) {
         uint32_t x = 0;
         uint32_t merged = 0;
         for(; x < counts[y]; x++) {

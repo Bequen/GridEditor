@@ -5,6 +5,8 @@
 #include <glm/glm.hpp>
 #include <avg/Debug.h>
 
+#define CACHE_SIZE 128
+
 template<typename T>
 struct Grid {
     T* grid;
@@ -13,7 +15,7 @@ struct Grid {
     glm::vec3 position;
 
     Grid() :
-    size(0), grid(nullptr) {
+    size(0), grid(nullptr){
 
     }
 

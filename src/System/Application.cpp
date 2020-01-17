@@ -17,6 +17,12 @@ void Application::init() {
     editor.window = window;
     editor.init();
 
+    init_imgui();
+
+    MESSAGE("Application initialization has finished");
+}
+
+void Application::init_imgui() {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -25,8 +31,6 @@ void Application::init() {
 
     ImGui_ImplGlfw_InitForOpenGL(window.window, true);
     ImGui_ImplOpenGL3_Init("#version 440");
-
-    MESSAGE("Application initialization has finished");
 }
 
 void Application::update() {

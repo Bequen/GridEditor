@@ -7,6 +7,15 @@
 #include "Editor/Editor.h"
 
 /**
+ * @brief  Some global properties that might come in handy
+ * @note   
+ * @retval None
+ */
+struct {
+    double deltaTime;
+} GRID_GLOBAL;
+
+/**
  * desc :   Where all the things happens
  * info :   Application class takes responsibility for entire runtime, it manages the main loop, initialization and even cleanup
  */ 
@@ -22,6 +31,7 @@ class Application {
          * info :   This function starts the whole application
          */
         void init();
+        void init_imgui();
 
         /**
          * desc :   Main update loop is stored here

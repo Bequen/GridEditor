@@ -77,8 +77,7 @@ void Window::init(char* name, int32_t width, int32_t height) {
     this->width = width;
     this->height = height;
 
-    if (!glfwInit())
-        ERROR("Couldn't initialize GLFW");
+    assert_msg(glfwInit(), "Couldn't initialize GLFW");
 
     glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -97,11 +96,11 @@ void Window::init(char* name, int32_t width, int32_t height) {
         ERROR(message);
 
         glfwTerminate();
+        raise(SIGABRT);
     }
 
     glfwMakeContextCurrent(window);
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-        ERROR("Failed to initialize GLAD");
+    assert_msg(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress), "Failed to initialize GLAD");
 
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);

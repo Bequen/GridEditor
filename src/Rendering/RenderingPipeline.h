@@ -4,6 +4,7 @@
 
 #include "System/Grid.h"
 #include "Quad.h"
+#include "System/Scene.h"
 
 /**
  * @brief  Where all the rendering is done
@@ -45,6 +46,9 @@ class RenderingPipeline {
          */
         void update();
 
+        void draw_scene(Scene scene);
+        void draw_grid(Grid<int8_t> grid);
+
         /**
          * @brief  Terminates the rendering pipeline and cleans up after it
          * @note   
@@ -59,5 +63,5 @@ class RenderingPipeline {
          * @param  counts: Number of quads in rows
          * @retval None
          */
-        void solve_greedy_meshing(Quad**& quads, uint32_t*& counts);
+        void solve_greedy_meshing(Quad**& quads, uint32_t*& counts, uint32_t size);
 };

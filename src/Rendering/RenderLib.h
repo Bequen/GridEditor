@@ -8,6 +8,8 @@
 #define DIR_Y 0x0001
 #define DIR_X 0x0002
 
+#define UNIFORM_BUFFER      0x8A11
+#define ARRAY_BUFFER        0x8892
 
 /**
  * @brief  Simple namespace with usefull rendering and gpu-related functions

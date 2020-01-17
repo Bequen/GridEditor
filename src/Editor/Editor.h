@@ -8,6 +8,7 @@
 #include "Ray.h"
 #include "Rendering/LightBuffer.h"
 #include "Rendering/Light.h"
+#include "System/Scene.h"
 
 #define STATE_NONE          0x0000
 #define STATE_PRESS         0x0001
@@ -28,29 +29,24 @@ class Editor {
         Camera* camera;
 
         Window window;
-        Grid<int8_t> grid = Grid<int8_t>(32);
-        Grid<int8_t>* cache = new Grid<int8_t>[10];
-        uint32_t usedCache;
-        uint32_t cacheSize;
-        uint32_t cacheIndex;
+        //Grid<int8_t> grid = Grid<int8_t>(32);
+        //Grid<int8_t>* cache = new Grid<int8_t>[10];
+        //uint32_t usedCache;
+        //uint32_t cacheSize;
+        //uint32_t cacheIndex;
 
         bool edit;
+        uint32_t selectedGrid;
 
         RGB32* palette;
         uint32_t colorSelected;
         uint32_t colorCache;
 
-        uint32_t program;
-        uint32_t VAO;
-
         RenderingPipeline render;
 
         glm::vec3 camDirection;
-        float camOffset;
         glm::vec3 camOrigin;
-
-        float lastPlace;
-        float placeDelay;
+        float camOffset;
 
         double mouseDeltaX, mouseDeltaY;
         double mouseLastX, mouseLastY;
@@ -75,10 +71,11 @@ class Editor {
         uint32_t drawMode;
 
         uint32_t undoState;
-        uint32_t undoCount;
+        /* uint32_t undoCount; */
         uint32_t redoState;
 
         LightBuffer lightBuffer;
+        Scene scene;
 
         void init();
         void update();
