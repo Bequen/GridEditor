@@ -27,13 +27,7 @@
 class Editor {
     public:
         Camera* camera;
-
         Window window;
-        //Grid<int8_t> grid = Grid<int8_t>(32);
-        //Grid<int8_t>* cache = new Grid<int8_t>[10];
-        //uint32_t usedCache;
-        //uint32_t cacheSize;
-        //uint32_t cacheIndex;
 
         bool edit;
         uint32_t selectedGrid;
@@ -55,7 +49,6 @@ class Editor {
         float panSpeed = 10.0f;
         double* deltaTime;
 
-        //uint32_t gridTexture;
         uint32_t paletteTexture;
 
         uint32_t drawing;
@@ -71,10 +64,8 @@ class Editor {
         uint32_t drawMode;
 
         uint32_t undoState;
-        /* uint32_t undoCount; */
         uint32_t redoState;
 
-        //LightBuffer lightBuffer;
         Scene scene;
 
         void init();

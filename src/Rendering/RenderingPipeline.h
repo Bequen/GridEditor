@@ -19,8 +19,6 @@ class RenderingPipeline {
         void* camera;
 
     public:
-        //Grid<int8_t>* grid;
-
         uint32_t shader;
         uint32_t boxShader;
         uint32_t skyShader;
@@ -37,7 +35,7 @@ class RenderingPipeline {
          * @param  grid: The grid that will be rendered
          * @retval None
          */
-        void init(Grid<int8_t>* grid);
+        void init();
 
         /**
          * @brief  Update loop doing all the rendering

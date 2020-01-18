@@ -12,8 +12,7 @@
 #include "QuadBuffer.h"
 #include "Quad.h"
 
-void RenderingPipeline::init(Grid<int8_t>* grid) {
-    //this->grid = grid;
+void RenderingPipeline::init() {
     RenderLib::init();
     skyColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
 

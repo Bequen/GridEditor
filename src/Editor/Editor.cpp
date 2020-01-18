@@ -20,7 +20,7 @@ void Editor::init() {
     scene = Scene(1);
 
     scene.init();
-    render.init(nullptr);
+    render.init();
 
     uint32_t cameraBuffer = RenderLib::create_buffer_stream(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, nullptr);
     camera = (Camera*)RenderLib::map_buffer_range(cameraBuffer, GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4) * 2);
@@ -54,6 +54,8 @@ void Editor::init() {
 
     update_palette();
     update_grid();
+
+    update_cache();
 }
 
 void Editor::update() {
@@ -210,8 +212,8 @@ void Editor::solve_voxel_placing() {
         }
     } else {
         if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
-            if(scene.grids[selectedGrid].cache[scene.grids[selectedGrid].cacheIndex].point_intersection(ray_cast(ray))) {
-                scene.grids[selectedGrid].cache[scene.grids[selectedGrid].cacheIndex].set(ray_cast(ray), colorSelected);
+            if(scene.grids[selectedGrid].cache[(scene.grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE].point_intersection(ray_cast(ray))) {
+                scene.grids[selectedGrid].cache[(scene.grids[selectedGrid].cacheIndex) % CACHE_SIZE].set(ray_cast(ray), colorSelected);
                 edit = true;
             }
             update_grid();
@@ -260,7 +262,7 @@ glm::vec3 Editor::ray_cast(Ray ray) {
     Grid<int8_t> previousGrid = scene.grids[selectedGrid].cache[(scene.grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE];
     while(distance < 100.0f) {
         distance += step;
-        if(scene.grids[selectedGrid].cache[(scene.grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE].point_intersection(ray.origin + ray.direction * distance)) {
+        if(previousGrid.point_intersection(ray.origin + ray.direction * distance)) {
             if(previousGrid.get(ray.origin + ray.direction * distance) > 0) {
                 if(window.is_key_down(GLFW_KEY_LEFT_CONTROL))
                     return ray.origin + ray.direction * (distance);
@@ -297,7 +299,7 @@ void Editor::flood_fill(glm::vec3 position, glm::vec3 normal) {
     
     glm::vec3 forward = glm::cross(right, normal);
     if(grid->get(position + normal) <= 0) {
-        grid->set(position, colorSelected);
+        grid->set(position + normal, colorSelected);
 
         flood_fill(position + right, normal);
         flood_fill(position + forward, normal);
@@ -382,11 +384,6 @@ void Editor::solve_mouse() {
 }
 
 void Editor::update_lights() {
-    /* void* pointer = RenderLib::map_buffer_range(lightBuffer.lightBuffer, GL_UNIFORM_BUFFER, 0, sizeof(Light) * MAX_LIGHT_COUNT);
-    memcpy(pointer, lightBuffer.lights, sizeof(Light) * MAX_LIGHT_COUNT);
-
-    RenderLib::unmap_buffer(GL_UNIFORM_BUFFER); */
-
     void* pointer = RenderLib::map_buffer_range(scene.lightBuffer, GL_UNIFORM_BUFFER, 0, sizeof(Light) * scene.lightBufferSize);
     memcpy(pointer, scene.lights, sizeof(Light) * MAX_LIGHT_COUNT);
 
@@ -402,10 +399,6 @@ void Editor::update_sky_color() {
 
 void Editor::update_grid() {
     TextureLib::update_texture_3d(scene.grids[0].gridTexture, 32, 32, 32, scene.grids[0].cache[scene.grids[0].cacheIndex].grid);
-    /* glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_3D, scene.grids[0].gridTexture);
-    ShaderLib::uniform_int32(render.shader, "grid", 0); */
-
 }
 
 void Editor::update_palette() {
@@ -416,7 +409,7 @@ void Editor::update_palette() {
 }
 
 void Editor::update_cache() {
-    ERROR("New cache");
+    ERROR("New cache " << (scene.grids[selectedGrid].cacheIndex + 1));
     if(scene.grids[selectedGrid].undoCount > 0) {
         ERROR("Resetting cache");
         scene.grids[selectedGrid].undoCount = 0;
@@ -428,7 +421,7 @@ void Editor::update_cache() {
     scene.grids[selectedGrid].cacheIndex++;
     scene.grids[selectedGrid].cacheIndex %= CACHE_SIZE;
     memcpy(scene.grids[selectedGrid].cache[scene.grids[selectedGrid].cacheIndex].grid, scene.grids[selectedGrid].cache[original].grid, std::pow(32, 3));
-    ERROR("New index " << scene.grids[selectedGrid].cacheIndex)
+
     if(scene.grids[selectedGrid].usedCache < CACHE_SIZE)
         scene.grids[selectedGrid].usedCache++;
 
@@ -436,12 +429,13 @@ void Editor::update_cache() {
 }
 
 void Editor::undo() {
-    /* if(undoCount < usedCache) {
-        undoCount++;
-        cacheIndex--;
-        cacheIndex %= cacheSize;
-        render.grid = &cache[cacheIndex];
-    } */
+    if(scene.grids[selectedGrid].undoCount < scene.grids[selectedGrid].usedCache) { 
+        scene.grids[selectedGrid].undoCount++;
+        scene.grids[selectedGrid].cacheIndex--;
+        scene.grids[selectedGrid].cacheIndex %= CACHE_SIZE;
+        ERROR("Undo " << scene.grids[selectedGrid].cacheIndex);
+        update_grid();
+    }
 }
 
 void Editor::redo() {
