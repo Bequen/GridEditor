@@ -15,32 +15,19 @@
 
 void Editor::init() {
     MESSAGE("Starting the editor initialization");
+
     selectedGrid = 0;
     scene = Scene(1);
+
     scene.init();
-    //cacheSize = 32;
-
-    /* grid = Grid<int8_t>(32);
-    cacheIndex = 0;
-    cache = new Grid<int8_t>[cacheSize];
-    for(uint32_t i = 0; i < cacheSize; i++) {
-        cache[i].init(cacheSize);
-    } */
-
-    /* undoCount = 0;
-    usedCache = 0;
-    undoState = STATE_NONE;
-    edit = false; */
-    render.init(/* &cache[cacheIndex] */nullptr);
+    render.init(nullptr);
 
     uint32_t cameraBuffer = RenderLib::create_buffer_stream(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, nullptr);
     camera = (Camera*)RenderLib::map_buffer_range(cameraBuffer, GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4) * 2);
-
     RenderLib::buffer_binding_range(cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
-
     camera->projection = glm::perspective(glm::radians(45.0f), 720.0f / 480.0f, 0.1f, 1000.0f);
-    colorSelected = 0;
 
+    colorSelected = 0;
     drawing = false;
 
     palette = (RGB32*)malloc(sizeof(RGB32) * 256);
@@ -57,24 +44,13 @@ void Editor::init() {
     rectangle = 0;
     camera->view = glm::lookAt(camOrigin + (-camDirection * camOffset), camOrigin, glm::vec3(0.0f, 0.0f, 1.0f));
 
-    /* extrudeSelect = new glm::vec3(grid.size * grid.size);
-    extrudeIndex = 0; */
+    extrudeSelect = new glm::vec3(scene.grids[selectedGrid].cache[scene.grids[selectedGrid].cacheIndex].size * scene.grids[selectedGrid].cache[scene.grids[selectedGrid].cacheIndex].size);
+    extrudeIndex = 0;
     drawMode = DRAW_MODE_BRUSH;
 
-    /* Light sun;
-    sun.ambient = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    sun.position = glm::vec4(0.0f, 0.0f, 0.0f, LIGHT_TYPE_DIRECTIONAL);
-    sun.direction = glm::normalize(glm::vec4(1.0f, 0.8f, 2.0f, 1.0f));
-    lightBuffer.lights[0] = sun;
-    lightBuffer.lightCount = 0;
-    lightBuffer.skyColor = glm::vec4(1.0, 1.0, 1.0, 1.0);
-    lightBuffer.lightBuffer = RenderLib::create_buffer_dynamic(GL_UNIFORM_BUFFER, sizeof(Light) * MAX_LIGHT_COUNT + sizeof(glm::vec4), nullptr);
-    RenderLib::buffer_binding_range(lightBuffer.lightBuffer, 2, 0, sizeof(Light) * MAX_LIGHT_COUNT + sizeof(glm::vec4)); */
     update_lights();
     update_sky_color();
     edit = false;
-
-    scene.grids[0].cache[0].set(glm::vec3(15.0, 15.0, 15.0), 2);
 
     update_palette();
     update_grid();
@@ -89,9 +65,6 @@ void Editor::update() {
         solve_voxel_placing();
     }
 
-    RenderLib::draw_voxel(render.boxShader, /* (camOrigin + (-camDirection * camOffset)) + ray.direction * 20.0f */glm::vec3(0.0f, 0.0f, 0.0f));
-
-    update_grid();
     render.draw_scene(scene);
     draw_ui();
 }
@@ -249,14 +222,14 @@ void Editor::solve_voxel_placing() {
     }
 
     if(window.is_key_down(GLFW_KEY_E)) {
-        /* ray.create_camera_ray(window, *camera);
+        ray.create_camera_ray(window, *camera);
         float distance = 0.0f;
         float step = 0.01f;
         ERROR("FLOOD FILL");
 
         while(distance < 100.0f) {
             distance += step;
-            if(grid.get((camOrigin + (-camDirection * camOffset)) + ray.direction * distance) > 0) {
+            if(scene.grids[selectedGrid].cache[scene.grids[selectedGrid].cacheIndex].get((camOrigin + (-camDirection * camOffset)) + ray.direction * distance) > 0) {
                 glm::vec3 position = (camOrigin + (-camDirection * camOffset)) + ray.direction * distance;
                 position.x = std::floor(position.x);
                 position.y = std::floor(position.y);
@@ -273,9 +246,10 @@ void Editor::solve_voxel_placing() {
 
                 flood_fill(position, normal);
 
+                update_grid();
                 break;
             }
-        } */
+        }
     }
 }
 
@@ -302,13 +276,15 @@ glm::vec3 Editor::ray_cast(Ray ray) {
 }
 
 void Editor::flood_fill(glm::vec3 position, glm::vec3 normal) {
-    /* if(position.x < 0 || position.x > grid.size ||
-        position.y  < 0 || position.y > grid.size ||
-        position.z < 0 || position.z > grid.size) {
+    Grid<int8_t>* grid = &scene.grids[selectedGrid].cache[scene.grids[selectedGrid].cacheIndex];
+
+    if(position.x < 0 || position.x > 32 ||
+        position.y  < 0 || position.y > 32 ||
+        position.z < 0 || position.z > 32) {
         return;
-    } if(grid.get(position) <= 0)
+    } if(grid->get(position) <= 0)
         return;
-    if(grid.get(position) == colorSelected)
+    if(grid->get(position) == colorSelected)
         return;
 
     glm::vec3 right = glm::vec3((1.0f - std::abs(normal.x)), (1.0f - std::abs(normal.y)), (1.0f - std::abs(normal.z)));
@@ -320,8 +296,8 @@ void Editor::flood_fill(glm::vec3 position, glm::vec3 normal) {
     }
     
     glm::vec3 forward = glm::cross(right, normal);
-    if(cache[cacheIndex].get(position + normal) <= 0) {
-        cache[cacheIndex].set(position, colorSelected);
+    if(grid->get(position + normal) <= 0) {
+        grid->set(position, colorSelected);
 
         flood_fill(position + right, normal);
         flood_fill(position + forward, normal);
@@ -329,7 +305,7 @@ void Editor::flood_fill(glm::vec3 position, glm::vec3 normal) {
         flood_fill(position - forward, normal);
     }
 
-    return; */
+    return;
 }
 
 void Editor::solve_input() {
@@ -425,7 +401,7 @@ void Editor::update_sky_color() {
 }
 
 void Editor::update_grid() {
-    //TextureLib::update_texture_3d(scene.grids[0].gridTexture, 32, 32, 32, &scene.grids[0].cache[/* scene.grids[selectedGrid].cacheIndex */0].grid);
+    TextureLib::update_texture_3d(scene.grids[0].gridTexture, 32, 32, 32, scene.grids[0].cache[scene.grids[0].cacheIndex].grid);
     /* glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, scene.grids[0].gridTexture);
     ShaderLib::uniform_int32(render.shader, "grid", 0); */

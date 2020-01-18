@@ -51,7 +51,6 @@ void RenderingPipeline::draw_scene(Scene scene) {
         ShaderLib::uniform_int32(shader, "grid", 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_3D, scene.grids[i].gridTexture);
-        TextureLib::update_texture_3d(scene.grids[i].gridTexture, 32, 32, 32, scene.grids[i].cache[scene.grids[i].cacheIndex].grid);
         draw_grid(scene.grids[i].cache[scene.grids[i].cacheIndex]);
     }
 
