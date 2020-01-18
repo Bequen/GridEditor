@@ -13,7 +13,7 @@ void Application::init() {
 
     window.init(PROJECT_NAME, 720, 480);
 
-    editor.deltaTime = &deltaTime;
+    editor.viewport.deltaTime = &deltaTime;
     editor.window = window;
     editor.init();
 
