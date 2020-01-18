@@ -12,8 +12,6 @@ struct Grid {
     T* grid;
     uint32_t size;
 
-    glm::vec3 position;
-
     Grid() :
     size(0), grid(nullptr){
 
@@ -69,8 +67,8 @@ struct Grid {
     }
 
     bool point_intersection(glm::vec3 point) {
-        if(point.x > position.x && point.y > position.y && point.z > position.z &&
-            point.x < position.x + size && point.y < position.y + size && point.z < position.z + size) {
+        if(point.x > 0 && point.y > 0 && point.z > 0 &&
+            point.x < 0 + size && point.y < 0 + size && point.z < 0 + size) {
             return true;
         } else {
             return false;

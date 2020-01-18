@@ -16,7 +16,7 @@
 void Editor::init() {
     MESSAGE("Starting the editor initialization");
     selectedGrid = 0;
-    scene = Scene();
+    scene = Scene(1);
     scene.init();
     //cacheSize = 32;
 
@@ -61,7 +61,7 @@ void Editor::init() {
     extrudeIndex = 0; */
     drawMode = DRAW_MODE_BRUSH;
 
-    Light sun;
+    /* Light sun;
     sun.ambient = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     sun.position = glm::vec4(0.0f, 0.0f, 0.0f, LIGHT_TYPE_DIRECTIONAL);
     sun.direction = glm::normalize(glm::vec4(1.0f, 0.8f, 2.0f, 1.0f));
@@ -69,9 +69,12 @@ void Editor::init() {
     lightBuffer.lightCount = 0;
     lightBuffer.skyColor = glm::vec4(1.0, 1.0, 1.0, 1.0);
     lightBuffer.lightBuffer = RenderLib::create_buffer_dynamic(GL_UNIFORM_BUFFER, sizeof(Light) * MAX_LIGHT_COUNT + sizeof(glm::vec4), nullptr);
-    RenderLib::buffer_binding_range(lightBuffer.lightBuffer, 2, 0, sizeof(Light) * MAX_LIGHT_COUNT + sizeof(glm::vec4));
+    RenderLib::buffer_binding_range(lightBuffer.lightBuffer, 2, 0, sizeof(Light) * MAX_LIGHT_COUNT + sizeof(glm::vec4)); */
     update_lights();
     update_sky_color();
+    edit = false;
+
+    scene.grids[0].cache[0].set(glm::vec3(15.0, 15.0, 15.0), 2);
 
     update_palette();
     update_grid();
@@ -86,8 +89,9 @@ void Editor::update() {
         solve_voxel_placing();
     }
 
-    RenderLib::draw_voxel(render.shader, /* (camOrigin + (-camDirection * camOffset)) + ray.direction * 20.0f */glm::vec3(0.0f, 0.0f, 0.0f));
+    RenderLib::draw_voxel(render.boxShader, /* (camOrigin + (-camDirection * camOffset)) + ray.direction * 20.0f */glm::vec3(0.0f, 0.0f, 0.0f));
 
+    update_grid();
     render.draw_scene(scene);
     draw_ui();
 }
@@ -99,7 +103,7 @@ void Editor::draw_ui() {
 }
 
 void Editor::draw_palette() {
-    ImGui::Begin("Pallette", nullptr, ImGuiWindowFlags_NoMove);
+    ImGui::Begin("Pallette", nullptr);
 
     ImGui::BeginChild("PickerWindow", ImVec2(200.0f, 200.0f), true);
     // Stupid workaround
@@ -119,7 +123,7 @@ void Editor::draw_palette() {
         const char* label = std::to_string(i).c_str();
         if(rowSize > 0) {
             if(i % rowSize)
-                ImGui::SameLine((i % rowSize) * (buttonSize + padding) + padding);
+                ImGui::SameLine((i % rowSize) * (buttonSize + padding) + padding * 2);
             if(ImGui::ColorButton(label, ImVec4(palette[i].r, palette[i].g, palette[i].b, 1.0f), 0, ImVec2(buttonSize, buttonSize))) {
                 colorSelected = i;
                 colorCache = i;
@@ -155,11 +159,40 @@ void Editor::draw_toolbar() {
 void Editor::draw_scene_setup() {
     ImGui::Begin("Scene Setup");
 
-    ImGui::BeginChild("Lighting");
-    if(ImGui::ColorPicker4("Sky Color", &lightBuffer.skyColor.r)) {
-        render.skyColor = lightBuffer.skyColor;
+    ImGui::BeginChild("Lighting", ImVec2(200.0f, 200.0f), true);
+    if(ImGui::ColorPicker4("Sky Color", &scene.skyColor.r)) {
+        render.skyColor = scene.skyColor;
         update_sky_color();
     }
+    ImGui::EndChild();
+
+    ImGui::BeginChild("Scene Lights");
+    for(uint32_t i = 0; i < scene.lightCount; i++) {
+        char* buffer = new char[256];
+        sprintf(buffer, "LightLabel%i", i);
+
+        ImGui::BeginChild(buffer, ImVec2(0.0f, 100.0f), true);
+        ImGui::Text("Light %i", i);
+        if(ImGui::InputFloat3("Position", &scene.lights[i].position.x, 3)) {
+            update_lights();
+            ERROR("Updating Lights");
+        } if(ImGui::InputFloat3("Direction", &scene.lights[i].direction.x, 3)) {
+            update_lights();
+            ERROR("Updating Lights");
+        }
+        ImGui::EndChild();
+
+        delete [] buffer;
+    }
+
+    {
+        ImGui::BeginChild("AddLightLabel", ImVec2(200.0f, 0.0f));
+        if(ImGui::Button("AddLightButton")) {
+            scene.lightCount++;
+        }
+        ImGui::EndChild();
+    }
+
     ImGui::EndChild();
 
     ImGui::End();
@@ -251,7 +284,6 @@ glm::vec3 Editor::ray_cast(Ray ray) {
     float step = 0.1f;
 
     Grid<int8_t> previousGrid = scene.grids[selectedGrid].cache[(scene.grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE];
-    Grid<int8_t> grid = scene.grids[selectedGrid].cache[(scene.grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE];
     while(distance < 100.0f) {
         distance += step;
         if(scene.grids[selectedGrid].cache[(scene.grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE].point_intersection(ray.origin + ray.direction * distance)) {
@@ -374,24 +406,30 @@ void Editor::solve_mouse() {
 }
 
 void Editor::update_lights() {
-    void* pointer = RenderLib::map_buffer_range(lightBuffer.lightBuffer, GL_UNIFORM_BUFFER, 0, sizeof(Light) * MAX_LIGHT_COUNT);
+    /* void* pointer = RenderLib::map_buffer_range(lightBuffer.lightBuffer, GL_UNIFORM_BUFFER, 0, sizeof(Light) * MAX_LIGHT_COUNT);
     memcpy(pointer, lightBuffer.lights, sizeof(Light) * MAX_LIGHT_COUNT);
 
-    RenderLib::unmap_buffer(GL_UNIFORM_BUFFER);
+    RenderLib::unmap_buffer(GL_UNIFORM_BUFFER); */
+
+    void* pointer = RenderLib::map_buffer_range(scene.lightBuffer, GL_UNIFORM_BUFFER, 0, sizeof(Light) * scene.lightBufferSize);
+    memcpy(pointer, scene.lights, sizeof(Light) * MAX_LIGHT_COUNT);
+
+    RenderLib::unmap_buffer(GL_UNIFORM_BUFFER); 
 }
 
 void Editor::update_sky_color() {
-    void* pointer = RenderLib::map_buffer_range(lightBuffer.lightBuffer, GL_UNIFORM_BUFFER, sizeof(Light) * MAX_LIGHT_COUNT, sizeof(glm::vec4));
-    memcpy(pointer, &lightBuffer.skyColor.x, sizeof(glm::vec4));
+    void* pointer = RenderLib::map_buffer_range(scene.lightBuffer, GL_UNIFORM_BUFFER, sizeof(Light) * scene.lightBufferSize, sizeof(glm::vec4));
+    memcpy(pointer, &scene.skyColor.x, sizeof(glm::vec4));
 
     RenderLib::unmap_buffer(GL_UNIFORM_BUFFER);
 }
 
 void Editor::update_grid() {
-    TextureLib::update_texture_3d(scene.grids[selectedGrid].gridTexture, 32, 32, 32, &scene.grids[selectedGrid].cache[scene.grids[selectedGrid].cacheIndex].grid);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_3D, scene.grids[selectedGrid].gridTexture);
-    ShaderLib::uniform_int32(render.shader, "grid", 0);
+    //TextureLib::update_texture_3d(scene.grids[0].gridTexture, 32, 32, 32, &scene.grids[0].cache[/* scene.grids[selectedGrid].cacheIndex */0].grid);
+    /* glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, scene.grids[0].gridTexture);
+    ShaderLib::uniform_int32(render.shader, "grid", 0); */
+
 }
 
 void Editor::update_palette() {
@@ -414,7 +452,7 @@ void Editor::update_cache() {
     scene.grids[selectedGrid].cacheIndex++;
     scene.grids[selectedGrid].cacheIndex %= CACHE_SIZE;
     memcpy(scene.grids[selectedGrid].cache[scene.grids[selectedGrid].cacheIndex].grid, scene.grids[selectedGrid].cache[original].grid, std::pow(32, 3));
-
+    ERROR("New index " << scene.grids[selectedGrid].cacheIndex)
     if(scene.grids[selectedGrid].usedCache < CACHE_SIZE)
         scene.grids[selectedGrid].usedCache++;
 

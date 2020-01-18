@@ -16,12 +16,14 @@ struct VoxelGrid {
     VoxelGrid() :
     cache(new Grid<int8_t>[CACHE_SIZE]) {
         cacheIndex = 0;
+        usedCache = 0;
+        undoCount = 0;
         for(uint32_t i = 0; i < CACHE_SIZE; i++) {
             cache[i].init(32);
         }
     }
 
     void init() {
-        gridTexture = TextureLib::create_texture_3d(32, 32, 32, cache[cacheIndex].grid);
+        gridTexture = TextureLib::create_texture_3d(32, 32, 32, cache[0].grid);
     }
 };

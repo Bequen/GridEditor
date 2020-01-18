@@ -19,7 +19,7 @@ class RenderingPipeline {
         void* camera;
 
     public:
-        Grid<int8_t>* grid;
+        //Grid<int8_t>* grid;
 
         uint32_t shader;
         uint32_t boxShader;

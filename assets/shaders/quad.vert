@@ -29,9 +29,10 @@ void main() {
     vec3 quadScale = vec3(scale.x - position.x, scale.y - position.y, scale.z - position.z);
     vec3 pos = position + ((vPos - vec3(0.5, 0.5, 0.0)) * 2.0);
 
-    int value = int(texelFetch(grid, ivec3(position.x, position.y, position.z), 0).r * 255.0);
+    int value = int(texelFetch(grid, ivec3(position.x, position.y, position.z)/* ivec3(0, 0, 0) */, 0).r * 255.0);
 
     color = vec4(texelFetch(palette, value, 0).rgb, 1.0);
+    //color = vec4(value / 255, value / 255, value / 255, 1.0);
     vec3 p = pos + normal;
     
     gl_Position = projection * view * vec4(vPos * quadScale + position + offset, 1.0);

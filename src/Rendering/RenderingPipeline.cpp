@@ -13,7 +13,7 @@
 #include "Quad.h"
 
 void RenderingPipeline::init(Grid<int8_t>* grid) {
-    this->grid = grid;
+    //this->grid = grid;
     RenderLib::init();
     skyColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
 
@@ -42,11 +42,16 @@ void RenderingPipeline::draw_scene(Scene scene) {
     glDisable(GL_CULL_FACE);
 
     RenderLib::bind_vertex_array(topQuadVAO);
-    ShaderLib::program_use(quadProgram);
+    ShaderLib::program_use(shader);
+
     if(polygonMode == 1)
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    for(uint32_t i = 0; i < scene.gridCount; i++) {
+    for(uint32_t i = 0; i < 1; i++) {
+        ShaderLib::uniform_int32(shader, "grid", 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_3D, scene.grids[i].gridTexture);
+        TextureLib::update_texture_3d(scene.grids[i].gridTexture, 32, 32, 32, scene.grids[i].cache[scene.grids[i].cacheIndex].grid);
         draw_grid(scene.grids[i].cache[scene.grids[i].cacheIndex]);
     }
 
@@ -159,7 +164,7 @@ void RenderingPipeline::update() {
     } */
 
     // Greedy
-    RenderLib::bind_vertex_array(topQuadVAO);
+    /* RenderLib::bind_vertex_array(topQuadVAO);
     ShaderLib::program_use(quadProgram);
     if(polygonMode == 1)
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -250,7 +255,7 @@ void RenderingPipeline::update() {
     RenderLib::bind_vertex_array(voxel);
 
     RenderLib::culling(GL_FRONT);
-    RenderLib::draw_voxel(boxShader, glm::vec3((float)0, (float)0, (float)0), glm::vec3(grid->size, grid->size, grid->size));
+    RenderLib::draw_voxel(boxShader, glm::vec3((float)0, (float)0, (float)0), glm::vec3(grid->size, grid->size, grid->size)); */
 }
 
 void RenderingPipeline::solve_greedy_meshing(Quad**& quads, uint32_t*& counts, uint32_t size) {

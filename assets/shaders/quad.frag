@@ -24,6 +24,7 @@ layout(binding = 2, std140) uniform Lights {
 
 void main() {
     vec4 lightDir = normalize(vec4(1.0, 1.0, 10.0, 1.0));
-    fragColor = mix(vec4(0.0, 0.0, 0.0, 1.0), color, max(dot(vec3(lights[0].direction), normal), 0.5));
+    //fragColor = max(dot(vec3(normalize(lights[0].direction)), normal), 0.1) * color;
+    fragColor = color;
     fragColor.w = 1.0;
 }
