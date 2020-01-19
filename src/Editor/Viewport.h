@@ -65,6 +65,9 @@ class Viewport {
     glm::vec3 camOrigin;
     float camOffset;
 
+    Framebuffer framebuffer;
+    uint32_t renderQuad;
+
     void init();
     void update();
     void terminate();

@@ -11,6 +11,7 @@
 #include <csignal>
 #include "QuadBuffer.h"
 #include "Quad.h"
+#include "Framebuffer.h"
 
 void RenderingPipeline::init() {
     RenderLib::init();
@@ -28,18 +29,27 @@ void RenderingPipeline::init() {
     polygonMode = 0;
 }
 
-void RenderingPipeline::draw_scene(Scene scene) {
+void RenderingPipeline::draw_scene(Framebuffer framebuffer, Scene scene) {
     assert_msg(scene.grids, "Scene Grids are not initialized");
     assert_msg(scene.lights, "Scene Lights are not initialized");
 
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.framebuffer);
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     glDepthMask(GL_FALSE);
+    glDisable(GL_CULL_FACE);
+    RenderLib::bind_vertex_array(voxel);
     ShaderLib::uniform_vec4(skyShader, "skyColor", &skyColor.x);
     RenderLib::draw_voxel(skyShader, glm::vec3(-100.0f, -100.0f, -100.0f), glm::vec3(200.0f, 200.0f, 200.0f));
+    glEnable(GL_CULL_FACE);
     glDepthMask(GL_TRUE);
 
-    RenderLib::culling(GL_BACK);
-    glDisable(GL_CULL_FACE);
 
+    
     RenderLib::bind_vertex_array(topQuadVAO);
     ShaderLib::program_use(shader);
 
@@ -50,17 +60,19 @@ void RenderingPipeline::draw_scene(Scene scene) {
         ShaderLib::uniform_int32(shader, "grid", 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_3D, scene.grids[i].gridTexture);
+
         draw_grid(scene.grids[i].cache[scene.grids[i].cacheIndex]);
     }
 
     if(polygonMode == 1)
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    glEnable(GL_CULL_FACE);
+    RenderLib::front_face(GL_CW);
     RenderLib::bind_vertex_array(voxel);
-
-    RenderLib::culling(GL_FRONT);
     RenderLib::draw_voxel(boxShader, glm::vec3((float)0, (float)0, (float)0), glm::vec3(32, 32, 32));
+    RenderLib::front_face(GL_CCW);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void RenderingPipeline::draw_grid(Grid<int8_t> grid) {

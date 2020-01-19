@@ -44,7 +44,7 @@ class RenderingPipeline {
          */
         void update();
 
-        void draw_scene(Scene scene);
+        void draw_scene(Framebuffer framebuffer, Scene scene);
         void draw_grid(Grid<int8_t> grid);
 
         /**

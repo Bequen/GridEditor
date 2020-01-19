@@ -166,11 +166,11 @@ uint32_t RenderLib::create_quad() {
         1.0f,   1.0f,   0.0f,
 
         0.0f,   0.0f,   1.0f,
+        1.0f,   0.0f,   0.0f,
         0.0f,   0.0f,   0.0f,
-        1.0f,   0.0f,   0.0f,
         0.0f,   0.0f,   1.0f,
-        1.0f,   0.0f,   0.0f,
         1.0f,   0.0f,   1.0f,
+        1.0f,   0.0f,   0.0f,
 
         0.0f,   0.0f,   1.0f,
         0.0f,   0.0f,   0.0f,
@@ -182,11 +182,11 @@ uint32_t RenderLib::create_quad() {
 
         // Opposite direction
         0.0f,   1.0f,   0.0f,
+        1.0f,   0.0f,   0.0f,
         0.0f,   0.0f,   0.0f,
-        1.0f,   0.0f,   0.0f,
         0.0f,   1.0f,   0.0f,
-        1.0f,   0.0f,   0.0f,
         1.0f,   1.0f,   0.0f,
+        1.0f,   0.0f,   0.0f,
 
         0.0f,   0.0f,   1.0f,
         0.0f,   0.0f,   0.0f,
@@ -196,11 +196,11 @@ uint32_t RenderLib::create_quad() {
         1.0f,   0.0f,   1.0f,
 
         0.0f,   0.0f,   1.0f,
+        0.0f,   1.0f,   0.0f,
         0.0f,   0.0f,   0.0f,
-        0.0f,   1.0f,   0.0f,
         0.0f,   0.0f,   1.0f,
-        0.0f,   1.0f,   0.0f,
         0.0f,   1.0f,   1.0f,
+        0.0f,   1.0f,   0.0f,
     };
 
     float normals[] = {
@@ -261,6 +261,34 @@ uint32_t RenderLib::create_quad() {
 
     return result;
 }
+
+uint32_t RenderLib::create_render_quad() {
+    uint32_t result;
+    glGenVertexArrays(1, &result);
+    glBindVertexArray(result);
+    
+    uint32_t VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    #pragma region DATA
+    float vertices[] = { 
+        -1.0f,  1.0f, 0.0f,
+        -1.0f, -1.0f, 0.0f,
+         1.0f,  1.0f, 0.0f,
+         1.0f, -1.0f, 0.0f,
+    };
+
+    #pragma endregion
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), nullptr, GL_STATIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    return result;
+}
 #pragma endregion
 
 void RenderLib::bind_vertex_array(uint32_t VAO) {
@@ -269,6 +297,8 @@ void RenderLib::bind_vertex_array(uint32_t VAO) {
 
 void RenderLib::draw_triangles(uint32_t triangles) {
     glDrawArrays(GL_TRIANGLES, 0, triangles);
+} void RenderLib::draw_triangle_strip(uint32_t triangles) {
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, triangles);
 }
 
 uint32_t RenderLib::create_buffer_stream(uint32_t target, uint32_t size, void* data) {

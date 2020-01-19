@@ -17,10 +17,22 @@ void Editor::init() {
     MESSAGE("Starting the editor initialization");
     viewport.window = window;
     viewport.init();
+
+    deferredProgram = ShaderLib::program_create("deferred");
+    drawQuad = RenderLib::create_render_quad();
 }
 
 void Editor::update() {
     viewport.update();
+    RenderLib::bind_vertex_array(drawQuad);
+    ShaderLib::program_use(deferredProgram);
+
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, viewport.framebuffer.texture);
+    ShaderLib::uniform_int32(deferredProgram, "color", 3);
+
+    RenderLib::draw_triangle_strip(4);
+
     draw_ui();
 }
 
@@ -130,12 +142,27 @@ void Editor::terminate() {
 
 }
 
-
-
 void Editor::resize_callback(int32_t width, int32_t height) {
     this->window.width = width;
     this->window.height = height;
+    viewport.window.width = width;
+    viewport.window.height = height;
 
     glViewport(0, 0, width, height);
     viewport.camera->projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 1000.0f);
+    viewport.framebuffer.width = width;
+    viewport.framebuffer.height = height;
+
+    glDeleteTextures(1, &viewport.framebuffer.texture);
+    glDeleteRenderbuffers(1, &viewport.framebuffer.depth);
+    glBindFramebuffer(GL_FRAMEBUFFER, viewport.framebuffer.framebuffer);
+
+    uint32_t colorAttachment = TextureLib::create_texture_2d(GL_TEXTURE_2D, width, height, GL_UNSIGNED_BYTE, GL_RGBA, GL_RGBA, nullptr);
+    TextureLib::framebuffer_attachment(colorAttachment, GL_TEXTURE_2D, GL_COLOR_ATTACHMENT0);
+    viewport.framebuffer.texture = colorAttachment;
+
+    glGenRenderbuffers(1, &viewport.framebuffer.depth);
+    glBindRenderbuffer(GL_RENDERBUFFER, viewport.framebuffer.depth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, viewport.framebuffer.depth);
 }

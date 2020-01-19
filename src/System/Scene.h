@@ -16,6 +16,8 @@ struct Scene {
     uint32_t gridSize;
     uint32_t gridCount;
 
+    uint32_t paletteTexture;
+
     Light* lights;
     uint32_t lightBuffer;
     uint32_t lightCount;

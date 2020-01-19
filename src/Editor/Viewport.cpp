@@ -25,6 +25,7 @@ void Viewport::init() {
     palette = (RGB32*)malloc(sizeof(RGB32) * 256);
     memset(palette, 0, sizeof(RGB32) * 256);
     paletteTexture = TextureLib::create_texture_1d(256, GL_RGB, GL_RGB, palette);
+    scene.paletteTexture = paletteTexture;
 
     panSpeed = 10.0f;
     rotationSpeed = 100.0f;
@@ -48,6 +49,28 @@ void Viewport::init() {
     update_grid();
 
     update_cache();
+
+    renderQuad = RenderLib::create_quad();
+
+    framebuffer = TextureLib::create_framebuffer(window.width, window.height);
+    uint32_t colorAttachment = TextureLib::create_texture_2d(GL_TEXTURE_2D, window.width, window.height, GL_UNSIGNED_BYTE, GL_RGBA, GL_RGBA, nullptr);
+    TextureLib::framebuffer_attachment(colorAttachment, GL_TEXTURE_2D, GL_COLOR_ATTACHMENT0);
+    framebuffer.texture = colorAttachment;
+    unsigned int rboDepth;
+    glGenRenderbuffers(1, &rboDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, window.width, window.height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+    glEnable(GL_DEPTH_TEST);
+    framebuffer.depth = rboDepth;
+
+    unsigned int attachments[1] = { GL_COLOR_ATTACHMENT0 };
+    glDrawBuffers(1, attachments);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cout << "Framebuffer not complete!" << std::endl;
+        raise(SIGABRT);
+    }
 }
 
 void Viewport::update() {
@@ -59,7 +82,11 @@ void Viewport::update() {
         solve_voxel_placing();
     }
 
-    render.draw_scene(scene);
+    render.draw_scene(framebuffer, scene);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); 
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void Viewport::terminate() {

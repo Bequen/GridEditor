@@ -45,3 +45,31 @@ void TextureLib::update_texture_3d(uint32_t texture, uint32_t width, uint32_t he
     glBindTexture(GL_TEXTURE_3D, texture);
     glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, width, height, depth, GL_RED, GL_UNSIGNED_BYTE, data);
 }
+
+uint32_t TextureLib::create_texture_2d(uint32_t target, uint32_t width, uint32_t height, uint32_t type, uint32_t format, uint32_t internalFormat, void* data) {
+    uint32_t result;
+    glGenTextures(1, &result);
+    glBindTexture(target, result);
+
+    glTexImage2D(target, 0, internalFormat, width, height, 0, format, type, data);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    return result;
+}
+
+Framebuffer TextureLib::create_framebuffer(uint32_t width, uint32_t height) {
+    Framebuffer result;
+    result.width = width;
+    result.height = height;
+
+    glGenFramebuffers(1, &result.framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, result.framebuffer);
+
+    return result;
+}
+
+void TextureLib::framebuffer_attachment(uint32_t texture, uint32_t target, uint32_t type) {
+    glFramebufferTexture2D(GL_FRAMEBUFFER, type, target, texture, 0);
+}

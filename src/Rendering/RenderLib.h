@@ -60,6 +60,7 @@ namespace RenderLib {
      * @retval returns id to the buffer
      */
     uint32_t create_quad();
+    uint32_t create_render_quad();
     
 
 
@@ -121,6 +122,7 @@ namespace RenderLib {
     void draw_voxel(uint32_t program, glm::vec3 position, glm::vec3 scale);
 
     void draw_triangles(uint32_t triangles);
+    void draw_triangle_strip(uint32_t triangles);
 
     // TODO Move into one function
     void draw_quad(Quad quad, uint32_t dir, uint32_t negative);

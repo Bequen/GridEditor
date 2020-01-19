@@ -1,6 +1,6 @@
 #version 440 core
 
-out vec4 color;
+layout(location = 0) out vec4 color;
 
 in vec3 normal;
 in vec3 pos;
@@ -32,6 +32,6 @@ void main() {
 
     st = brickTile(st, 32.0);
 
-    color = vec4(0.0, 0.0, 0.0, 1.0 - box(st,vec2(0.5)));
-    //color = vec4(1.0, 0.0, 0.0, 1.0);
+    //color = vec3(1.0 - box(st,vec2(0.5)));
+    color = vec4(0.0, 0.0, 0.0, vec3(1.0 - box(st,vec2(0.5))));
 }

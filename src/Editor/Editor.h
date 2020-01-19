@@ -16,6 +16,9 @@ class Editor {
         Window window;
         Viewport viewport;
 
+        uint32_t drawQuad;
+        uint32_t deferredProgram;
+
         void init();
         void update();
         void terminate();
