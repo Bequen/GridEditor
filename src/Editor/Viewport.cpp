@@ -75,6 +75,7 @@ void Viewport::terminate() {
 }
 
 void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
+    glEnable(GL_DEPTH_TEST);
     solve_mouse();
     solve_input();
 
@@ -147,7 +148,7 @@ void Viewport::solve_voxel_placing(Cursor cursor) {
             }
 
             if(scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE].point_intersection(ray_cast(ray))) {
-                scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex) % CACHE_SIZE].set(ray_cast(ray), 2/* scene->colorSelected */);
+                scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex) % CACHE_SIZE].set(ray_cast(ray), scene->colorSelected);
                 edit = true;
             }
             update_grid();
