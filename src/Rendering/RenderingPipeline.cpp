@@ -29,9 +29,10 @@ void RenderingPipeline::init() {
     polygonMode = 0;
 }
 
-void RenderingPipeline::draw_scene(Framebuffer framebuffer, Scene scene) {
-    assert_msg(scene.grids, "Scene Grids are not initialized");
-    assert_msg(scene.lights, "Scene Lights are not initialized");
+void RenderingPipeline::draw_scene(Framebuffer framebuffer, Scene* scene) {
+    assert_msg(scene, "Scene is not initialized, cannot render")
+    assert_msg(scene->grids, "Scene Grids are not initialized, cannot render");
+    assert_msg(scene->lights, "Scene Lights are not initialized, cannot render");
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -59,9 +60,9 @@ void RenderingPipeline::draw_scene(Framebuffer framebuffer, Scene scene) {
     for(uint32_t i = 0; i < 1; i++) {
         ShaderLib::uniform_int32(shader, "grid", 0);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_3D, scene.grids[i].gridTexture);
+        glBindTexture(GL_TEXTURE_3D, scene->grids[i].gridTexture);
 
-        draw_grid(scene.grids[i].cache[scene.grids[i].cacheIndex]);
+        draw_grid(scene->grids[i].cache[scene->grids[i].cacheIndex]);
     }
 
     if(polygonMode == 1)

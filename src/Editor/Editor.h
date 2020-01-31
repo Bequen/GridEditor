@@ -10,19 +10,33 @@
 #include "Rendering/Light.h"
 #include "System/Scene.h"
 #include "Viewport.h"
+#include "EditorView.h"
 
 class Editor {
     public:
         Window window;
-        Viewport viewport;
+        //Viewport viewport;
 
         uint32_t drawQuad;
         uint32_t deferredProgram;
+
+        EditorView editorWindow;
+
+        uint32_t windowProgram;
+        uint32_t windowQuad;
+
+        Cursor cursor;
+        Scene scene;
+
+        double* deltaTime;
 
         void init();
         void update();
         void terminate();
 
+        void update_cursor();
+
+        void draw_menubar();
         void draw_ui();
         void draw_palette();
         void draw_toolbar();

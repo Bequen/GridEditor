@@ -95,8 +95,8 @@ lib${PROJECT_NAME}.so: ${OBJ}
 
 
 # CLEANING
-.PHONY: clean
 clean:
+.PHONY: clean
 	@echo "Cleaning up"
 	@rm -f -r ./obj/
 	@rm -f -r ./build/

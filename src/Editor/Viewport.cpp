@@ -9,23 +9,15 @@
 
 void Viewport::init() {
     selectedGrid = 0;
-    scene = Scene(1);
 
-    scene.init();
     render.init();
 
-    uint32_t cameraBuffer = RenderLib::create_buffer_stream(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, nullptr);
+    cameraBuffer = RenderLib::create_buffer_stream(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, nullptr);
     camera = (Camera*)RenderLib::map_buffer_range(cameraBuffer, GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4) * 2);
     RenderLib::buffer_binding_range(cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
-    camera->projection = glm::perspective(glm::radians(45.0f), 720.0f / 480.0f, 0.1f, 1000.0f);
+    camera->projection = glm::perspective(glm::radians(45.0f), 720.0f / (480.0f), 0.1f, 1000.0f);
 
-    colorSelected = 0;
     drawing = false;
-
-    palette = (RGB32*)malloc(sizeof(RGB32) * 256);
-    memset(palette, 0, sizeof(RGB32) * 256);
-    paletteTexture = TextureLib::create_texture_1d(256, GL_RGB, GL_RGB, palette);
-    scene.paletteTexture = paletteTexture;
 
     panSpeed = 10.0f;
     rotationSpeed = 100.0f;
@@ -37,7 +29,7 @@ void Viewport::init() {
     rectangle = 0;
     camera->view = glm::lookAt(camOrigin + (-camDirection * camOffset), camOrigin, glm::vec3(0.0f, 0.0f, 1.0f));
 
-    extrudeSelect = new glm::vec3(scene.grids[selectedGrid].cache[scene.grids[selectedGrid].cacheIndex].size * scene.grids[selectedGrid].cache[scene.grids[selectedGrid].cacheIndex].size);
+    extrudeSelect = new glm::vec3(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex].size * scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex].size);
     extrudeIndex = 0;
     drawMode = DRAW_MODE_BRUSH;
 
@@ -71,39 +63,61 @@ void Viewport::init() {
         std::cout << "Framebuffer not complete!" << std::endl;
         raise(SIGABRT);
     }
+
+    scene->colorSelected = 2;
 }
 
 void Viewport::update() {
-    solve_mouse();
-    solve_input();
-
-    if(!ImGui::IsAnyWindowHovered() && !ImGui::IsAnyItemHovered()) {
-        solve_camera();
-        solve_voxel_placing();
-    }
-
-    render.draw_scene(framebuffer, scene);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void Viewport::terminate() {
     
 }
 
-void Viewport::solve_voxel_placing() {
+void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
+    solve_mouse();
+    solve_input();
+
+    if(ImGui::IsWindowHovered()) {
+        float offsetX = tileInfo.x * window.width; float offsetY = tileInfo.y * window.height;
+        cursor.cursorX = (2.0f * (((float)cursor.cursorX - offsetX) / tileInfo.width)) / (window.width) - 1.0f;
+        cursor.cursorY = 1.0 - ((2.0f * ((((float)cursor.cursorY) - offsetY) / tileInfo.height)) / (window.height));
+
+        solve_camera(cursor);
+        solve_voxel_placing(cursor);
+    }
+
+    RenderLib::buffer_binding_range(cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
+    ShaderLib::uniform_int32(render.shader, "palette", 1);
+    render.draw_scene(framebuffer, scene);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    //ERROR((ImGui::GetCursorScreenPos().x + window.width * tileInfo.width) << "|" << (ImGui::GetCursorScreenPos().y + window.height * tileInfo.height));
+    // Draws the viewport into the ImGui Window
+    //ERROR(this->tileInfo.width << "|" << this->tileInfo.height);
+    ImGui::GetWindowDrawList()->AddImage((void*)framebuffer.texture, 
+                                        ImVec2(tileInfo.x * window.width, tileInfo.y * window.height), 
+                                        ImVec2((tileInfo.x + tileInfo.width) * window.width,
+                                        (tileInfo.y + tileInfo.height) * window.height), 
+                                        ImVec2(0, 1), ImVec2(1, 0));
+    this->tileInfo = tileInfo;
+}
+
+void Viewport::solve_voxel_placing(Cursor cursor) {
     Ray ray;
-    ray.create_camera_ray(window, *camera);
+    ray.create_camera_ray(cursor, *camera);
+
     ray.origin = (camOrigin + (-camDirection * camOffset));
     float step = 0.01f;
 
     // If the user wants to delete stuff
     if(window.is_key_down(GLFW_KEY_LEFT_CONTROL))
-        colorSelected = 0;
+        scene->colorSelected = 0;
     else
-        colorSelected = colorCache;
+        scene->colorSelected = scene->colorCache;
 
     if(window.is_key_down(GLFW_KEY_LEFT_SHIFT))
         drawMode = DRAW_MODE_SHAPE;
@@ -132,8 +146,8 @@ void Viewport::solve_voxel_placing() {
                 update_cache();
             }
 
-            if(scene.grids[selectedGrid].cache[(scene.grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE].point_intersection(ray_cast(ray))) {
-                scene.grids[selectedGrid].cache[(scene.grids[selectedGrid].cacheIndex) % CACHE_SIZE].set(ray_cast(ray), colorSelected);
+            if(scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE].point_intersection(ray_cast(ray))) {
+                scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex) % CACHE_SIZE].set(ray_cast(ray), 2/* scene->colorSelected */);
                 edit = true;
             }
             update_grid();
@@ -144,14 +158,14 @@ void Viewport::solve_voxel_placing() {
     }
 
     if(window.is_key_down(GLFW_KEY_E)) {
-        ray.create_camera_ray(window, *camera);
+        ray.create_camera_ray(cursor, *camera);
         float distance = 0.0f;
         float step = 0.01f;
         ERROR("FLOOD FILL");
 
         while(distance < 100.0f) {
             distance += step;
-            if(scene.grids[selectedGrid].cache[scene.grids[selectedGrid].cacheIndex].get((camOrigin + (-camDirection * camOffset)) + ray.direction * distance) > 0) {
+            if(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex].get((camOrigin + (-camDirection * camOffset)) + ray.direction * distance) > 0) {
                 glm::vec3 position = (camOrigin + (-camDirection * camOffset)) + ray.direction * distance;
                 position.x = std::floor(position.x);
                 position.y = std::floor(position.y);
@@ -179,7 +193,7 @@ glm::vec3 Viewport::ray_cast(Ray ray) {
     float distance = 0.0f;
     float step = 0.1f;
 
-    Grid<int8_t> previousGrid = scene.grids[selectedGrid].cache[(scene.grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE];
+    Grid<int8_t> previousGrid = scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE];
     while(distance < 100.0f) {
         distance += step;
         if(previousGrid.point_intersection(ray.origin + ray.direction * distance)) {
@@ -198,7 +212,7 @@ glm::vec3 Viewport::ray_cast(Ray ray) {
 }
 
 void Viewport::flood_fill(glm::vec3 position, glm::vec3 normal) {
-    Grid<int8_t>* grid = &scene.grids[selectedGrid].cache[scene.grids[selectedGrid].cacheIndex];
+    Grid<int8_t>* grid = &scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex];
 
     if(position.x < 0 || position.x > 32 ||
         position.y  < 0 || position.y > 32 ||
@@ -206,7 +220,7 @@ void Viewport::flood_fill(glm::vec3 position, glm::vec3 normal) {
         return;
     } if(grid->get(position) <= 0)
         return;
-    if(grid->get(position) == colorSelected)
+    if(grid->get(position) == scene->colorSelected)
         return;
 
     glm::vec3 right = glm::vec3((1.0f - std::abs(normal.x)), (1.0f - std::abs(normal.y)), (1.0f - std::abs(normal.z)));
@@ -219,7 +233,7 @@ void Viewport::flood_fill(glm::vec3 position, glm::vec3 normal) {
     
     glm::vec3 forward = glm::cross(right, normal);
     if(grid->get(position + normal) <= 0) {
-        grid->set(position + normal, colorSelected);
+        grid->set(position + normal, scene->colorSelected);
 
         flood_fill(position + right, normal);
         flood_fill(position + forward, normal);
@@ -259,7 +273,7 @@ void Viewport::solve_input() {
 }
 
 void Viewport::solve_rectangle(glm::vec3 start, glm::vec3 end) {
-    Grid<int8_t>* grid = &scene.grids[selectedGrid].cache[scene.grids[selectedGrid].cacheIndex];
+    Grid<int8_t>* grid = &scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex];
     switch(rectangle) {
         case RECTANGLE_CUBE: {
             if(start.x > end.x) { std::swap(start.x, end.x); }
@@ -269,7 +283,7 @@ void Viewport::solve_rectangle(glm::vec3 start, glm::vec3 end) {
             for(float x = std::floor(start.x); x <= std::floor(end.x); x++) {
                 for(float y = std::floor(start.y); y <= std::floor(end.y); y++) {
                     for(float z = std::floor(start.z); z <= std::floor(end.z); z++) {
-                        if(grid->set(glm::vec3(x, y, z), colorSelected))
+                        if(grid->set(glm::vec3(x, y, z), scene->colorSelected))
                             edit = true;
                     }
                 }
@@ -286,7 +300,7 @@ void Viewport::solve_rectangle(glm::vec3 start, glm::vec3 end) {
             while(distance < length) {
                 distance += step;
 
-                if(grid->set(start + direction * distance, colorSelected))
+                if(grid->set(start + direction * distance, scene->colorSelected))
                     edit = true;
             }
             break;
@@ -304,71 +318,71 @@ void Viewport::solve_mouse() {
 }
 
 void Viewport::update_lights() {
-    void* pointer = RenderLib::map_buffer_range(scene.lightBuffer, GL_UNIFORM_BUFFER, 0, sizeof(Light) * scene.lightBufferSize);
-    memcpy(pointer, scene.lights, sizeof(Light) * MAX_LIGHT_COUNT);
+    void* pointer = RenderLib::map_buffer_range(scene->lightBuffer, GL_UNIFORM_BUFFER, 0, sizeof(Light) * scene->lightBufferSize);
+    memcpy(pointer, scene->lights, sizeof(Light) * MAX_LIGHT_COUNT);
 
     RenderLib::unmap_buffer(GL_UNIFORM_BUFFER); 
 }
 
 void Viewport::update_sky_color() {
-    void* pointer = RenderLib::map_buffer_range(scene.lightBuffer, GL_UNIFORM_BUFFER, sizeof(Light) * scene.lightBufferSize, sizeof(glm::vec4));
-    memcpy(pointer, &scene.skyColor.x, sizeof(glm::vec4));
+    void* pointer = RenderLib::map_buffer_range(scene->lightBuffer, GL_UNIFORM_BUFFER, sizeof(Light) * scene->lightBufferSize, sizeof(glm::vec4));
+    memcpy(pointer, &scene->skyColor.x, sizeof(glm::vec4));
 
     RenderLib::unmap_buffer(GL_UNIFORM_BUFFER);
 }
 
 void Viewport::update_grid() {
-    TextureLib::update_texture_3d(scene.grids[0].gridTexture, 32, 32, 32, scene.grids[0].cache[scene.grids[0].cacheIndex].grid);
+    TextureLib::update_texture_3d(scene->grids[0].gridTexture, 32, 32, 32, scene->grids[0].cache[scene->grids[0].cacheIndex].grid);
 }
 
 void Viewport::update_palette() {
-    TextureLib::update_texture_1d(paletteTexture, 256, palette);
+    TextureLib::update_texture_1d(scene->paletteTexture, 256, scene->palette);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_1D, paletteTexture);
+    glBindTexture(GL_TEXTURE_1D, scene->paletteTexture);
     ShaderLib::uniform_int32(render.shader, "palette", 1);
 }
 
 void Viewport::update_cache() {
-    ERROR("New cache " << (scene.grids[selectedGrid].cacheIndex + 1));
-    if(scene.grids[selectedGrid].undoCount > 0) {
+    ERROR("New cache " << (scene->grids[selectedGrid].cacheIndex + 1));
+    if(scene->grids[selectedGrid].undoCount > 0) {
         ERROR("Resetting cache");
-        scene.grids[selectedGrid].undoCount = 0;
-        scene.grids[selectedGrid].usedCache = 0;
+        scene->grids[selectedGrid].undoCount = 0;
+        scene->grids[selectedGrid].usedCache = 0;
     }
 
-    uint32_t original = scene.grids[selectedGrid].cacheIndex;
+    uint32_t original = scene->grids[selectedGrid].cacheIndex;
 
-    scene.grids[selectedGrid].cacheIndex++;
-    scene.grids[selectedGrid].cacheIndex %= CACHE_SIZE;
-    memcpy(scene.grids[selectedGrid].cache[scene.grids[selectedGrid].cacheIndex].grid, scene.grids[selectedGrid].cache[original].grid, std::pow(32, 3));
+    scene->grids[selectedGrid].cacheIndex++;
+    scene->grids[selectedGrid].cacheIndex %= CACHE_SIZE;
+    memcpy(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex].grid, scene->grids[selectedGrid].cache[original].grid, std::pow(32, 3));
 
-    if(scene.grids[selectedGrid].usedCache < CACHE_SIZE)
-        scene.grids[selectedGrid].usedCache++;
+    if(scene->grids[selectedGrid].usedCache < CACHE_SIZE)
+        scene->grids[selectedGrid].usedCache++;
 
     edit = false;
 }
 
 void Viewport::undo() {
-    if(scene.grids[selectedGrid].undoCount < scene.grids[selectedGrid].usedCache) { 
-        scene.grids[selectedGrid].undoCount++;
-        scene.grids[selectedGrid].cacheIndex--;
-        scene.grids[selectedGrid].cacheIndex %= CACHE_SIZE;
-        MESSAGE("Undo " << scene.grids[selectedGrid].cacheIndex);
+    if(scene->grids[selectedGrid].undoCount < scene->grids[selectedGrid].usedCache) { 
+        scene->grids[selectedGrid].undoCount++;
+        scene->grids[selectedGrid].cacheIndex--;
+        scene->grids[selectedGrid].cacheIndex %= CACHE_SIZE;
+        MESSAGE("Undo " << scene->grids[selectedGrid].cacheIndex);
         update_grid();
     }
 }
 
 void Viewport::redo() {
-    if(scene.grids[selectedGrid].undoCount > 0) {
-        scene.grids[selectedGrid].undoCount--;
-        scene.grids[selectedGrid].cacheIndex++;
-        scene.grids[selectedGrid].cacheIndex %= CACHE_SIZE;
-        MESSAGE("Undo " << scene.grids[selectedGrid].cacheIndex);
+    if(scene->grids[selectedGrid].undoCount > 0) {
+        scene->grids[selectedGrid].undoCount--;
+        scene->grids[selectedGrid].cacheIndex++;
+        scene->grids[selectedGrid].cacheIndex %= CACHE_SIZE;
+        MESSAGE("Undo " << scene->grids[selectedGrid].cacheIndex);
         update_grid();
     }
 }
 
-void Viewport::solve_camera() {
+void Viewport::solve_camera(Cursor cursor) {
     // Camera Panning
     if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_3) && window.is_key_down(GLFW_KEY_LEFT_SHIFT)) {
         camOrigin += (float)mouseDeltaY * panSpeed * glm::normalize(glm::vec3(camera->view[0][1], camera->view[1][1], camera->view[2][1]));
@@ -383,6 +397,28 @@ void Viewport::solve_camera() {
         camDirection = glm::rotate(camDirection, (float)mouseDeltaX * rotationSpeed * (float)*deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
         camDirection = glm::rotate(camDirection, (float)mouseDeltaY * rotationSpeed * (float)*deltaTime, -glm::normalize(glm::vec3(camera->view[0][0], camera->view[1][0], camera->view[2][0])));
     }
-
+    
     camera->view = glm::lookAt(camOrigin + (-camDirection * camOffset), camOrigin, glm::vec3(0.0f, 0.0f, 1.0f));
+}
+
+void Viewport::resize_callback(uint32_t width, uint32_t height) {
+    this->window.width = width;
+    this->window.height = height;
+
+    camera->projection = glm::perspective(glm::radians(45.0f), (float)(width * tileInfo.width) / (float)(height * tileInfo.height), 0.1f, 1000.0f);
+    framebuffer.width = width;
+    framebuffer.height = height;
+
+    glDeleteTextures(1, &framebuffer.texture);
+    glDeleteRenderbuffers(1, &framebuffer.depth);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.framebuffer);
+
+    uint32_t colorAttachment = TextureLib::create_texture_2d(GL_TEXTURE_2D, width, height, GL_UNSIGNED_BYTE, GL_RGBA, GL_RGBA, nullptr);
+    TextureLib::framebuffer_attachment(colorAttachment, GL_TEXTURE_2D, GL_COLOR_ATTACHMENT0);
+    framebuffer.texture = colorAttachment;
+
+    glGenRenderbuffers(1, &framebuffer.depth);
+    glBindRenderbuffer(GL_RENDERBUFFER, framebuffer.depth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, framebuffer.depth);
 }

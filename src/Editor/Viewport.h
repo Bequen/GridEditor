@@ -6,6 +6,8 @@
 #include "Ray.h"
 #include "System/Window.h"
 #include "Color.h"
+#include "WindowTile.h"
+
 
 #define STATE_NONE          0x0000
 #define STATE_PRESS         0x0001
@@ -21,13 +23,13 @@
 
 #define MAX_LIGHT_COUNT 32
 
-class Viewport {
+class Viewport : public WindowTile {
     public:
     bool edit;
     uint32_t selectedGrid;
 
     Camera* camera;
-    Scene scene;
+    uint32_t cameraBuffer;
 
     Window window;
 
@@ -39,12 +41,6 @@ class Viewport {
     float rotationSpeed = 50.0f;
     float panSpeed = 10.0f;
     double* deltaTime;
-
-    RGB32* palette;
-    uint32_t colorSelected;
-    uint32_t colorCache;
-
-    uint32_t paletteTexture;
 
     uint32_t drawing;
     glm::vec3 shapeStart;
@@ -68,9 +64,16 @@ class Viewport {
     Framebuffer framebuffer;
     uint32_t renderQuad;
 
+    Viewport(Scene* scene, Window window, double* deltaTime) :
+    WindowTile(scene), window(window), deltaTime(deltaTime) {
+        
+    }
+
     void init();
     void update();
     void terminate();
+
+    void draw(Cursor cursor, WindowTileInfo tileInfo);
 
     void extrude(glm::vec3 position, glm::vec3 normal);
     void flood_fill(glm::vec3 position, glm::vec3 normal);
@@ -86,8 +89,10 @@ class Viewport {
     void redo();
 
     void solve_input();
-    void solve_voxel_placing();
+    void solve_voxel_placing(Cursor cursor);
     void solve_mouse();
-    void solve_camera();
+    void solve_camera(Cursor cursor);
     void solve_rectangle(glm::vec3 start, glm::vec3 end);
+
+    void resize_callback(uint32_t width, uint32_t height);
 };

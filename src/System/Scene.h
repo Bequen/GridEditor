@@ -6,6 +6,7 @@
 #include "Rendering/Light.h"
 #include "VoxelGrid.h"
 #include "Rendering/LightBuffer.h"
+#include "Editor/Color.h"
 
 #define INITIAL_GRID_COUNT 8
 #define INITIAL_LIGHT_COUNT 32
@@ -23,6 +24,10 @@ struct Scene {
     uint32_t lightCount;
     uint32_t lightBufferSize;
     glm::vec4 skyColor;
+
+    RGB32* palette;
+    uint32_t colorSelected;
+    uint32_t colorCache;
 
     Scene();
     Scene(uint32_t gridCount);

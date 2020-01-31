@@ -1,6 +1,7 @@
 #include "Scene.h"
 
 #include "Rendering/RenderLib.h"
+#include <glad/glad.h>
 
 Scene::Scene() :
 grids(new VoxelGrid[INITIAL_GRID_COUNT]), lights(new Light[INITIAL_LIGHT_COUNT]) {
@@ -37,4 +38,9 @@ void Scene::init() {
     for(uint32_t i = 0; i < gridSize; i++) {
         grids[i].init();
     }
+    colorSelected = 2;
+    palette = (RGB32*)malloc(sizeof(RGB32) * 256);
+    memset(palette, 0, sizeof(RGB32) * 256);
+    paletteTexture = TextureLib::create_texture_1d(256, GL_RGB, GL_RGB, palette);
+    paletteTexture = paletteTexture;
 }

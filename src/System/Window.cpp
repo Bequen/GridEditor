@@ -34,6 +34,8 @@ void Window::init() {
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
     glfwSwapInterval(1);
+
+    init_cursors();
 }
 
 void Window::init(int32_t width, int32_t height) {
@@ -69,6 +71,8 @@ void Window::init(int32_t width, int32_t height) {
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
     glfwSwapInterval(1);
+
+    init_cursors();
 }
 
 void Window::init(char* name, int32_t width, int32_t height) {
@@ -106,7 +110,13 @@ void Window::init(char* name, int32_t width, int32_t height) {
     glViewport(0, 0, width, height);
     //glfwSwapInterval(1);
 
-    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
+    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    init_cursors();
+}
+
+void Window::init_cursors() {
+    defaultCursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+    resizeCursor = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
 }
 
 void Window::change_size(uint32_t size) {
@@ -162,4 +172,21 @@ glm::vec3 Window::get_normalized_cursor_pos() {
     glm::vec3 result = glm::vec3((2.0f * (float)x) / width - 1.0f, 1.0f - (2.0f * (float)y) / height, 1.0f);
 
     return result;
+}
+
+void Window::cursor_pos(double* x, double* y) {
+    glfwGetCursorPos(window, x, y);
+}
+
+void Window::set_cursor(uint32_t cursor) {
+    assert_msg(defaultCursor && resizeCursor, "You are trying to change the cursor, but they are not initialized");
+
+    switch(cursor) {
+        case(GLFW_ARROW_CURSOR):
+            glfwSetCursor(window, defaultCursor);
+            break;
+        case(GLFW_HRESIZE_CURSOR):
+            glfwSetCursor(window, resizeCursor);
+            break;
+    }
 }

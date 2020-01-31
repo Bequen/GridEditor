@@ -13,7 +13,7 @@ void Application::init() {
 
     window.init(PROJECT_NAME, 720, 480);
 
-    editor.viewport.deltaTime = &deltaTime;
+    editor.deltaTime = &deltaTime;
     editor.window = window;
     editor.init();
 
@@ -44,9 +44,8 @@ void Application::update() {
 
         int32_t width, height;
         glfwGetFramebufferSize(window.window, &width, &height);
-        editor.resize_callback(width, height);
-        if(width != editor.window.width || height != editor.window.height) {
-
+        if(window.width != width || window.height != height) {
+            editor.resize_callback(width, height);
             window.width = width;
             window.height = height;
         }
@@ -62,9 +61,9 @@ void Application::update() {
 
         ImGui::Render();
 
-        int display_w, display_h;
+/*         int display_w, display_h;
         glfwGetFramebufferSize(window.window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
+        glViewport(0, 0, display_w, display_h); */
         //glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
         //glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

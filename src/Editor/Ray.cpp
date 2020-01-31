@@ -2,9 +2,10 @@
 
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
+#include "Cursor.h"
 
-void Ray::create_camera_ray(Window window, Camera camera) {
-    glm::vec4 mouse = glm::vec4(window.get_normalized_cursor_pos(), 1.0f);
+void Ray::create_camera_ray(Cursor cursor, Camera camera) {
+    glm::vec4 mouse = glm::vec4(cursor.cursorX, cursor.cursorY, 0.0f, 1.0f);
     mouse.z = -1.0f;
 
     glm::vec4 eye = glm::inverse(camera.projection) * (mouse);

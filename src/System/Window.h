@@ -12,6 +12,8 @@ class Window {
     private:
 
     public:
+        GLFWcursor* resizeCursor;
+        GLFWcursor* defaultCursor;
         GLFWwindow* window;
         int32_t width;
         int32_t height;
@@ -19,6 +21,8 @@ class Window {
         void init();
         void init(int32_t width, int32_t height);
         void init(char* name, int32_t width, int32_t height);
+
+        void init_cursors();
 
         void update();
         void terminate();
@@ -33,4 +37,7 @@ class Window {
         bool is_mouse_button_down(uint32_t button);
         bool is_key_down(uint32_t key);
         glm::vec3 get_normalized_cursor_pos();
+        void cursor_pos(double* x, double* y);
+
+        void set_cursor(uint32_t cursor);
 };

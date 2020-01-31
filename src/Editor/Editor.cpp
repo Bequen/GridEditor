@@ -11,39 +11,110 @@
 
 #include "Rendering/TextureLib.h"
 #include "Rendering/ShaderLib.h"
+#include "PaletteTile.h"
 #include <csignal>
 
 void Editor::init() {
     MESSAGE("Starting the editor initialization");
-    viewport.window = window;
-    viewport.init();
+    scene = Scene();
+    scene.init();
+    scene.grids[0].cache[0].set(glm::vec3(0.0f, 0.0f, 0.0f), 2);
+    scene.colorSelected = 2;
+    /* viewport.window = window;
+    viewport.scene = &scene;
+    viewport.init(); */
 
     deferredProgram = ShaderLib::program_create("deferred");
     drawQuad = RenderLib::create_render_quad();
+
+    windowQuad = RenderLib::create_render_quad();
+    windowProgram = ShaderLib::program_create("window");
+
+    editorWindow.init(10);
+    editorWindow.width = 1.0f;
+    editorWindow.children[0].init(10);
+    editorWindow.children[0].width = 0.5f;
+
+    editorWindow.children[0].children[0].init();
+    editorWindow.children[0].children[0].width = 0.5f;
+    editorWindow.children[0].children[1].init();
+    editorWindow.children[0].children[1].width = 1.0f;
+    editorWindow.children[0].children[1].assign(new Viewport(&scene, window, deltaTime));
+    editorWindow.children[0].childrenCount = 2;
+
+    editorWindow.children[1].init();
+    editorWindow.children[1].width = 1.0f;
+    editorWindow.children[1].assign(new PaletteTile(&scene));
+    editorWindow.childrenCount = 2;
+
+    scene.colorSelected = 2;
 }
 
 void Editor::update() {
-    viewport.update();
+    //viewport.update();
     RenderLib::bind_vertex_array(drawQuad);
     ShaderLib::program_use(deferredProgram);
 
-    glActiveTexture(GL_TEXTURE3);
+/*     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, viewport.framebuffer.texture);
     ShaderLib::uniform_int32(deferredProgram, "color", 3);
 
-    RenderLib::draw_triangle_strip(4);
+    RenderLib::draw_triangle_strip(4); */
 
     draw_ui();
+
+    glDisable(GL_DEPTH_TEST);
+    RenderLib::bind_vertex_array(windowQuad);
+    ShaderLib::program_use(windowProgram);
+
+    update_cursor();
+    editorWindow.update(cursor, 0.0f, 0.0f, 1.0f, windowProgram, EDITOR_WINDOW_FLOW_X, window.width, window.height - 19);
+}
+
+void Editor::update_cursor() {
+    if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
+        if(cursor.leftButtonState == MOUSE_BUTTON_STATE_PRESS || cursor.leftButtonState == MOUSE_BUTTON_STATE_HOLD)
+            cursor.leftButtonState = MOUSE_BUTTON_STATE_HOLD;
+        else
+            cursor.leftButtonState = MOUSE_BUTTON_STATE_PRESS;
+    } else {
+        cursor.leftButtonState = MOUSE_BUTTON_STATE_NONE;
+    }
+
+    double x, y;
+    window.cursor_pos(&x, &y);
+
+    cursor.deltaX = cursor.cursorX - x; 
+    cursor.deltaY = cursor.cursorY - y;
+
+    cursor.cursorX = x; 
+    cursor.cursorY = y;
 }
 
 void Editor::draw_ui() {
+    draw_menubar();
     draw_palette();
     draw_toolbar();
     draw_scene_setup();
 }
 
+void Editor::draw_menubar() {
+    if(ImGui::BeginMainMenuBar()) {
+        if(ImGui::BeginMenu("File")) {
+            ImGui::MenuItem("Load", NULL);
+            ImGui::MenuItem("Save", NULL);
+            ImGui::MenuItem("Quit", NULL);
+            ImGui::EndMenu();
+        }
+    }
+
+    //ERROR("Size: " << ImGui::GetWindowHeight());
+
+    ImGui::EndMainMenuBar();
+}
+
 void Editor::draw_palette() {
-    ImGui::Begin("Pallette", nullptr);
+    /* ImGui::Begin("Pallette", nullptr);
 
     ImGui::BeginChild("PickerWindow", ImVec2(200.0f, 200.0f), true);
     // Stupid workaround
@@ -72,11 +143,11 @@ void Editor::draw_palette() {
     }
     ImGui::EndChild();
 
-    ImGui::End();
+    ImGui::End(); */
 }
 
 void Editor::draw_toolbar() {
-    ImGui::Begin("Toolbar");
+    /* ImGui::Begin("Toolbar");
 
     const char* items[] = { "Cube", "Line", "Circle" };
 
@@ -93,11 +164,11 @@ void Editor::draw_toolbar() {
         ImGui::EndCombo();
     }
 
-    ImGui::End();
+    ImGui::End(); */
 }
 
 void Editor::draw_scene_setup() {
-    ImGui::Begin("Scene Setup");
+    /* ImGui::Begin("Scene Setup");
 
     ImGui::BeginChild("Lighting", ImVec2(200.0f, 200.0f), true);
     if(ImGui::ColorPicker4("Sky Color", &viewport.scene.skyColor.r)) {
@@ -135,7 +206,7 @@ void Editor::draw_scene_setup() {
 
     ImGui::EndChild();
 
-    ImGui::End();
+    ImGui::End(); */
 }
 
 void Editor::terminate() {
@@ -145,24 +216,6 @@ void Editor::terminate() {
 void Editor::resize_callback(int32_t width, int32_t height) {
     this->window.width = width;
     this->window.height = height;
-    viewport.window.width = width;
-    viewport.window.height = height;
-
     glViewport(0, 0, width, height);
-    viewport.camera->projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 1000.0f);
-    viewport.framebuffer.width = width;
-    viewport.framebuffer.height = height;
-
-    glDeleteTextures(1, &viewport.framebuffer.texture);
-    glDeleteRenderbuffers(1, &viewport.framebuffer.depth);
-    glBindFramebuffer(GL_FRAMEBUFFER, viewport.framebuffer.framebuffer);
-
-    uint32_t colorAttachment = TextureLib::create_texture_2d(GL_TEXTURE_2D, width, height, GL_UNSIGNED_BYTE, GL_RGBA, GL_RGBA, nullptr);
-    TextureLib::framebuffer_attachment(colorAttachment, GL_TEXTURE_2D, GL_COLOR_ATTACHMENT0);
-    viewport.framebuffer.texture = colorAttachment;
-
-    glGenRenderbuffers(1, &viewport.framebuffer.depth);
-    glBindRenderbuffer(GL_RENDERBUFFER, viewport.framebuffer.depth);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, viewport.framebuffer.depth);
+    editorWindow.resize_callback(width, height);
 }
