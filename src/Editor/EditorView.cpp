@@ -34,12 +34,20 @@ void EditorView::update(Cursor cursor, float offsetX, float offsetY, float heigh
     float x = offsetX;
     float y = offsetY;
 
+    float cursorX = cursor.cursorX / winWidth;
+    float cursorY = (cursor.cursorY - 19.0f) / winHeight;
+    if(flow == EDITOR_WINDOW_FLOW_Y)
+        std::swap(cursorX, cursorY);
+
+    //ERROR(cursorX << "|" << cursorY);
+
     // If the user pressed the mouse meaning he wants to interact
     // The exception is interacting with the first window, can't resize that one, obviously
-    if(cursor.leftButtonState == STATE_PRESS && width < 1.0f)
-        if(cursor.cursorY < width && cursor.cursorY > width - 0.05f)
+    if(cursor.leftButtonState == STATE_PRESS && width < 1.0f) {
+        ERROR("Test");
+        if(cursorY < width && cursorY > width - 0.05f)
             state = EDITOR_WINDOW_STATE_RESIZE;
-    else if(cursor.leftButtonState == STATE_NONE)
+    } else if(cursor.leftButtonState == STATE_NONE)
         state = EDITOR_WINDOW_STATE_NONE;
 
     // Now let's run through the children and update those
@@ -49,13 +57,14 @@ void EditorView::update(Cursor cursor, float offsetX, float offsetY, float heigh
         for(uint32_t i = 0; i < childrenCount; i++) {
             assert_msg(children, "Children are NOT initialized");
             // Move the window to the cursor position
+            
             if(children[i].state == EDITOR_WINDOW_STATE_RESIZE) {
-                if(cursor.cursorX > children[i + 1].width - 0.1f)
+                if(cursorX > children[i + 1].width - 0.1f)
                     children[i].width = children[i + 1].width - 0.1f;
-                else if(cursor.cursorX < x + 0.1f)
+                else if(cursorX < x + 0.1f)
                     children[i].width = x + 0.1f;
                 else
-                    children[i].width = cursor.cursorX;
+                    children[i].width = cursorX;
 
                 if(children[i].tile != nullptr)
                     children[i].resize_callback(children[i].width * winWidth, width * winHeight);
@@ -97,8 +106,8 @@ void EditorView::update(Cursor cursor, float offsetX, float offsetY, float heigh
             ImGui::SetWindowPos(ImVec2(x * winWidth, (y) * winHeight + 19));
         } ImGui::SetWindowSize(ImVec2((w - x) * winWidth, (height - y) * winHeight));
 
-        if(tile != nullptr)
-            tile->draw(cursor, tileInfo);
+        /* if(tile != nullptr)
+            tile->draw(cursor, tileInfo); */
 
         ImGui::End();
     }
