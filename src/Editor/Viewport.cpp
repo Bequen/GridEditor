@@ -98,9 +98,9 @@ void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
 
     //ERROR((ImGui::GetCursorScreenPos().x + window.width * tileInfo.width) << "|" << (ImGui::GetCursorScreenPos().y + window.height * tileInfo.height));
     // Draws the viewport into the ImGui Window
-    //ERROR(this->tileInfo.width << "|" << this->tileInfo.height);
+    ERROR(this->tileInfo.width << "|" << this->tileInfo.height);
     ImGui::GetWindowDrawList()->AddImage((void*)framebuffer.texture, 
-                                        ImVec2(tileInfo.x * window.width, tileInfo.y * window.height), 
+                                        ImVec2(tileInfo.x * window.width, tileInfo.y * window.height + 19), 
                                         ImVec2((tileInfo.x + tileInfo.width) * window.width,
                                         (tileInfo.y + tileInfo.height) * window.height), 
                                         ImVec2(0, 1), ImVec2(1, 0));

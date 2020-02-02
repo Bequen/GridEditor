@@ -32,19 +32,32 @@ void Editor::init() {
 
     editorWindow.init(10);
     editorWindow.width = 1.0f;
+    editorWindow.tileInfo.width = 1.0f;
+    editorWindow.tileInfo.height = 1.0f;
+    editorWindow.tileInfo.x = 0.0f;
+    editorWindow.tileInfo.y = 0.0f;
+
     editorWindow.children[0].init(10);
     editorWindow.children[0].width = 0.5f;
+    editorWindow.children[0].assign(new Viewport(&scene, window, deltaTime));
 
-    editorWindow.children[0].children[0].init();
+    /* editorWindow.children[0].children[0].init();
     editorWindow.children[0].children[0].width = 0.5f;
-    editorWindow.children[0].children[1].init();
+    editorWindow.children[0].children[1].init(10);
     editorWindow.children[0].children[1].width = 1.0f;
-    editorWindow.children[0].children[1].assign(new Viewport(&scene, window, deltaTime));
+    //editorWindow.children[0].children[1].assign(new Viewport(&scene, window, deltaTime));
     editorWindow.children[0].childrenCount = 2;
+
+    editorWindow.children[0].children[1].children[0].init();
+    editorWindow.children[0].children[1].children[0].width = 0.25f;
+    editorWindow.children[0].children[1].children[1].init();
+    editorWindow.children[0].children[1].children[1].width = 0.5f;
+    editorWindow.children[0].children[1].childrenCount = 2; */
 
     editorWindow.children[1].init();
     editorWindow.children[1].width = 1.0f;
     editorWindow.children[1].assign(new PaletteTile(&scene));
+
     editorWindow.childrenCount = 2;
 
     scene.colorSelected = 2;
@@ -72,7 +85,9 @@ void Editor::update() {
     ShaderLib::program_use(windowProgram);
 
     update_cursor();
-    editorWindow.update(cursor, 0.0f, 0.0f, 1.0f, windowProgram, EDITOR_WINDOW_FLOW_X, window.width, window.height - 19);
+    update_keyboard();
+    //ERROR("Update");
+    editorWindow.update_test(cursor, keyboard, 0.0f, 0.0f, 1.0f, windowProgram, EDITOR_WINDOW_FLOW_X, window.width, window.height - 19);
 }
 
 void Editor::update_cursor() {
@@ -93,6 +108,42 @@ void Editor::update_cursor() {
 
     cursor.cursorX = x; 
     cursor.cursorY = y;
+}
+
+void Editor::update_keyboard() {
+    // Left control
+    if(window.is_key_down(GLFW_KEY_LEFT_CONTROL)) {
+        if(keyboard.leftControl == KEY_STATE_PRESS)
+            keyboard.leftControl = KEY_STATE_HOLD;
+        else if(keyboard.leftControl == KEY_STATE_NONE)
+            keyboard.leftControl = KEY_STATE_PRESS;
+    } else {
+        keyboard.leftControl = KEY_STATE_NONE;
+    }
+
+
+
+    // Left shift
+    if(window.is_key_down(GLFW_KEY_LEFT_SHIFT)) {
+        if(keyboard.leftShift == KEY_STATE_PRESS)
+            keyboard.leftShift = KEY_STATE_HOLD;
+        else if(keyboard.leftShift == KEY_STATE_NONE)
+            keyboard.leftShift = KEY_STATE_PRESS;
+    } else {
+        keyboard.leftShift = KEY_STATE_NONE;
+    } 
+
+
+
+    // Left Alt
+    if(window.is_key_down(GLFW_KEY_LEFT_ALT)) {
+        if(keyboard.leftAlt == KEY_STATE_PRESS)
+            keyboard.leftAlt = KEY_STATE_HOLD;
+        else if(keyboard.leftAlt == KEY_STATE_NONE)
+            keyboard.leftAlt = KEY_STATE_PRESS;
+    } else {
+        keyboard.leftAlt = KEY_STATE_NONE;
+    } 
 }
 
 void Editor::draw_ui() {

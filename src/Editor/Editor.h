@@ -10,6 +10,7 @@
 #include "Rendering/Light.h"
 #include "System/Scene.h"
 #include "Viewport.h"
+#include "Keyboard.h"
 #include "EditorView.h"
 
 class Editor {
@@ -29,12 +30,14 @@ class Editor {
         Scene scene;
 
         double* deltaTime;
+        Keyboard keyboard;
 
         void init();
         void update();
         void terminate();
 
         void update_cursor();
+        void update_keyboard();
 
         void draw_menubar();
         void draw_ui();
