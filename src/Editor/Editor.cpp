@@ -12,6 +12,7 @@
 #include "Rendering/TextureLib.h"
 #include "Rendering/ShaderLib.h"
 #include "PaletteTile.h"
+#include "SceneSetupTile.h"
 #include <csignal>
 
 void Editor::init() {
@@ -41,22 +42,17 @@ void Editor::init() {
     editorWindow.children[0].width = 0.5f;
     editorWindow.children[0].assign(new Viewport(&scene, window, deltaTime));
 
-    /* editorWindow.children[0].children[0].init();
-    editorWindow.children[0].children[0].width = 0.5f;
-    editorWindow.children[0].children[1].init(10);
-    editorWindow.children[0].children[1].width = 1.0f;
-    //editorWindow.children[0].children[1].assign(new Viewport(&scene, window, deltaTime));
-    editorWindow.children[0].childrenCount = 2;
+    
 
-    editorWindow.children[0].children[1].children[0].init();
-    editorWindow.children[0].children[1].children[0].width = 0.25f;
-    editorWindow.children[0].children[1].children[1].init();
-    editorWindow.children[0].children[1].children[1].width = 0.5f;
-    editorWindow.children[0].children[1].childrenCount = 2; */
-
-    editorWindow.children[1].init();
+    editorWindow.children[1].init(10);
+    editorWindow.children[1].childrenCount = 2;
     editorWindow.children[1].width = 1.0f;
-    editorWindow.children[1].assign(new PaletteTile(&scene));
+    editorWindow.children[1].children[0].init();
+    editorWindow.children[1].children[0].width = 0.5f;
+    editorWindow.children[1].children[0].assign(new PaletteTile(&scene));
+    editorWindow.children[1].children[1].init();
+    editorWindow.children[1].children[1].width = 1.0f;
+    editorWindow.children[1].children[1].assign(new SceneSetupTile(&scene));
 
     editorWindow.childrenCount = 2;
 

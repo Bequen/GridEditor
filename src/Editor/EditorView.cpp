@@ -239,6 +239,7 @@ uint32_t EditorView::update_test(Cursor cursor, Keyboard keyboard, float offsetX
                 }
 
                 children[childrenCount++] = child;
+                ERROR("Children count " << childrenCount);
             }
 
             if(children[i].lowestBound < crossLowestBound)

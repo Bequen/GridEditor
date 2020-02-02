@@ -96,9 +96,6 @@ void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //ERROR((ImGui::GetCursorScreenPos().x + window.width * tileInfo.width) << "|" << (ImGui::GetCursorScreenPos().y + window.height * tileInfo.height));
-    // Draws the viewport into the ImGui Window
-    ERROR(this->tileInfo.width << "|" << this->tileInfo.height);
     ImGui::GetWindowDrawList()->AddImage((void*)framebuffer.texture, 
                                         ImVec2(tileInfo.x * window.width, tileInfo.y * window.height + 19), 
                                         ImVec2((tileInfo.x + tileInfo.width) * window.width,
