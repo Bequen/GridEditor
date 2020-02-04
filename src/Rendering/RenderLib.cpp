@@ -449,6 +449,23 @@ void RenderLib::draw_quad_z(Quad quad, uint32_t negative) {
     glDrawArrays(GL_TRIANGLES, 12 + negative * 18, 6);
 }
 
+
+void RenderLib::draw_quad_mesh(QuadMesh quadMesh) {
+    for(uint32_t z = 0; z < 32; z++) {
+        for(uint32_t p = 0; p < 3; p++) {
+            for(uint32_t i = 0; i < 2; i++) {
+                for(uint32_t y = 0; y < quadMesh.width; y++) {
+                    for(uint32_t x = 0; x < quadMesh.buffers[p][z].counts[i][y]; x++) {
+                        if(quadMesh.buffers[p][z].quads[i][y][x].d > 0) {
+                            RenderLib::draw_quad(quadMesh.buffers[p][z].quads[i][y][x], p, i);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 void RenderLib::culling(uint32_t mode) {
     glCullFace(mode);
 } void RenderLib::front_face(uint32_t face) {

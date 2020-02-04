@@ -2,6 +2,7 @@
 
 #include "Rendering/RenderLib.h"
 #include "Rendering/ShaderLib.h"
+#include "System/GridLib.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
@@ -92,7 +93,6 @@ void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
     RenderLib::buffer_binding_range(cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
     ShaderLib::uniform_int32(render.shader, "palette", 1);
     render.draw_scene(framebuffer, scene);
-    //render.draw_grid(tempGrid);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -133,34 +133,45 @@ void Viewport::solve_voxel_placing(Cursor cursor) {
             drawing = false;
 
             shapeEnd = ray_cast(ray);
-
             solve_rectangle(&scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex], shapeStart, shapeEnd);
             update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
 
             if(edit)
                 update_cache();
         } else if(drawing && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
-            ERROR("Test");
             memcpy(scene->grids[0].cache[scene->grids[0].cacheIndex].grid, scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE].grid, 32 * 32 * 32);
 
-            shapeEnd = ray_cast(ray);
-            solve_rectangle(&scene->grids[0].cache[scene->grids[0].cacheIndex], shapeStart, shapeEnd);
-            update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
+            glm::vec3 shapeEndTemp = ray_cast(ray);
+            if(std::floor(shapeEnd[0]) != std::floor(shapeEndTemp[0]) ||
+                std::floor(shapeEnd[1]) != std::floor(shapeEndTemp[1]) ||
+                std::floor(shapeEnd[2]) != std::floor(shapeEndTemp[2])) {
+                shapeEnd = shapeEndTemp;
+                solve_rectangle(&scene->grids[0].cache[scene->grids[0].cacheIndex], shapeStart, shapeEnd);
+                update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
+                scene->grids[selectedGrid].quadMesh = GridLib::greedy_meshing(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex]);
+            }
         }
     } else {
         if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
-            if(!edit) {
-                update_cache();
+            glm::vec3 shapeEndTemp = ray_cast(ray);
+            if(std::floor(shapeEnd[0]) != std::floor(shapeEndTemp[0]) ||
+                std::floor(shapeEnd[1]) != std::floor(shapeEndTemp[1]) ||
+                std::floor(shapeEnd[2]) != std::floor(shapeEndTemp[2])) {
+                shapeEnd = shapeEndTemp;
+                if(scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE].point_intersection(shapeEnd) &&
+                    scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex) % CACHE_SIZE].get(shapeEnd) != scene->colorSelected) {
+                    
+                    scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex) % CACHE_SIZE].set(shapeEnd, scene->colorSelected);
+                    edit = true;
+                    update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
+                    scene->grids[selectedGrid].quadMesh = GridLib::greedy_meshing(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex]);
+                }
             }
-
-            if(scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE].point_intersection(ray_cast(ray))) {
-                scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex) % CACHE_SIZE].set(ray_cast(ray), scene->colorSelected);
-                edit = true;
-            }
-            update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
         } else {
-            if(edit)
+            if(edit) {
+                update_cache();
                 edit = false;
+            }
         }
     }
 
@@ -280,7 +291,6 @@ void Viewport::solve_input() {
 }
 
 void Viewport::solve_rectangle(Grid<int8_t>* grid, glm::vec3 start, glm::vec3 end) {
-    //Grid<int8_t>* grid = &scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex];
     switch(rectangle) {
         case RECTANGLE_CUBE: {
             if(start.x > end.x) { std::swap(start.x, end.x); }
@@ -365,6 +375,10 @@ void Viewport::update_cache() {
 
     if(scene->grids[selectedGrid].usedCache < CACHE_SIZE)
         scene->grids[selectedGrid].usedCache++;
+
+    if(scene->grids[selectedGrid].quadMesh.width > 0)
+        scene->grids[selectedGrid].quadMesh.cleanup();
+    scene->grids[selectedGrid].quadMesh = GridLib::greedy_meshing(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex]);
 
     edit = false;
 }

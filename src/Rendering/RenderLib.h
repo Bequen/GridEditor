@@ -1,8 +1,10 @@
 #pragma once
 
-#include "Quad.h"
 #include <cstdint>
 #include <glm/glm.hpp>
+
+#include "Quad.h"
+#include "QuadMesh.h"
 
 #define DIR_Z 0x0000
 #define DIR_Y 0x0001
@@ -125,6 +127,8 @@ namespace RenderLib {
     void draw_triangle_strip(uint32_t triangles);
 
     // TODO Move into one function
+    void draw_quad_mesh(QuadMesh quadMesh);
+
     void draw_quad(Quad quad, uint32_t dir, uint32_t negative);
     void draw_quad_z(Quad quad, uint32_t negative);
     void draw_quad_y(Quad quad, uint32_t negative);

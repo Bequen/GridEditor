@@ -14,9 +14,10 @@ void PaletteTile::update() {
 
 void PaletteTile::draw(Cursor cursor, WindowTileInfo tileInfo) {
     ImGui::BeginChild("PickerWindow", ImVec2(200.0f, 200.0f), true);
-    // Stupid workaround
+    // Stupid workaround, for some reason the value is unitialized
     if(scene->colorSelected > 255)
         scene->colorSelected = 1;
+
     if(ImGui::ColorPicker3("picker", &scene->palette[scene->colorSelected].r, ImGuiColorEditFlags_PickerHueWheel))
         update_palette();
     ImGui::EndChild();

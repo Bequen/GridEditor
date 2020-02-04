@@ -1,7 +1,5 @@
 #include "RenderingPipeline.h"
 
-#include "RenderLib.h"
-#include "ShaderLib.h"
 
 #include <cstring>
 #include <glm/glm.hpp>
@@ -9,6 +7,11 @@
 #include <avg/Debug.h>
 #include <glad/glad.h>
 #include <csignal>
+
+
+#include "System/GridLib.h"
+#include "RenderLib.h"
+#include "ShaderLib.h"
 #include "QuadBuffer.h"
 #include "Quad.h"
 #include "Framebuffer.h"
@@ -62,7 +65,10 @@ void RenderingPipeline::draw_scene(Framebuffer framebuffer, Scene* scene) {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_3D, scene->grids[i].gridTexture);
 
-        draw_grid(scene->grids[i].cache[scene->grids[i].cacheIndex]);
+        /* scene->grids[i].quadMesh.cleanup();
+        scene->grids[i].quadMesh = GridLib::greedy_meshing(scene->grids[i].cache[scene->grids[i].cacheIndex]); */
+        RenderLib::draw_quad_mesh(scene->grids[i].quadMesh);
+       // draw_grid(scene->grids[i].cache[scene->grids[i].cacheIndex]);
     }
 
     if(polygonMode == 1)
@@ -77,6 +83,7 @@ void RenderingPipeline::draw_scene(Framebuffer framebuffer, Scene* scene) {
 }
 
 void RenderingPipeline::draw_grid(Grid<int8_t> grid) {
+
     for(uint32_t z = 0; z < grid.size; z++) {
         QuadBuffer buffers[3] = { QuadBuffer(32), QuadBuffer(32), QuadBuffer(32) };
 
@@ -134,12 +141,12 @@ void RenderingPipeline::draw_grid(Grid<int8_t> grid) {
             }
         }
 
-        for(uint32_t p = 0; p < 3; p++) {
+        /* for(uint32_t p = 0; p < 3; p++) {
             for(uint32_t i = 0; i < 2; i++) {
                 solve_greedy_meshing(buffers[p].quads[i], buffers[p].counts[i], 32);
             }
         }
-
+ */
         for(uint32_t p = 0; p < 3; p++) {
             for(uint32_t i = 0; i < 2; i++) {
                 for(uint32_t y = 0; y < grid.size; y++) {
@@ -163,116 +170,13 @@ void RenderingPipeline::update() {
 
     RenderLib::culling(GL_BACK);
     glDisable(GL_CULL_FACE);
-    // Stupid
-    /* for(uint32_t z = 0; z < grid->size; z++) {
-        for(uint32_t y = 0; y < grid->size; y++) {
-            for(uint32_t x = 0; x < grid->size; x++) {
-                if(grid->grid[x + z * (grid->size * grid->size) + y * grid->size] != 0) {
-                    RenderLib::draw_voxel(shader, glm::vec3((float)x, (float)y, (float)z));
-                }
-            }
-        }
-    } */
-
-    // Greedy
-    /* RenderLib::bind_vertex_array(topQuadVAO);
-    ShaderLib::program_use(quadProgram);
-    if(polygonMode == 1)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-    #pragma region Greedy Meshing
-    for(uint32_t z = 0; z < grid->size; z++) {
-        QuadBuffer buffers[3] = { QuadBuffer(32), QuadBuffer(32), QuadBuffer(32) };
-
-        for(uint32_t y = 0; y < grid->size; y++) {
-            for(uint32_t p = 0; p < 3; p++) {
-                for(uint32_t i = 0; i < 2; i++) {
-                    buffers[p].streak[i] = false;
-                    buffers[p].quadIndex[i] = 0;
-
-                    buffers[p].quads[i][y] = new Quad[grid->size];
-                    buffers[p].counts[i][y] = 0;
-                }
-            }
-
-            float dirs[2] = {1.0f, -1.0f};
-
-            for(uint32_t x = 0; x < grid->size; x++) {
-                for(uint32_t p = 0; p < 3; p++) {
-                    for(uint32_t i = 0; i < 2; i++) {
-                        int32_t voxel = grid->get(RenderLib::get_voxel(p, x, y, z));
-                        int32_t adjacentVoxel = grid->get(RenderLib::get_adjacent_voxel(p, x, y, z, dirs[i]));
-                        if(!buffers[p].streak[i]) {
-                            if(voxel > 0 && adjacentVoxel <= 0) {
-                                buffers[p].streak[i] = true;
-                                buffers[p].quads[i][y][buffers[p].quadIndex[i]] = Quad(x, y, z, y + 1, voxel);
-                            }
-                        } else {
-                            if(voxel != buffers[p].quads[i][y][buffers[p].quadIndex[i]].brush || adjacentVoxel > 0) {
-                                buffers[p].streak[i] = false;
-
-                                buffers[p].quads[i][y][buffers[p].quadIndex[i]].w = x;
-                                buffers[p].counts[i][y]++;
-                                buffers[p].quadIndex[i]++;
-
-                                if(voxel > 0 && adjacentVoxel <= 0) { 
-                                    buffers[p].streak[i] = true;
-                                    buffers[p].quads[i][y][buffers[p].quadIndex[i]] = Quad(x, y, z, y + 1, voxel);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            for(uint32_t p = 0; p < 3; p++) {
-                for(uint32_t i = 0; i < 2; i++) {
-                    if(buffers[p].streak[i]) {
-                        buffers[p].streak[i] = false;
-
-                        buffers[p].quads[i][y][buffers[p].quadIndex[i]].w = grid->size;
-                        buffers[p].counts[i][y]++;
-                        buffers[p].quadIndex[i]++;
-                    }
-                }
-            }
-        }
-
-        for(uint32_t p = 0; p < 3; p++) {
-            for(uint32_t i = 0; i < 2; i++) {
-                solve_greedy_meshing(buffers[p].quads[i], buffers[p].counts[i], 32);
-            }
-        }
-
-        for(uint32_t p = 0; p < 3; p++) {
-            for(uint32_t i = 0; i < 2; i++) {
-                for(uint32_t y = 0; y < grid->size; y++) {
-                    for(uint32_t x = 0; x < buffers[p].counts[i][y]; x++) {
-                        if(buffers[p].quads[i][y][x].d > 0)
-                            RenderLib::draw_quad(buffers[p].quads[i][y][x], p, i);
-                    }
-                    delete [] buffers[p].quads[i][y];
-                }
-                delete [] buffers[p].counts[i];
-            }
-        }
-    }
-    #pragma endregion
-
-    if(polygonMode == 1)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    glEnable(GL_CULL_FACE);
-    RenderLib::bind_vertex_array(voxel);
-
-    RenderLib::culling(GL_FRONT);
-    RenderLib::draw_voxel(boxShader, glm::vec3((float)0, (float)0, (float)0), glm::vec3(grid->size, grid->size, grid->size)); */
 }
 
 void RenderingPipeline::solve_greedy_meshing(Quad**& quads, uint32_t*& counts, uint32_t size) {
     for(uint32_t y = 1; y < size; y++) {
         uint32_t x = 0;
         uint32_t merged = 0;
+
         for(; x < counts[y]; x++) {
             // Runs through the previous line
             for(uint32_t i = merged; i < counts[y - 1]; i++) {

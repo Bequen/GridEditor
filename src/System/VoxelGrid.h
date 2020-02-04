@@ -2,6 +2,7 @@
 
 #include "Grid.h"
 #include "Rendering/TextureLib.h"
+#include "Rendering/QuadMesh.h"
 
 #define CACHE_SIZE 128
 
@@ -12,6 +13,8 @@ struct VoxelGrid {
     uint32_t undoCount;
 
     uint32_t gridTexture;
+
+    QuadMesh quadMesh;
 
     VoxelGrid() :
     cache(new Grid<int8_t>[CACHE_SIZE]) {
