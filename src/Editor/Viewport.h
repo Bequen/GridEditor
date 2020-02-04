@@ -30,6 +30,7 @@ class Viewport : public WindowTile {
 
     Camera* camera;
     uint32_t cameraBuffer;
+    Grid<int8_t> tempGrid;
 
     Window window;
 
@@ -79,7 +80,7 @@ class Viewport : public WindowTile {
     void flood_fill(glm::vec3 position, glm::vec3 normal);
     glm::vec3 ray_cast(Ray ray);
 
-    void update_grid();
+    void update_grid(Grid<int8_t> grid);
     void update_palette();
     void update_cache();
     void update_lights();
@@ -92,7 +93,7 @@ class Viewport : public WindowTile {
     void solve_voxel_placing(Cursor cursor);
     void solve_mouse();
     void solve_camera(Cursor cursor);
-    void solve_rectangle(glm::vec3 start, glm::vec3 end);
+    void solve_rectangle(Grid<int8_t>* grid, glm::vec3 start, glm::vec3 end);
 
     void resize_callback(uint32_t width, uint32_t height);
 };

@@ -11,11 +11,12 @@ void Viewport::init() {
     selectedGrid = 0;
 
     render.init();
+    tempGrid.init(32);
 
     cameraBuffer = RenderLib::create_buffer_stream(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, nullptr);
     camera = (Camera*)RenderLib::map_buffer_range(cameraBuffer, GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4) * 2);
     RenderLib::buffer_binding_range(cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
-    camera->projection = glm::perspective(glm::radians(45.0f), 720.0f / (480.0f), 0.1f, 1000.0f);
+    camera->projection = glm::perspective(glm::radians(45.0f), 720.0f / (480.0f), 0.1f, 100.0f);
 
     drawing = false;
 
@@ -38,7 +39,7 @@ void Viewport::init() {
     edit = false;
 
     update_palette();
-    update_grid();
+    update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
 
     update_cache();
 
@@ -91,6 +92,7 @@ void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
     RenderLib::buffer_binding_range(cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
     ShaderLib::uniform_int32(render.shader, "palette", 1);
     render.draw_scene(framebuffer, scene);
+    //render.draw_grid(tempGrid);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -132,11 +134,18 @@ void Viewport::solve_voxel_placing(Cursor cursor) {
 
             shapeEnd = ray_cast(ray);
 
-            solve_rectangle(shapeStart, shapeEnd);
-            update_grid();
+            solve_rectangle(&scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex], shapeStart, shapeEnd);
+            update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
 
             if(edit)
                 update_cache();
+        } else if(drawing && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
+            ERROR("Test");
+            memcpy(scene->grids[0].cache[scene->grids[0].cacheIndex].grid, scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE].grid, 32 * 32 * 32);
+
+            shapeEnd = ray_cast(ray);
+            solve_rectangle(&scene->grids[0].cache[scene->grids[0].cacheIndex], shapeStart, shapeEnd);
+            update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
         }
     } else {
         if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
@@ -148,7 +157,7 @@ void Viewport::solve_voxel_placing(Cursor cursor) {
                 scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex) % CACHE_SIZE].set(ray_cast(ray), scene->colorSelected);
                 edit = true;
             }
-            update_grid();
+            update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
         } else {
             if(edit)
                 edit = false;
@@ -180,7 +189,7 @@ void Viewport::solve_voxel_placing(Cursor cursor) {
 
                 flood_fill(position, normal);
 
-                update_grid();
+                update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
                 break;
             }
         }
@@ -270,8 +279,8 @@ void Viewport::solve_input() {
     }
 }
 
-void Viewport::solve_rectangle(glm::vec3 start, glm::vec3 end) {
-    Grid<int8_t>* grid = &scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex];
+void Viewport::solve_rectangle(Grid<int8_t>* grid, glm::vec3 start, glm::vec3 end) {
+    //Grid<int8_t>* grid = &scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex];
     switch(rectangle) {
         case RECTANGLE_CUBE: {
             if(start.x > end.x) { std::swap(start.x, end.x); }
@@ -329,8 +338,8 @@ void Viewport::update_sky_color() {
     RenderLib::unmap_buffer(GL_UNIFORM_BUFFER);
 }
 
-void Viewport::update_grid() {
-    TextureLib::update_texture_3d(scene->grids[0].gridTexture, 32, 32, 32, scene->grids[0].cache[scene->grids[0].cacheIndex].grid);
+void Viewport::update_grid(Grid<int8_t> grid) {
+    TextureLib::update_texture_3d(scene->grids[0].gridTexture, 32, 32, 32, grid.grid);
 }
 
 void Viewport::update_palette() {
@@ -366,7 +375,7 @@ void Viewport::undo() {
         scene->grids[selectedGrid].cacheIndex--;
         scene->grids[selectedGrid].cacheIndex %= CACHE_SIZE;
         MESSAGE("Undo " << scene->grids[selectedGrid].cacheIndex);
-        update_grid();
+        update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
     }
 }
 
@@ -376,7 +385,7 @@ void Viewport::redo() {
         scene->grids[selectedGrid].cacheIndex++;
         scene->grids[selectedGrid].cacheIndex %= CACHE_SIZE;
         MESSAGE("Undo " << scene->grids[selectedGrid].cacheIndex);
-        update_grid();
+        update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
     }
 }
 
