@@ -6,6 +6,8 @@
 
 #include "Rendering/RenderLib.h"
 #include <avg/Debug.h>
+#include <avg/Random/PermutationTable.h>
+#include <avg/Random/PerlinNoise.h>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -18,13 +20,18 @@
 void Editor::init() {
     MESSAGE("Starting the editor initialization");
     scene = Scene();
-    scene.init();
+    scene.init(1);
+
+    scene.voxelVAO = RenderLib::create_voxel();
+    scene.boxShader = ShaderLib::program_create("box");
 
     deferredProgram = ShaderLib::program_create("deferred");
     drawQuad = RenderLib::create_render_quad();
 
     windowQuad = RenderLib::create_render_quad();
     windowProgram = ShaderLib::program_create("window");
+
+    
 
     // Basic layout
     // TODO Make layout saveable
@@ -37,7 +44,6 @@ void Editor::init() {
 
     editorWindow.children[0].init(10);
     editorWindow.children[0].width = 0.5f;
-    editorWindow.children[0].assign(new Viewport(&scene, window, deltaTime));
 
     editorWindow.children[1].init(10);
     editorWindow.children[1].childrenCount = 2;
@@ -52,6 +58,8 @@ void Editor::init() {
     editorWindow.childrenCount = 2;
 
     scene.colorSelected = 2;
+
+    editorWindow.children[0].assign(new Viewport(&scene, window, deltaTime));
 }
 
 void Editor::update() {

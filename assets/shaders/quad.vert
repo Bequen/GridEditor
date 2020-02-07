@@ -27,6 +27,8 @@ void main() {
     vec3 offset = vec3(max(normal.x, 0.0), max(normal.y, 0.0), max(normal.z, 0.0));
     vec3 coords = (vPos - vec3(0.5, 0.5, 0.0)) * 2.0;
     vec3 quadScale = vec3(scale.x - position.x, scale.y - position.y, scale.z - position.z);
+    quadScale = vec3(scale.x, scale.y, scale.z);
+    //quadScale = vec3(1.0);
     vec3 pos = position + ((vPos - vec3(0.5, 0.5, 0.0)) * 2.0);
 
     int value = int(texelFetch(grid, ivec3(position.x, position.y, position.z)/* ivec3(0, 0, 0) */, 0).r * 255.0);

@@ -30,7 +30,6 @@ class Viewport : public WindowTile {
 
     Camera* camera;
     uint32_t cameraBuffer;
-    Grid<int8_t> tempGrid;
 
     Window window;
 

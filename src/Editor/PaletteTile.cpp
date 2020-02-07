@@ -5,7 +5,7 @@
 #include <ImGUI/imgui.h>
 
 void PaletteTile::init() {
-
+    scene->colorSelected = 1;
 }
 
 void PaletteTile::update() {
@@ -14,12 +14,10 @@ void PaletteTile::update() {
 
 void PaletteTile::draw(Cursor cursor, WindowTileInfo tileInfo) {
     ImGui::BeginChild("PickerWindow", ImVec2(200.0f, 200.0f), true);
-    // Stupid workaround, for some reason the value is unitialized
-    if(scene->colorSelected > 255)
-        scene->colorSelected = 1;
 
-    if(ImGui::ColorPicker3("picker", &scene->palette[scene->colorSelected].r, ImGuiColorEditFlags_PickerHueWheel))
+    if(ImGui::ColorPicker3("picker", &scene->palette[scene->colorSelected].r))
         update_palette();
+
     ImGui::EndChild();
 
     ImGui::BeginChild("PaletteWindow", ImVec2(0.0f, 0.0f), true);

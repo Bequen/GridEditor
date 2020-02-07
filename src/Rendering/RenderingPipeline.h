@@ -18,6 +18,9 @@ class RenderingPipeline {
         uint32_t cameraBuffer;
         void* camera;
 
+        uint32_t position;
+        uint32_t scale;
+
     public:
         uint32_t shader;
         uint32_t boxShader;
@@ -25,7 +28,7 @@ class RenderingPipeline {
 
         glm::vec4 skyColor;
 
-        uint32_t topQuadVAO;
+        uint32_t quadVAO;
         uint32_t quadProgram;
         uint32_t polygonMode;
 
@@ -46,6 +49,7 @@ class RenderingPipeline {
 
         void draw_scene(Framebuffer framebuffer, Scene* scene);
         void draw_grid(Grid<int8_t> grid);
+        void draw_sky();
 
         /**
          * @brief  Terminates the rendering pipeline and cleans up after it

@@ -29,9 +29,8 @@ struct Scene {
     uint32_t colorSelected;
     uint32_t colorCache;
 
-    Scene();
-    Scene(uint32_t gridCount);
-    Scene(uint32_t gridCount, uint32_t lightCount);
+    uint32_t voxelVAO;
+    uint32_t boxShader;
 
-    void init();
+    void init(uint32_t gridCount);
 };

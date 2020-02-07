@@ -12,4 +12,9 @@ struct Quad {
     x(x), y(y), z(z), w(0.0f), d(d), h(0.0f), brush(brush) {
 
     }
+
+    Quad(float x, float y, float z, float w, float d, float h) :
+    x(x), y(y), z(z), w(w), d(d), h(h) {
+
+    }
 };

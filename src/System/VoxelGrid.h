@@ -16,17 +16,17 @@ struct VoxelGrid {
 
     QuadMesh quadMesh;
 
-    VoxelGrid() :
-    cache(new Grid<int8_t>[CACHE_SIZE]) {
-        cacheIndex = 0;
+    void init(uint32_t size) {
+        quadMesh.init(size);
         usedCache = 0;
         undoCount = 0;
-        for(uint32_t i = 0; i < CACHE_SIZE; i++) {
-            cache[i].init(32);
-        }
-    }
+        cacheIndex = 0;
 
-    void init() {
-        gridTexture = TextureLib::create_texture_3d(32, 32, 32, cache[0].grid);
+        cache = new Grid<int8_t>[CACHE_SIZE];
+        for(uint32_t i = 0; i < CACHE_SIZE; i++) {
+            cache[i].init(size);
+        }
+
+        gridTexture = TextureLib::create_texture_3d(size, size, size, cache[0].grid);
     }
 };

@@ -12,7 +12,6 @@ void Viewport::init() {
     selectedGrid = 0;
 
     render.init();
-    tempGrid.init(32);
 
     cameraBuffer = RenderLib::create_buffer_stream(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, nullptr);
     camera = (Camera*)RenderLib::map_buffer_range(cameraBuffer, GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4) * 2);
@@ -67,6 +66,8 @@ void Viewport::init() {
     }
 
     scene->colorSelected = 2;
+
+    //scene->grids[selectedGrid].quadMesh = GridLib::greedy_meshing(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex]);
 }
 
 void Viewport::update() {
@@ -94,6 +95,11 @@ void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
     ShaderLib::uniform_int32(render.shader, "palette", 1);
     render.draw_scene(framebuffer, scene);
 
+    RenderLib::front_face(GL_CW);
+    RenderLib::bind_vertex_array(scene->voxelVAO);
+    RenderLib::draw_voxel(scene->boxShader, glm::vec3((float)0, (float)0, (float)0), glm::vec3(128.0f));
+    RenderLib::front_face(GL_CCW);
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -104,6 +110,7 @@ void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
                                         (tileInfo.y + tileInfo.height) * window.height), 
                                         ImVec2(0, 1), ImVec2(1, 0));
     this->tileInfo = tileInfo;
+    
 }
 
 void Viewport::solve_voxel_placing(Cursor cursor) {
@@ -139,7 +146,7 @@ void Viewport::solve_voxel_placing(Cursor cursor) {
             if(edit)
                 update_cache();
         } else if(drawing && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
-            memcpy(scene->grids[0].cache[scene->grids[0].cacheIndex].grid, scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE].grid, 32 * 32 * 32);
+            memcpy(scene->grids[0].cache[scene->grids[0].cacheIndex].grid, scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE].grid, scene->grids[selectedGrid].quadMesh.width * scene->grids[selectedGrid].quadMesh.depth * scene->grids[selectedGrid].quadMesh.height);
 
             glm::vec3 shapeEndTemp = ray_cast(ray);
             if(std::floor(shapeEnd[0]) != std::floor(shapeEndTemp[0]) ||
@@ -148,7 +155,8 @@ void Viewport::solve_voxel_placing(Cursor cursor) {
                 shapeEnd = shapeEndTemp;
                 solve_rectangle(&scene->grids[0].cache[scene->grids[0].cacheIndex], shapeStart, shapeEnd);
                 update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
-                scene->grids[selectedGrid].quadMesh = GridLib::greedy_meshing(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex]);
+                //scene->grids[selectedGrid].quadMesh = GridLib::greedy_meshing(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex]);
+                //GridLib::dynamic_greedy_meshing(&scene->grids[selectedGrid].quadMesh, scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex], glm::vec3(0.0f), glm::vec3(32.0f));
             }
         }
     } else {
@@ -164,7 +172,8 @@ void Viewport::solve_voxel_placing(Cursor cursor) {
                     scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex) % CACHE_SIZE].set(shapeEnd, scene->colorSelected);
                     edit = true;
                     update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
-                    scene->grids[selectedGrid].quadMesh = GridLib::greedy_meshing(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex]);
+                    //GridLib::dynamic_greedy_meshing(&scene->grids[selectedGrid].quadMesh, scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex], glm::vec3(0.0f), glm::vec3(32.0f));
+                    //scene->grids[selectedGrid].quadMesh = GridLib::greedy_meshing(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex]);
                 }
             }
         } else {
@@ -179,7 +188,6 @@ void Viewport::solve_voxel_placing(Cursor cursor) {
         ray.create_camera_ray(cursor, *camera);
         float distance = 0.0f;
         float step = 0.01f;
-        ERROR("FLOOD FILL");
 
         while(distance < 100.0f) {
             distance += step;
@@ -212,7 +220,7 @@ glm::vec3 Viewport::ray_cast(Ray ray) {
     float step = 0.1f;
 
     Grid<int8_t> previousGrid = scene->grids[selectedGrid].cache[(scene->grids[selectedGrid].cacheIndex - 1) % CACHE_SIZE];
-    while(distance < 100.0f) {
+    while(distance < 240.0f) {
         distance += step;
         if(previousGrid.point_intersection(ray.origin + ray.direction * distance)) {
             if(previousGrid.get(ray.origin + ray.direction * distance) > 0) {
@@ -349,7 +357,7 @@ void Viewport::update_sky_color() {
 }
 
 void Viewport::update_grid(Grid<int8_t> grid) {
-    TextureLib::update_texture_3d(scene->grids[0].gridTexture, 32, 32, 32, grid.grid);
+    TextureLib::update_texture_3d(scene->grids[0].gridTexture, grid.size, grid.size, grid.size, grid.grid);
 }
 
 void Viewport::update_palette() {
@@ -371,14 +379,14 @@ void Viewport::update_cache() {
 
     scene->grids[selectedGrid].cacheIndex++;
     scene->grids[selectedGrid].cacheIndex %= CACHE_SIZE;
-    memcpy(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex].grid, scene->grids[selectedGrid].cache[original].grid, std::pow(32, 3));
+    memcpy(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex].grid, scene->grids[selectedGrid].cache[original].grid, std::pow(/* scene->grids[selectedGrid].quadMesh.width */128, 3));
 
     if(scene->grids[selectedGrid].usedCache < CACHE_SIZE)
         scene->grids[selectedGrid].usedCache++;
 
-    if(scene->grids[selectedGrid].quadMesh.width > 0)
+    /* if(scene->grids[selectedGrid].quadMesh.width > 0)
         scene->grids[selectedGrid].quadMesh.cleanup();
-    scene->grids[selectedGrid].quadMesh = GridLib::greedy_meshing(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex]);
+    scene->grids[selectedGrid].quadMesh = GridLib::greedy_meshing(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex]); */
 
     edit = false;
 }

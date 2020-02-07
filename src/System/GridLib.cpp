@@ -4,7 +4,7 @@
 
 QuadMesh GridLib::greedy_meshing(Grid<int8_t> grid) {
     MESSAGE("Greedy meshing");
-    QuadMesh result = QuadMesh(32, 32, 32);
+    QuadMesh result = QuadMesh(grid.size, grid.size, grid.size);
     for(uint32_t z = 0; z < grid.size; z++) {
         for(uint32_t y = 0; y < grid.size; y++) {
             for(uint32_t p = 0; p < 3; p++) {
@@ -17,13 +17,15 @@ QuadMesh GridLib::greedy_meshing(Grid<int8_t> grid) {
                 }
             }
 
-            float dirs[2] = {1.0f, -1.0f};
-
             for(uint32_t x = 0; x < grid.size; x++) {
                 for(uint32_t p = 0; p < 3; p++) {
                     for(uint32_t i = 0; i < 2; i++) {
-                        int32_t voxel = grid.get(RenderLib::get_voxel(p, x, y, z));
-                        int32_t adjacentVoxel = grid.get(RenderLib::get_adjacent_voxel(p, x, y, z, dirs[i]));
+                        int32_t* position = GridLib::get_voxel(p, x, y, z);
+                        int32_t voxel = grid.get(position[0], position[1], position[2]);
+                        int32_t dirs[2] = { -1, 1};
+                        position[p] += dirs[i];
+                        int32_t adjacentVoxel = 0;
+                        //int32_t adjacentVoxel = grid.get(RenderLib::get_adjacent_voxel(p, x, y, z, dirs[i]));
                         if(!result.buffers[p][z].streak[i]) {
                             if(voxel > 0 && adjacentVoxel <= 0) {
                                 result.buffers[p][z].streak[i] = true;
@@ -60,14 +62,39 @@ QuadMesh GridLib::greedy_meshing(Grid<int8_t> grid) {
             }
         }
 
-        for(uint32_t p = 0; p < 3; p++) {
+        /* for(uint32_t p = 0; p < 3; p++) {
             for(uint32_t i = 0; i < 2; i++) {
-                greedy_meshing_merging(result.buffers[p][z].quads[i], result.buffers[p][z].counts[i], 32);
+                greedy_meshing_merging(result.buffers[p][z].quads[i], result.buffers[p][z].counts[i], grid.size);
             }
-        }
+        } */
     }
 
     return result;
+}
+
+void GridLib::dynamic_greedy_meshing(QuadMesh* quadMesh, Grid<int8_t> grid, glm::vec3 start, glm::vec3 end) {
+    MESSAGE("Dynamic greedy meshing " << start.x << "|" << start.y << "|" << start.z);
+    
+    for(uint32_t z = (int32_t)start.z; z <= (int32_t)end.z; z++) {
+        for(uint32_t y = (int32_t)start.y; y <= (int32_t)end.y; y++) {
+            Quad quad = Quad(0, y, z, 0, 1, 0);
+
+            for(uint32_t x = (int32_t)start.x; x <= (int32_t)end.x; x++) {
+                // If there is voxel on the position
+                if(grid.get(x, y, z) > 0 && grid.get(x, y, z + 1) <= 0) {
+                    ERROR("Width")
+                    quad.w++;
+                } else {
+                    if(quad.w > 0) {
+                        MESSAGE("New quad ");
+                        quadMesh->quads[0][quadMesh->counts[0]++] = quad;
+                    } else {
+                        quad.x++;
+                    }
+                }
+            }
+        }
+    }
 }
 
 void GridLib::greedy_meshing_merging(Quad**& quads, uint32_t*& counts, uint32_t size) {
@@ -152,4 +179,14 @@ void GridLib::greedy_meshing_merging(Quad**& quads, uint32_t*& counts, uint32_t 
             }
         }
     }
+}
+
+int32_t* GridLib::get_voxel(uint32_t p, uint32_t x, uint32_t y, uint32_t z) {
+    int32_t* pos[3] = { new int32_t[3]{x, y, z}, new int32_t[3]{x, z, y}, new int32_t[3]{z, x, y} };
+    return pos[p];
+}
+
+
+QuadMesh GridLib::doubles_remove_meshing(Grid<int8_t> grid) {
+    
 }

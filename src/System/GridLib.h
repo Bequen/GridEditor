@@ -16,6 +16,8 @@ namespace GridLib {
      */
     QuadMesh greedy_meshing(Grid<int8_t> grid);
 
+    void dynamic_greedy_meshing(QuadMesh* quadMesh, Grid<int8_t> grid, glm::vec3 start, glm::vec3 end);
+
     void greedy_meshing_merging(Quad**& quads, uint32_t*& counts, uint32_t size);
 
     /**
@@ -24,5 +26,7 @@ namespace GridLib {
      * @param  grid: Grid that will be meshed
      * @retval Returns actual quads for rendering
      */
-    QuadBuffer doubles_remove_meshing(Grid<int8_t> grid);
+    QuadMesh doubles_remove_meshing(Grid<int8_t> grid);
+
+    int32_t* get_voxel(uint32_t p, uint32_t x, uint32_t y, uint32_t z);
 };

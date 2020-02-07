@@ -1,8 +1,8 @@
 #include "RenderLib.h"
 
-#include <glad/glad.h>
 #include <iostream>
 #include <avg/Debug.h>
+
 #include "ShaderLib.h"
 
 void GLAPIENTRY
@@ -14,9 +14,9 @@ MessageCallback( GLenum source,
                  const GLchar* message,
                  const void* userParam )
 {
-  fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+  /* fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
            ( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ),
-            type, severity, message );
+            type, severity, message ); */
 }
 
 void RenderLib::polygon_mode(uint32_t mode) {
@@ -32,9 +32,7 @@ void RenderLib::init() {
 
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(MessageCallback, 0);
-    
-    glEnable(GL_MULTISAMPLE);
-    
+
     RenderLib::culling(GL_BACK);
 }
 
@@ -293,6 +291,8 @@ uint32_t RenderLib::create_render_quad() {
 
 void RenderLib::bind_vertex_array(uint32_t VAO) {
     glBindVertexArray(VAO);
+} void RenderLib::bind_buffer(uint32_t target, uint32_t buffer) {
+    glBindBuffer(target, buffer);
 }
 
 void RenderLib::draw_triangles(uint32_t triangles) {
@@ -301,6 +301,9 @@ void RenderLib::draw_triangles(uint32_t triangles) {
     glDrawArrays(GL_TRIANGLE_STRIP, 0, triangles);
 }
 
+
+
+#pragma region BUFFER CREATION
 uint32_t RenderLib::create_buffer_stream(uint32_t target, uint32_t size, void* data) {
     uint32_t result;
 
@@ -320,6 +323,7 @@ uint32_t RenderLib::create_buffer_dynamic(uint32_t target, uint32_t size, void* 
 
     return result;
 }
+#pragma endregion
 
 
 
@@ -376,44 +380,28 @@ void RenderLib::draw_voxel(uint32_t program, float x, float y, float z) {
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
-
-glm::vec3 RenderLib::get_adjacent_voxel(uint32_t dir, float x, float y, float z, float normal) {
-    glm::vec3 pos[3] = { {x, y, z + normal}, {x, z + normal, y}, {z + normal, x, y} };
-    return pos[dir];
-}
-
-glm::vec3 RenderLib::get_voxel(uint32_t dir, float x, float y, float z) {
-    glm::vec3 pos[3] = { {x, y, z}, {x, z, y}, {z, x, y} };
-    return pos[dir];
-}
-
-void RenderLib::draw_quad(Quad quad, uint32_t dir, uint32_t negative) {
+void RenderLib::draw_quad(uint32_t pos, uint32_t scale, Quad quad, uint32_t dir, uint32_t negative) {
     switch(dir) {
         case DIR_X:
-            draw_quad_x(quad, negative);
+            draw_quad_x(pos, scale, quad, negative);
             break;
         case DIR_Y:
-            draw_quad_y(quad, negative);
+            draw_quad_y(pos, scale, quad, negative);
             break;
         case DIR_Z:
-            draw_quad_z(quad, negative);
+            draw_quad_z(pos, scale, quad, negative);
             break;
     }
 }
 
-void RenderLib::draw_quad_z(Quad quad, uint32_t negative) {
-    GLint program;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
-
+void RenderLib::draw_quad_z(uint32_t pos, uint32_t scale, Quad quad, uint32_t negative) {
     quad.h = quad.z + 1.0f;
-    ShaderLib::uniform_vec3(program, "position", &quad.x);
-    ShaderLib::uniform_vec3(program, "scale", &quad.w);
+
+    glUniform3fv(pos, 1, &quad.x);
+    glUniform3fv(scale, 1, &quad.w);
 
     glDrawArrays(GL_TRIANGLES, 0 + negative * 18, 6);
-} void RenderLib::draw_quad_y(Quad quad, uint32_t negative) {
-    GLint program;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
-
+} void RenderLib::draw_quad_y(uint32_t pos, uint32_t scale, Quad quad, uint32_t negative) {
     float x = quad.x;
     float y = quad.y;
     float z = quad.z;
@@ -423,15 +411,12 @@ void RenderLib::draw_quad_z(Quad quad, uint32_t negative) {
     quad.z = y;
     quad.h = quad.d;
     quad.d = quad.y + 1.0f;
-    ShaderLib::uniform_vec3(program, "position", &quad.x);
 
-    ShaderLib::uniform_vec3(program, "scale", &quad.w);
+    glUniform3fv(pos, 1, &quad.x);
+    glUniform3fv(scale, 1, &quad.w);
 
     glDrawArrays(GL_TRIANGLES, 6 + negative * 18, 6);
-} void RenderLib::draw_quad_x(Quad quad, uint32_t negative) {
-    GLint program;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
-
+} void RenderLib::draw_quad_x(uint32_t pos, uint32_t scale, Quad quad, uint32_t negative) {
     quad.h = quad.d;
     quad.d = quad.w;
     quad.w = quad.x + 1.0f;
@@ -443,27 +428,42 @@ void RenderLib::draw_quad_z(Quad quad, uint32_t negative) {
     quad.y = x;
     quad.z = y;
 
-    ShaderLib::uniform_vec3(program, "position", &quad.x);
-    ShaderLib::uniform_vec3(program, "scale", &quad.w);
+    glUniform3fv(pos, 1, &quad.x);
+    glUniform3fv(scale, 1, &quad.w);
 
     glDrawArrays(GL_TRIANGLES, 12 + negative * 18, 6);
 }
 
 
-void RenderLib::draw_quad_mesh(QuadMesh quadMesh) {
-    for(uint32_t z = 0; z < 32; z++) {
+void RenderLib::draw_quad_mesh(QuadMesh quadMesh, uint32_t position, uint32_t scale) {
+    /* for(uint32_t z = 0; z < quadMesh.height; z++) {
         for(uint32_t p = 0; p < 3; p++) {
             for(uint32_t i = 0; i < 2; i++) {
                 for(uint32_t y = 0; y < quadMesh.width; y++) {
                     for(uint32_t x = 0; x < quadMesh.buffers[p][z].counts[i][y]; x++) {
                         if(quadMesh.buffers[p][z].quads[i][y][x].d > 0) {
-                            RenderLib::draw_quad(quadMesh.buffers[p][z].quads[i][y][x], p, i);
+                            RenderLib::draw_quad(position, scale, quadMesh.buffers[p][z].quads[i][y][x], p, i);
                         }
                     }
                 }
             }
         }
+    } */
+
+    assert_msg(quadMesh.quads[0] != nullptr || quadMesh.quads[1] != nullptr || quadMesh.quads[2] != nullptr,
+                "Quad mesh is not initialized, therefore cannot be used for rendering");
+
+    for(uint32_t p = 0; p < 3; p++) {
+        for(uint32_t i = 0; i < quadMesh.counts[p]; i++) {
+            glUniform3fv(position, 1, &quadMesh.quads[p][i].x);
+            glUniform3fv(scale, 1, &quadMesh.quads[p][i].w);
+            RenderLib::render_quad(0, 1);
+        }
     }
+}
+
+void RenderLib::render_quad(uint32_t dir, uint32_t opposite) {
+    glDrawArrays(GL_TRIANGLES, dir * 6 + opposite * 18, 6);
 }
 
 void RenderLib::culling(uint32_t mode) {

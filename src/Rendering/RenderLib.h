@@ -1,7 +1,9 @@
+
 #pragma once
 
 #include <cstdint>
 #include <glm/glm.hpp>
+#include <glad/glad.h>
 
 #include "Quad.h"
 #include "QuadMesh.h"
@@ -73,7 +75,10 @@ namespace RenderLib {
      * @retval None
      */
     void bind_vertex_array(uint32_t VAO);
-
+    void bind_buffer(uint32_t target, uint32_t buffer);
+    inline void bind_framebuffer(uint32_t framebuffer) {
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    }
 
 
     /**
@@ -127,11 +132,13 @@ namespace RenderLib {
     void draw_triangle_strip(uint32_t triangles);
 
     // TODO Move into one function
-    void draw_quad_mesh(QuadMesh quadMesh);
+    void draw_quad_mesh(QuadMesh quadMesh, uint32_t position, uint32_t scale);
 
-    void draw_quad(Quad quad, uint32_t dir, uint32_t negative);
-    void draw_quad_z(Quad quad, uint32_t negative);
-    void draw_quad_y(Quad quad, uint32_t negative);
-    void draw_quad_x(Quad quad, uint32_t negative);
+    void draw_quad(uint32_t pos, uint32_t scale, Quad quad, uint32_t dir, uint32_t negative);
+    void draw_quad_z(uint32_t pos, uint32_t scale, Quad quad, uint32_t negative);
+    void draw_quad_y(uint32_t pos, uint32_t scale, Quad quad, uint32_t negative);
+    void draw_quad_x(uint32_t pos, uint32_t scale, Quad quad, uint32_t negative);
+
+    void render_quad(uint32_t dir, uint32_t opposite);
     #pragma endregion
 };

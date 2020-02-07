@@ -23,6 +23,8 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
+int32_t find_exponent(int32_t number, int32_t power);
+
 /**
   * @brief  Entry point for this application
   * @note   
@@ -40,3 +42,4 @@ int32_t main(uint32_t argc, char** argv) {
 
     return 0;
 }
+

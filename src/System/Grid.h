@@ -13,8 +13,8 @@ struct Grid {
     uint32_t size;
 
     Grid() :
-    size(0), grid(nullptr){
-
+    size(0), grid(nullptr) {
+        
     }
 
     Grid(uint32_t size) :
@@ -57,11 +57,13 @@ struct Grid {
             return grid[x + y * size + z * (size * size)];
         else
             return -1;
-    } int32_t get(glm::vec3 position) {
+    } inline int32_t get(glm::vec3 position) {
         if(position.x >= 0.0f && position.x < size &&
             position.y >= 0.0f && position.y < size &&
             position.z >= 0.0f && position.z < size)
-            return grid[(uint32_t)std::floor(position.x) + (uint32_t)std::floor(position.y) * size + (uint32_t)std::floor(position.z) * (size * size)];
+            return grid[(uint32_t)std::floor(position.x) + 
+                        (uint32_t)std::floor(position.y) * size + 
+                        (uint32_t)std::floor(position.z) * (size * size)];
         else
             return -1;
     }
