@@ -25,9 +25,9 @@ uniform sampler1D palette;
 void main() {
     normal = vNormal;
     vec3 offset = vec3(max(normal.x, 0.0), max(normal.y, 0.0), max(normal.z, 0.0));
-    vec3 coords = (vPos - vec3(0.5, 0.5, 0.0)) * 2.0;
-    vec3 quadScale = vec3(scale.x - position.x, scale.y - position.y, scale.z - position.z);
-    quadScale = vec3(scale.x, scale.y, scale.z);
+    //vec3 coords = (vPos - vec3(0.5, 0.5, 0.0)) * 2.0;
+    //vec3 quadScale = vec3(scale.x - position.x, scale.y - position.y, scale.z - position.z);
+    vec3 quadScale = vec3(scale.x, scale.y, scale.z);
     //quadScale = vec3(1.0);
     vec3 pos = position + ((vPos - vec3(0.5, 0.5, 0.0)) * 2.0);
 

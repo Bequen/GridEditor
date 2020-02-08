@@ -31,6 +31,7 @@ struct Scene {
 
     uint32_t voxelVAO;
     uint32_t boxShader;
+    uint32_t quadShader;
 
     void init(uint32_t gridCount);
 };

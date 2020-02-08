@@ -31,8 +31,6 @@ void Editor::init() {
     windowQuad = RenderLib::create_render_quad();
     windowProgram = ShaderLib::program_create("window");
 
-    
-
     // Basic layout
     // TODO Make layout saveable
     editorWindow.init(10);

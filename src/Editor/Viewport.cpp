@@ -67,6 +67,10 @@ void Viewport::init() {
 
     scene->colorSelected = 2;
 
+    ShaderLib::uniform_int32(render.shader, "grid", 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, scene->grids[selectedGrid].gridTexture);
+
     //scene->grids[selectedGrid].quadMesh = GridLib::greedy_meshing(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex]);
 }
 

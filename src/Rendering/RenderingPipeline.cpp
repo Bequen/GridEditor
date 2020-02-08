@@ -52,11 +52,6 @@ void RenderingPipeline::draw_scene(Framebuffer framebuffer, Scene* scene) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     for(uint32_t i = 0; i < 1; i++) {
-        ShaderLib::uniform_int32(shader, "grid", 0);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_3D, scene->grids[i].gridTexture);
-
-        //RenderLib::draw_quad_mesh(scene->grids[i].quadMesh, position, scale);
         draw_grid(scene->grids[0].cache[(scene->grids[0].cacheIndex) % CACHE_SIZE]);
     }
 
@@ -101,8 +96,6 @@ void RenderingPipeline::draw_grid(Grid<int8_t> grid) {
                             RenderLib::render_quad(0, 0);
                             streakX = 0;
                         }
-                        streakX = 0;
-
                         startX = x + 1;
                     }
 
@@ -115,8 +108,6 @@ void RenderingPipeline::draw_grid(Grid<int8_t> grid) {
                             RenderLib::render_quad(0, 1);
                             _streakX = 0;
                         }
-                        _streakX = 0;
-
                         _startX = x + 1;
                     }
 
@@ -129,8 +120,6 @@ void RenderingPipeline::draw_grid(Grid<int8_t> grid) {
                             RenderLib::render_quad(1, 0);
                             streakY = 0;
                         }
-                        streakY = 0;
-
                         startY = x + 1;
                     } if(grid.get(x, y - 1, z) <= 0) {
                         _streakY++;
@@ -141,8 +130,6 @@ void RenderingPipeline::draw_grid(Grid<int8_t> grid) {
                             RenderLib::render_quad(1, 0);
                             _streakY = 0;
                         }
-                        _streakY = 0;
-
                         _startY = x + 1;
                     }
 

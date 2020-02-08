@@ -8,6 +8,10 @@ void Scene::init(uint32_t gridCount) {
     this->gridSize = gridCount;
     grids = new VoxelGrid[gridCount];
 
+    lightBufferSize = INITIAL_LIGHT_COUNT;
+    lightCount = 0;
+    lights = new Light[lightBufferSize];
+
     lightBuffer = RenderLib::create_buffer_dynamic(UNIFORM_BUFFER, sizeof(Light) * lightBufferSize + sizeof(glm::vec4), lights);
     RenderLib::buffer_binding_range(lightBuffer, 2, 0, sizeof(Light) * lightBufferSize + sizeof(glm::vec4));
 

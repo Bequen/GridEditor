@@ -121,7 +121,7 @@ uint32_t EditorView::update(Cursor cursor, Keyboard keyboard, float offsetX, flo
     }
 
     if(keyboard.leftControl == KEY_STATE_HOLD && cursor.leftButtonState == MOUSE_BUTTON_STATE_PRESS && result != EDITOR_WINDOW_STATE_SPLIT && width - x > 0.2f) {
-        if(cursorY > x && cursorY < width && cursorX > y && cursorX < height) {
+        if(cursorY > x && cursorY < x + 0.05f && cursorX > y && cursorX < height) {
             if(keyboard.leftShift == KEY_STATE_HOLD && result != EDITOR_WINDOW_STATE_SUBDIVIDE) {
                 result = EDITOR_WINDOW_STATE_SUBDIVIDE;
             } else {
