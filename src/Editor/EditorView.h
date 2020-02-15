@@ -12,6 +12,8 @@
 #define EDITOR_WINDOW_FLOW_X            0x0000
 #define EDITOR_WINDOW_FLOW_Y            0x0001
 
+#define MENUBAR_HEIGHT                  19
+
 /**
  * @brief  Window node used inside of the editor
  * @note   

@@ -47,9 +47,19 @@ class RenderingPipeline {
          */
         void update();
 
-        void draw_scene(Framebuffer framebuffer, Scene* scene);
-        void draw_grid(Grid<int8_t> grid);
+        /**
+         * @brief  Draws the scene into specific buffer
+         * @note   
+         * @param  framebuffer: The framebuffer in which we will be rendering the scene
+         * @param  scene: Scene that will be rendered
+         * @param  view: Position of the viewing camera
+         * @retval None
+         */
+        void draw_scene(Framebuffer framebuffer, Scene* scene, glm::vec3 view);
+        void draw_grid(Grid<int8_t> grid, glm::vec3 view);
         void draw_sky();
+
+        void merge_quad(_QuadMesh& quadMesh, _Quad quad, uint32_t& quadIndex, uint32_t index);
 
         /**
          * @brief  Terminates the rendering pipeline and cleans up after it

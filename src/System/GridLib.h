@@ -6,6 +6,7 @@
 #include "Rendering/QuadBuffer.h"
 #include "Rendering/QuadMesh.h"
 #include "Grid.h"
+#include "Rendering/_QuadMesh.h"
 
 namespace GridLib {
     /**
@@ -16,7 +17,7 @@ namespace GridLib {
      */
     QuadMesh greedy_meshing(Grid<int8_t> grid);
 
-    void dynamic_greedy_meshing(QuadMesh* quadMesh, Grid<int8_t> grid, glm::vec3 start, glm::vec3 end);
+    void dynamic_greedy_meshing(_QuadMesh* quadMesh, Grid<int8_t> grid, glm::vec3 start, glm::vec3 end);
 
     void greedy_meshing_merging(Quad**& quads, uint32_t*& counts, uint32_t size);
 

@@ -37,7 +37,7 @@ uint32_t EditorView::update(Cursor cursor, Keyboard keyboard, float offsetX, flo
     float y = offsetY;
 
     float cursorX = cursor.cursorX / winWidth;
-    float cursorY = (cursor.cursorY - 19.0f) / winHeight;
+    float cursorY = (cursor.cursorY - MENUBAR_HEIGHT) / winHeight;
     if(flow == EDITOR_WINDOW_FLOW_Y)
         std::swap(cursorX, cursorY);
 

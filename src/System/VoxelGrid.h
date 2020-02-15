@@ -3,6 +3,7 @@
 #include "Grid.h"
 #include "Rendering/TextureLib.h"
 #include "Rendering/QuadMesh.h"
+#include "Rendering/_QuadMesh.h"
 
 #define CACHE_SIZE 128
 
@@ -15,8 +16,12 @@ struct VoxelGrid {
     uint32_t gridTexture;
 
     QuadMesh quadMesh;
+    uint32_t size;
+
+    _QuadMesh _quadMesh;
 
     void init(uint32_t size) {
+        this->size = size;
         quadMesh.init(size);
         usedCache = 0;
         undoCount = 0;
