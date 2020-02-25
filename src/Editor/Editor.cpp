@@ -13,8 +13,9 @@
 
 #include "Rendering/TextureLib.h"
 #include "Rendering/ShaderLib.h"
-#include "PaletteTile.h"
-#include "SceneSetupTile.h"
+#include "Editor/Tiles/PaletteTile.h"
+#include "Editor/Tiles/PerformanceMonitor.h"
+#include "Editor/Tiles/SceneSetupTile.h"
 #include <csignal>
 
 void Editor::init() {
@@ -41,23 +42,30 @@ void Editor::init() {
     editorWindow.tileInfo.y = 0.0f;
 
     editorWindow.children[0].init(10);
+    editorWindow.children[0].childrenCount = 2;
     editorWindow.children[0].width = 0.5f;
+
+    editorWindow.children[0].children[0].init();
+    editorWindow.children[0].children[0].width = 0.75f;
+    editorWindow.children[0].children[0].assign(new Viewport(&scene, window, deltaTime), &window);
+
+    editorWindow.children[0].children[1].init();
+    editorWindow.children[0].children[1].width = 1.0f;
+    editorWindow.children[0].children[1].assign(new PerformanceMonitor(&scene, deltaTime), &window);
 
     editorWindow.children[1].init(10);
     editorWindow.children[1].childrenCount = 2;
     editorWindow.children[1].width = 1.0f;
     editorWindow.children[1].children[0].init();
     editorWindow.children[1].children[0].width = 0.5f;
-    editorWindow.children[1].children[0].assign(new PaletteTile(&scene));
+    editorWindow.children[1].children[0].assign(new PaletteTile(&scene), &window);
     editorWindow.children[1].children[1].init();
     editorWindow.children[1].children[1].width = 1.0f;
-    editorWindow.children[1].children[1].assign(new SceneSetupTile(&scene));
+    editorWindow.children[1].children[1].assign(new SceneSetupTile(&scene), &window);
 
     editorWindow.childrenCount = 2;
 
     scene.colorSelected = 2;
-
-    editorWindow.children[0].assign(new Viewport(&scene, window, deltaTime));
 }
 
 void Editor::update() {

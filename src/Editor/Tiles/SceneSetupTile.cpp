@@ -53,7 +53,8 @@ void SceneSetupTile::resize_callback(uint32_t width, uint32_t height) {
 }
 
 void SceneSetupTile::update_lights() {
-    void* pointer = RenderLib::map_buffer_range(scene->lightBuffer, GL_UNIFORM_BUFFER, 0, sizeof(Light) * scene->lightBufferSize);
+    MESSAGE("Updating lights");
+    void* pointer = RenderLib::map_buffer_range(scene->lightBuffer, GL_UNIFORM_BUFFER, 0, sizeof(Light) * MAX_LIGHT_COUNT);
     memcpy(pointer, scene->lights, sizeof(Light) * MAX_LIGHT_COUNT);
 
     RenderLib::unmap_buffer(GL_UNIFORM_BUFFER); 

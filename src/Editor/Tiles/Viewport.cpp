@@ -7,19 +7,42 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include "ImGUI/imgui.h"
+#include <chrono>
+typedef std::chrono::high_resolution_clock Clock;
 
+
+///
+/// Initialization
+///
 void Viewport::init() {
-    selectedGrid = 0;
-
+    // Initializes few things
     render.init();
+    init_camera();
 
-    cameraBuffer = RenderLib::create_buffer_stream(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, nullptr);
-    camera = (Camera*)RenderLib::map_buffer_range(cameraBuffer, GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4) * 2);
-    RenderLib::buffer_binding_range(cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
-    camera->projection = glm::perspective(glm::radians(45.0f), 720.0f / (480.0f), 0.1f, 100.0f);
-
+    // Set some default values
+    selectedGrid = 0;
+    rectangle = 0;
+    extrudeIndex = 0;
     drawing = false;
+    edit = false;
 
+    extrudeSelect = new glm::vec3(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex].size * scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex].size);
+    drawMode = DRAW_MODE_BRUSH;
+
+    // Updates all that is needed
+    update_lights();
+    update_sky_color();
+    update_palette();
+    update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
+    update_cache();
+
+    init_framebuffer();
+    init_profiler();
+
+    scene->colorSelected = 2;
+}
+
+void Viewport::init_camera() {
     panSpeed = 10.0f;
     rotationSpeed = 100.0f;
     camDirection = glm::normalize(glm::vec3(0.0f, 1.0f, -1.0f));
@@ -27,51 +50,57 @@ void Viewport::init() {
     camOrigin = glm::vec3(16.0f, 16.0f, 0.0f);
     camOffset = 20.0f;
 
-    rectangle = 0;
+    cameraBuffer = RenderLib::create_buffer_stream(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, nullptr);
+    camera = (Camera*)RenderLib::map_buffer_range(cameraBuffer, GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4) * 2);
+    RenderLib::buffer_binding_range(cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
+    camera->projection = glm::perspective(glm::radians(45.0f), 720.0f / (480.0f), 0.1f, 100.0f);
     camera->view = glm::lookAt(camOrigin + (-camDirection * camOffset), camOrigin, glm::vec3(0.0f, 0.0f, 1.0f));
+}
 
-    extrudeSelect = new glm::vec3(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex].size * scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex].size);
-    extrudeIndex = 0;
-    drawMode = DRAW_MODE_BRUSH;
-
-    update_lights();
-    update_sky_color();
-    edit = false;
-
-    update_palette();
-    update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
-
-    update_cache();
-
+void Viewport::init_framebuffer() {
     renderQuad = RenderLib::create_quad();
 
     framebuffer = TextureLib::create_framebuffer(window.width, window.height);
     uint32_t colorAttachment = TextureLib::create_texture_2d(GL_TEXTURE_2D, window.width, window.height, GL_UNSIGNED_BYTE, GL_RGBA, GL_RGBA, nullptr);
     TextureLib::framebuffer_attachment(colorAttachment, GL_TEXTURE_2D, GL_COLOR_ATTACHMENT0);
     framebuffer.texture = colorAttachment;
+
     unsigned int rboDepth;
     glGenRenderbuffers(1, &rboDepth);
     glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, window.width, window.height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
-    glEnable(GL_DEPTH_TEST);
     framebuffer.depth = rboDepth;
 
     unsigned int attachments[1] = { GL_COLOR_ATTACHMENT0 };
     glDrawBuffers(1, attachments);
 
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        std::cout << "Framebuffer not complete!" << std::endl;
-        raise(SIGABRT);
-    }
+    assert_msg(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer not complete!");
 
-    scene->colorSelected = 2;
-
-    ShaderLib::uniform_int32(render.shader, "grid", 0);
+    ShaderLib::uniform_int32(render.voxelProgram, "grid", 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, scene->grids[selectedGrid].gridTexture);
 }
 
+void Viewport::init_profiler() {
+    PerformanceStat _stat;
+    _stat.bufferSize = 32;
+    _stat.time = new float[32];
+    _stat.id = 0;
+    _stat.index = 0;
+    _stat.name = "Rendering";
+    memset(_stat.time, 0, sizeof(float) * 32);
+
+    profiler.stats[0] = _stat;
+    profiler.count++;
+    stat = &profiler.stats[0];
+}
+
+
+
+///
+/// Updates
+/// 
 void Viewport::update() {
 }
 
@@ -80,10 +109,10 @@ void Viewport::terminate() {
 }
 
 void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
-    glEnable(GL_DEPTH_TEST);
     solve_mouse();
     solve_input();
 
+    // Capture mouse for camera, but only if tile is hovered
     if(ImGui::IsWindowHovered()) {
         float offsetX = tileInfo.x * window.width; float offsetY = tileInfo.y * window.height;
         cursor.cursorX = (2.0f * (((float)cursor.cursorX - offsetX) / tileInfo.width)) / (window.width) - 1.0f;
@@ -93,10 +122,19 @@ void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
         solve_voxel_placing(cursor);
     }
 
+    // Bounds the camera
     RenderLib::buffer_binding_range(cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
-    ShaderLib::uniform_int32(render.shader, "palette", 1);
+
+    // Actual rendering code
+    auto start_time = Clock::now();
+
     render.draw_scene(framebuffer, scene, glm::vec3(0.0f));
 
+    auto end_time = Clock::now();
+    stat->count++;
+    stat->sum += (float)std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+
+    // Draws the cage
     RenderLib::front_face(GL_CW);
     RenderLib::bind_vertex_array(scene->voxelVAO);
     RenderLib::draw_voxel(scene->boxShader, glm::vec3((float)0, (float)0, (float)0), glm::vec3(scene->grids[selectedGrid].size));
@@ -106,21 +144,22 @@ void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
+    // Draws resulting image into the ImGui window
     ImGui::GetWindowDrawList()->AddImage((void*)framebuffer.texture, 
                                         ImVec2(tileInfo.x * window.width, tileInfo.y * window.height + 19), 
                                         ImVec2((tileInfo.x + tileInfo.width) * window.width,
                                         (tileInfo.y + tileInfo.height) * window.height), 
                                         ImVec2(0, 1), ImVec2(1, 0));
     this->tileInfo = tileInfo;
-    
 }
 
 void Viewport::solve_voxel_placing(Cursor cursor) {
+    // Initialize a new ray
     Ray ray;
     ray.create_camera_ray(cursor, *camera);
-
     ray.origin = (camOrigin + (-camDirection * camOffset));
-    float step = 0.01f;
+    const float step = 0.01f; // Ray step
 
     // If the user wants to delete stuff
     if(window.is_key_down(GLFW_KEY_LEFT_CONTROL))
@@ -128,11 +167,16 @@ void Viewport::solve_voxel_placing(Cursor cursor) {
     else
         scene->colorSelected = scene->colorCache;
 
+
+
+    // If user want to draw a shape
     if(window.is_key_down(GLFW_KEY_LEFT_SHIFT))
         drawMode = DRAW_MODE_SHAPE;
     else
         drawMode = DRAW_MODE_BRUSH;
 
+
+    // If the shape is being drawn
     if(drawMode == DRAW_MODE_SHAPE) {
         if(!drawing && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
             drawing = true;
@@ -365,11 +409,10 @@ void Viewport::update_palette() {
     TextureLib::update_texture_1d(scene->paletteTexture, 256, scene->palette);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_1D, scene->paletteTexture);
-    ShaderLib::uniform_int32(render.shader, "palette", 1);
+    ShaderLib::uniform_int32(render.voxelProgram, "palette", 1);
 }
 
 void Viewport::update_cache() {
-    ERROR("New cache " << (scene->grids[selectedGrid].cacheIndex + 1));
     if(scene->grids[selectedGrid].undoCount > 0) {
         scene->grids[selectedGrid].undoCount = 0;
         scene->grids[selectedGrid].usedCache = 0;
@@ -430,6 +473,10 @@ void Viewport::resize_callback(uint32_t width, uint32_t height) {
     this->window.width = width;
     this->window.height = height;
 
+    if(tileInfo.width == 0.0)
+        tileInfo.width = 1.0f;
+    if(tileInfo.height == 0.0f)
+        tileInfo.height = 1.0f;
     camera->projection = glm::perspective(glm::radians(45.0f), (float)(width * tileInfo.width) / (float)(height * tileInfo.height), 0.1f, 1000.0f);
     framebuffer.width = width;
     framebuffer.height = height;

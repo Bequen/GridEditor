@@ -1,13 +1,15 @@
 #pragma once
 
-#include "Cursor.h"
+#include "Editor/Cursor.h"
 #include "System/Scene.h"
 #include "WindowTileInfo.h"
+#include "System/Window.h"
 
 class WindowTile {
     public:
         WindowTileInfo tileInfo;
         Scene* scene;
+        Window* window;
 
         WindowTile(Scene* scene) :
         scene(scene) {

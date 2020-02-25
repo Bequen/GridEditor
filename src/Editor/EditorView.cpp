@@ -7,7 +7,7 @@
 
 #include "Rendering/RenderLib.h"
 #include "Rendering/ShaderLib.h"
-#include "Viewport.h"
+#include "Editor/Tiles/Viewport.h"
 #include <ImGUI/imgui.h>
 
 uint32_t EditorView::lastId = 0;
@@ -38,13 +38,16 @@ uint32_t EditorView::update(Cursor cursor, Keyboard keyboard, float offsetX, flo
 
     float cursorX = cursor.cursorX / winWidth;
     float cursorY = (cursor.cursorY - MENUBAR_HEIGHT) / winHeight;
-    if(flow == EDITOR_WINDOW_FLOW_Y)
-        std::swap(cursorX, cursorY);
-
+    
     tileInfo.x = x;
     tileInfo.y = y;
     tileInfo.width = width - x;
     tileInfo.height = height - y;
+
+    if(flow == EDITOR_WINDOW_FLOW_Y) {
+        std::swap(cursorX, cursorY);
+        std::swap(tileInfo.width, tileInfo.height);
+    }
 
     // If the user pressed the mouse meaning he wants to interact
     // The exception is interacting with the first window, can't resize that one, obviously
@@ -155,6 +158,7 @@ void EditorView::render(Cursor cursor, float x, float y, float height, uint32_t 
         std::swap(x, y);
         std::swap(height, w);
         std::swap(tileX, tileY);
+        std::swap(tileInfo.width, tileInfo.height);
     } 
 
     std::string label = "##" + std::to_string(id);
@@ -162,6 +166,7 @@ void EditorView::render(Cursor cursor, float x, float y, float height, uint32_t 
 
     ImGui::SetWindowPos(ImVec2(x * winWidth, (y) * winHeight + 19));
     ImGui::SetWindowSize(ImVec2((w - x) * winWidth, (height - y) * winHeight));
+
 
     if(tile != nullptr)
         tile->draw(cursor, tileInfo);
@@ -215,9 +220,10 @@ void EditorView::terminate() {
 }
 
 
-void EditorView::assign(WindowTile* tile) {
+void EditorView::assign(WindowTile* tile, Window* window) {
     this->tile = tile;
     this->tile->init();
+    this->tile->window = window;
 }
 
 void EditorView::resize_callback(uint32_t width, uint32_t height) {

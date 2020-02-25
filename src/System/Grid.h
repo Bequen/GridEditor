@@ -48,9 +48,13 @@ struct Grid {
         return true;
     }
 
-    T get(uint32_t index) {
+    inline T get(uint32_t index) {
+        if(index < 0)
+            return -1;
+        else if(index > size * size * size)
+            return -1;
         return grid[index];
-    } T get(uint32_t x, uint32_t y, uint32_t z) {
+    } inline T get(uint32_t x, uint32_t y, uint32_t z) {
         if(x >= 0 && x < size &&
             y >= 0 && y < size &&
             z >= 0 && z < size)

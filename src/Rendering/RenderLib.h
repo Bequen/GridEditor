@@ -5,9 +5,6 @@
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 
-#include "Quad.h"
-#include "QuadMesh.h"
-
 #define DIR_Z 0x0000
 #define DIR_Y 0x0001
 #define DIR_X 0x0002
@@ -130,15 +127,6 @@ namespace RenderLib {
 
     void draw_triangles(uint32_t triangles);
     void draw_triangle_strip(uint32_t triangles);
-
-    // TODO Move into one function
-    void draw_quad_mesh(QuadMesh quadMesh, uint32_t position, uint32_t scale);
-
-    void draw_quad(uint32_t pos, uint32_t scale, Quad quad, uint32_t dir, uint32_t negative);
-    void draw_quad_z(uint32_t pos, uint32_t scale, Quad quad, uint32_t negative);
-    void draw_quad_y(uint32_t pos, uint32_t scale, Quad quad, uint32_t negative);
-    void draw_quad_x(uint32_t pos, uint32_t scale, Quad quad, uint32_t negative);
-
-    void render_quad(uint32_t dir, uint32_t opposite);
     #pragma endregion
+
 };

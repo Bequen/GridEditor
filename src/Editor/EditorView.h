@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "WindowTile.h"
+#include "Editor/Tiles/WindowTile.h"
 #include "Keyboard.h"
 
 #define EDITOR_WINDOW_STATE_NONE        0x0000
@@ -47,7 +47,7 @@ class EditorView {
         void init();
         void init(uint32_t bufferSize);
 
-        void assign(WindowTile* tile);
+        void assign(WindowTile* tile, Window* window);
 
         uint32_t update(Cursor cursor, Keyboard keyboard, float x, float y, float height, uint32_t program, uint32_t flow, uint32_t winWidth, uint32_t winHeight);
 

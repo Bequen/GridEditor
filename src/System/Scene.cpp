@@ -17,8 +17,6 @@ void Scene::init(uint32_t gridCount) {
 
     for(uint32_t i = 0; i < gridSize; i++) {
         grids[i].init(128);
-
-        grids[i].quadMesh.counts[0] = 0;
     }
 
     palette = (RGB32*)malloc(sizeof(RGB32) * 256);

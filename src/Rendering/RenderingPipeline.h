@@ -3,8 +3,8 @@
 #include <cstdint>
 
 #include "System/Grid.h"
-#include "Quad.h"
 #include "System/Scene.h"
+#include "Editor/Tiles/PerformanceMonitor.h"
 
 /**
  * @brief  Where all the rendering is done
@@ -19,10 +19,11 @@ class RenderingPipeline {
         void* camera;
 
         uint32_t position;
+        uint32_t positionIndex;
         uint32_t scale;
 
     public:
-        uint32_t shader;
+        uint32_t voxelProgram;
         uint32_t boxShader;
         uint32_t skyShader;
 
@@ -31,6 +32,8 @@ class RenderingPipeline {
         uint32_t quadVAO;
         uint32_t quadProgram;
         uint32_t polygonMode;
+
+        PerformanceStat* perfStat;
 
         /**
          * @brief  Initializes the rendering pipeline
@@ -59,21 +62,10 @@ class RenderingPipeline {
         void draw_grid(Grid<int8_t> grid, glm::vec3 view);
         void draw_sky();
 
-        void merge_quad(_QuadMesh& quadMesh, _Quad quad, uint32_t& quadIndex, uint32_t index);
-
         /**
          * @brief  Terminates the rendering pipeline and cleans up after it
          * @note   
          * @retval None
          */
         void terminate();
-
-        /**
-         * @brief  Connects the set of quads
-         * @note   You can use this on any set of quads divided into rows
-         * @param  quads: Quads that will be merged
-         * @param  counts: Number of quads in rows
-         * @retval None
-         */
-        void solve_greedy_meshing(Quad**& quads, uint32_t*& counts, uint32_t size);
 };

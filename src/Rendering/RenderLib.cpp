@@ -14,9 +14,9 @@ MessageCallback( GLenum source,
                  const GLchar* message,
                  const void* userParam )
 {
-  /* fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+  fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
            ( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ),
-            type, severity, message ); */
+            type, severity, message );
 }
 
 void RenderLib::polygon_mode(uint32_t mode) {
@@ -380,91 +380,6 @@ void RenderLib::draw_voxel(uint32_t program, float x, float y, float z) {
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
-void RenderLib::draw_quad(uint32_t pos, uint32_t scale, Quad quad, uint32_t dir, uint32_t negative) {
-    switch(dir) {
-        case DIR_X:
-            draw_quad_x(pos, scale, quad, negative);
-            break;
-        case DIR_Y:
-            draw_quad_y(pos, scale, quad, negative);
-            break;
-        case DIR_Z:
-            draw_quad_z(pos, scale, quad, negative);
-            break;
-    }
-}
-
-void RenderLib::draw_quad_z(uint32_t pos, uint32_t scale, Quad quad, uint32_t negative) {
-    quad.h = quad.z + 1.0f;
-
-    glUniform3fv(pos, 1, &quad.x);
-    glUniform3fv(scale, 1, &quad.w);
-
-    glDrawArrays(GL_TRIANGLES, 0 + negative * 18, 6);
-} void RenderLib::draw_quad_y(uint32_t pos, uint32_t scale, Quad quad, uint32_t negative) {
-    float x = quad.x;
-    float y = quad.y;
-    float z = quad.z;
-
-    quad.x = x;
-    quad.y = z;
-    quad.z = y;
-    quad.h = quad.d;
-    quad.d = quad.y + 1.0f;
-
-    glUniform3fv(pos, 1, &quad.x);
-    glUniform3fv(scale, 1, &quad.w);
-
-    glDrawArrays(GL_TRIANGLES, 6 + negative * 18, 6);
-} void RenderLib::draw_quad_x(uint32_t pos, uint32_t scale, Quad quad, uint32_t negative) {
-    quad.h = quad.d;
-    quad.d = quad.w;
-    quad.w = quad.x + 1.0f;
-    float x = quad.x;
-    float y = quad.y;
-    float z = quad.z;
-
-    quad.x = z;
-    quad.y = x;
-    quad.z = y;
-
-    glUniform3fv(pos, 1, &quad.x);
-    glUniform3fv(scale, 1, &quad.w);
-
-    glDrawArrays(GL_TRIANGLES, 12 + negative * 18, 6);
-}
-
-
-void RenderLib::draw_quad_mesh(QuadMesh quadMesh, uint32_t position, uint32_t scale) {
-    /* for(uint32_t z = 0; z < quadMesh.height; z++) {
-        for(uint32_t p = 0; p < 3; p++) {
-            for(uint32_t i = 0; i < 2; i++) {
-                for(uint32_t y = 0; y < quadMesh.width; y++) {
-                    for(uint32_t x = 0; x < quadMesh.buffers[p][z].counts[i][y]; x++) {
-                        if(quadMesh.buffers[p][z].quads[i][y][x].d > 0) {
-                            RenderLib::draw_quad(position, scale, quadMesh.buffers[p][z].quads[i][y][x], p, i);
-                        }
-                    }
-                }
-            }
-        }
-    } */
-
-    assert_msg(quadMesh.quads[0] != nullptr || quadMesh.quads[1] != nullptr || quadMesh.quads[2] != nullptr,
-                "Quad mesh is not initialized, therefore cannot be used for rendering");
-
-    for(uint32_t p = 0; p < 3; p++) {
-        for(uint32_t i = 0; i < quadMesh.counts[p]; i++) {
-            glUniform3fv(position, 1, &quadMesh.quads[p][i].x);
-            glUniform3fv(scale, 1, &quadMesh.quads[p][i].w);
-            RenderLib::render_quad(0, 1);
-        }
-    }
-}
-
-void RenderLib::render_quad(uint32_t dir, uint32_t opposite) {
-    glDrawArrays(GL_TRIANGLES, dir * 6 + opposite * 18, 6);
-}
 
 void RenderLib::culling(uint32_t mode) {
     glCullFace(mode);

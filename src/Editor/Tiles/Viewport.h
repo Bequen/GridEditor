@@ -1,11 +1,12 @@
 #pragma once
 
-#include "Camera.h"
+#include "Editor/Camera.h"
 #include "System/Scene.h"
 #include "Rendering/RenderingPipeline.h"
-#include "Ray.h"
+#include "Editor/Ray.h"
 #include "System/Window.h"
-#include "Color.h"
+#include "Editor/Color.h"
+#include "PerformanceMonitor.h"
 #include "WindowTile.h"
 
 
@@ -64,12 +65,18 @@ class Viewport : public WindowTile {
         Framebuffer framebuffer;
         uint32_t renderQuad;
 
+        PerformanceStat* stat;
+
         Viewport(Scene* scene, Window window, double* deltaTime) :
         WindowTile(scene), window(window), deltaTime(deltaTime) {
             
         }
 
         void init();
+        void init_camera();
+        void init_framebuffer();
+        void init_profiler();
+
         void update();
         void terminate();
 
