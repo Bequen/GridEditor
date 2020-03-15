@@ -7,8 +7,9 @@
 #include "System/Window.h"
 #include "Editor/Color.h"
 #include "PerformanceMonitor.h"
+#include "Editor/FloodFillSelect.h"
 #include "WindowTile.h"
-
+#include "Editor/Input.h"
 
 #define STATE_NONE          0x0000
 #define STATE_PRESS         0x0001
@@ -19,15 +20,15 @@
 #define RECTANGLE_LINE      0x0001
 #define RECTANGLE_CIRCLE    0x0002
 
-#define DRAW_MODE_BRUSH 0x0000
-#define DRAW_MODE_SHAPE 0x0001
+#define DRAW_MODE_BRUSH     0x0000
+#define DRAW_MODE_SHAPE     0x0001
 
-#define MAX_LIGHT_COUNT 32
+#define MAX_LIGHT_COUNT     32
 
 class Viewport : public WindowTile {
     public:
         bool edit;
-        uint32_t selectedGrid;
+        int32_t selectedGrid;
 
         Camera* camera;
         uint32_t cameraBuffer;
@@ -35,6 +36,7 @@ class Viewport : public WindowTile {
         Window window;
 
         RenderingPipeline render;
+        Input input;
 
         double mouseDeltaX, mouseDeltaY;
         double mouseLastX, mouseLastY;
@@ -44,6 +46,7 @@ class Viewport : public WindowTile {
         double* deltaTime;
 
         uint32_t drawing;
+        uint32_t extruding;
         glm::vec3 shapeStart;
         glm::vec3 shapeEnd;
 
@@ -57,6 +60,7 @@ class Viewport : public WindowTile {
 
         uint32_t undoState;
         uint32_t redoState;
+        uint32_t isEditMode;
 
         glm::vec3 camDirection;
         glm::vec3 camOrigin;
@@ -66,10 +70,13 @@ class Viewport : public WindowTile {
         uint32_t renderQuad;
 
         PerformanceStat* stat;
+        _Grid tempGrid;
+
+        FloodFillSelect floodFillSelection;
 
         Viewport(Scene* scene, Window window, double* deltaTime) :
         WindowTile(scene), window(window), deltaTime(deltaTime) {
-            
+            assert_msg(deltaTime, "Invalid delta time");
         }
 
         void init();
@@ -83,14 +90,13 @@ class Viewport : public WindowTile {
         void draw(Cursor cursor, WindowTileInfo tileInfo);
 
         void extrude(glm::vec3 position, glm::vec3 normal);
-        void flood_fill(glm::vec3 position, glm::vec3 normal);
+        void flood_fill(glm::vec3 position, glm::vec3 normal, int8_t brush);
+        void extrude(int32_t height);
         glm::vec3 ray_cast(Ray ray);
 
         void update_grid(Grid<int8_t> grid);
-        void update_palette();
+        void update_grid(_Grid grid);
         void update_cache();
-        void update_lights();
-        void update_sky_color();
 
         void undo();
         void redo();
@@ -100,6 +106,11 @@ class Viewport : public WindowTile {
         void solve_mouse();
         void solve_camera(Cursor cursor);
         void solve_rectangle(Grid<int8_t>* grid, glm::vec3 start, glm::vec3 end);
+        void solve_rectangle(_Grid* grid, glm::vec3 start, glm::vec3 end);
 
         void resize_callback(uint32_t width, uint32_t height);
+
+        void change_grid(int32_t index);
+
+        void enter_edit_mode();
 };

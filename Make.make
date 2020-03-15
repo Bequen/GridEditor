@@ -8,7 +8,7 @@ INCLUDE_DIR=src/
 LIB_DIR=deps/
 
 # If your source files have some sub directories, specify them here 
-FILES_SUB_DIRS=System Rendering Editor ImGUI ImGUI/GL Editor/Tiles
+FILES_SUB_DIRS=System System/Tiles Rendering Editor ImGUI ImGUI/GL Editor/Tiles System/Voxels
 
 # Where libraries, other than those in /usr/lib64/ are put
 THIRD_PARTY=./third-party/

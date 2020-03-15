@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "System/Grid.h"
+#include "System/Voxels/Grid.h"
 #include "System/Scene.h"
 #include "Editor/Tiles/PerformanceMonitor.h"
 
@@ -58,8 +58,8 @@ class RenderingPipeline {
          * @param  view: Position of the viewing camera
          * @retval None
          */
-        void draw_scene(Framebuffer framebuffer, Scene* scene, glm::vec3 view);
-        void draw_grid(Grid<int8_t> grid, glm::vec3 view);
+        void draw_scene(Framebuffer framebuffer, Scene* scene);
+        void draw_grid(_Grid grid);
         void draw_sky();
 
         /**

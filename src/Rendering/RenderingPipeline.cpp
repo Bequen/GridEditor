@@ -10,7 +10,7 @@
 #include <chrono>
 typedef std::chrono::high_resolution_clock Clock;
 
-#include "System/GridLib.h"
+#include "System/Voxels/GridLib.h"
 #include "RenderLib.h"
 #include "ShaderLib.h"
 #include "Framebuffer.h"
@@ -41,8 +41,8 @@ void RenderingPipeline::init() {
     perfStat = &profiler.stats[1];
 }
 
-void RenderingPipeline::draw_scene(Framebuffer framebuffer, Scene* scene, glm::vec3 view) {
-    assert_msg(scene || scene->grids || scene->lights, "Scene is not initialized, it cannot be used for rendering")
+void RenderingPipeline::draw_scene(Framebuffer framebuffer, Scene* scene) {
+    assert_msg(scene || scene->_grids || scene->lights, "Scene is not initialized, it cannot be used for rendering")
 
     perfStat->count++;
     RenderLib::update();
@@ -50,17 +50,17 @@ void RenderingPipeline::draw_scene(Framebuffer framebuffer, Scene* scene, glm::v
     RenderLib::bind_framebuffer(framebuffer.framebuffer);
     RenderLib::update();
 
-    draw_sky();
+    /* draw_sky();
 
     if(polygonMode == 1)
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    for(uint32_t i = 0; i < 1; i++) {
-        draw_grid(scene->grids[i].cache[(scene->grids[i].cacheIndex) % CACHE_SIZE], view);
+    for(uint32_t i = 1; i < 1; i++) {
+        draw_grid(scene->_grids[i]);
     }
 
     if(polygonMode == 1)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); */
 }
 
 void RenderingPipeline::draw_sky() {
@@ -75,21 +75,16 @@ void RenderingPipeline::draw_sky() {
     glDepthMask(GL_TRUE);
 }
 
-void RenderingPipeline::draw_grid(Grid<int8_t> grid, glm::vec3 view) {
+void RenderingPipeline::draw_grid(_Grid grid) {
     uint32_t streak = 0;
     uint32_t streakBegin = 0;
 
     glUseProgram(voxelProgram);
     glBindVertexArray(voxel);
+    glUniform3ui(glGetUniformLocation(voxelProgram, "size"), grid.width, grid.depth, grid.height);
 
-    for(uint32_t i = 0; i < grid.size * grid.size * grid.size; i++) {
-        if(grid.grid[i] > 0/*  &&
-            (grid.get(i + grid.size) <= 0 ||
-            grid.get(i - grid.size) <= 0 ||
-            grid.get(i + (grid.size * grid.size)) <= 0 ||
-            grid.get(i - (grid.size * grid.size)) <= 0 ||
-            grid.get(i + 1) <= 0 ||
-            grid.get(i - 1) <= 0) */) {
+    for(uint32_t i = 0; i < grid.width * grid.depth * grid.height; i++) {
+        if(grid.get(i) > 0) {
             streak++;
         } else {
             if(streak > 0) {

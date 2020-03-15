@@ -24,13 +24,13 @@ struct VoxelOctreeNode {
     uint32_t size;
 
     void set(ivec3 pos, uint32_t value, uint32_t desiredLevel, uint32_t level) {
-        if(desiredLevel == level) {
+        // If we are on the correct position
+        if(desiredLevel == level)
             this->value = value; return;
-        }
 
-        if(children == nullptr) {
+        // In case children are not initialized
+        if(children == nullptr)
             children = new VoxelOctreeNode[8];
-        }
 
         uint32_t x = pos.x / size;
         uint32_t y = pos.y / size;
@@ -45,7 +45,9 @@ struct VoxelOctreeNode {
 struct VoxelOctree {
     uint32_t size;
 
-    void set(uint32_t x, uint32_t y, uint32_t z, uint32_t value) {
+    VoxelOctreeNode node;
 
+    void set(uint32_t x, uint32_t y, uint32_t z, uint32_t value) {
+        node.set(ivec3(x, y, z), value, 4, 0);
     }
 };

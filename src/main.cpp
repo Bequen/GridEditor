@@ -4,6 +4,7 @@
 #include "ImGUI/imgui_impl_glfw.h"
 #include "ImGUI/imgui_impl_opengl3.h"
 #include <stdio.h>
+#include <cstring>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -39,6 +40,7 @@ int32_t main(uint32_t argc, char** argv) {
     app.init();
     app.update();
     app.terminate();
+ 
 
     return 0;
 }

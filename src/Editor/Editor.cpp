@@ -66,6 +66,7 @@ void Editor::init() {
     editorWindow.childrenCount = 2;
 
     scene.colorSelected = 2;
+    scene.add_grid(_Grid(32), "Grid1");
 }
 
 void Editor::update() {
@@ -105,38 +106,19 @@ void Editor::update_cursor() {
 }
 
 void Editor::update_keyboard() {
-    // Left control
-    if(window.is_key_down(GLFW_KEY_LEFT_CONTROL)) {
-        if(keyboard.leftControl == KEY_STATE_PRESS)
-            keyboard.leftControl = KEY_STATE_HOLD;
-        else if(keyboard.leftControl == KEY_STATE_NONE)
-            keyboard.leftControl = KEY_STATE_PRESS;
+    update_key(GLFW_KEY_LEFT_ALT, keyboard.leftAlt);
+    update_key(GLFW_KEY_LEFT_CONTROL, keyboard.leftControl);
+    update_key(GLFW_KEY_LEFT_SHIFT, keyboard.leftShift);
+}
+
+void Editor::update_key(uint32_t key, uint32_t& state) {
+    if(window.is_key_down(key)) {
+        if(state == KEY_STATE_PRESS)
+            state = KEY_STATE_HOLD;
+        else if(state == KEY_STATE_NONE)
+            state = KEY_STATE_PRESS;
     } else {
-        keyboard.leftControl = KEY_STATE_NONE;
-    }
-
-
-
-    // Left shift
-    if(window.is_key_down(GLFW_KEY_LEFT_SHIFT)) {
-        if(keyboard.leftShift == KEY_STATE_PRESS)
-            keyboard.leftShift = KEY_STATE_HOLD;
-        else if(keyboard.leftShift == KEY_STATE_NONE)
-            keyboard.leftShift = KEY_STATE_PRESS;
-    } else {
-        keyboard.leftShift = KEY_STATE_NONE;
-    } 
-
-
-
-    // Left Alt
-    if(window.is_key_down(GLFW_KEY_LEFT_ALT)) {
-        if(keyboard.leftAlt == KEY_STATE_PRESS)
-            keyboard.leftAlt = KEY_STATE_HOLD;
-        else if(keyboard.leftAlt == KEY_STATE_NONE)
-            keyboard.leftAlt = KEY_STATE_PRESS;
-    } else {
-        keyboard.leftAlt = KEY_STATE_NONE;
+        state = KEY_STATE_NONE;
     } 
 }
 
@@ -145,7 +127,10 @@ void Editor::draw_menubar() {
         if(ImGui::BeginMenu("File")) {
             ImGui::MenuItem("Load", NULL);
             ImGui::MenuItem("Save", NULL);
-            ImGui::MenuItem("Quit", NULL);
+            
+            if(ImGui::MenuItem("Quit", NULL)) {
+                glfwSetWindowShouldClose(window.window, 1);
+            }
             ImGui::EndMenu();
         }
     }

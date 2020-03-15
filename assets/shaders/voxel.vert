@@ -20,6 +20,7 @@ out float shadowValue;
 
 const float SHADOW_FACTOR = 0.1;
 
+uniform uvec3 size;
 uniform sampler3D grid;
 uniform sampler1D palette;
 
@@ -29,7 +30,7 @@ void main() {
     camPos = vec3(view[0][3], view[1][3], view[2][3]);
 
     int offset = index + gl_InstanceID;
-    pos = vec3(offset % 128, offset % (128 * 128) / 128, offset / (128 * 128));
+    pos = vec3(offset % size.x, offset % (size.x * size.y) / size.z, offset / (size.x * size.y));
     vec3 p = pos + normal;
 
     shadow = vec3(0.0, 0.0, 0.0);

@@ -2,21 +2,24 @@
 
 #include "Camera.h"
 #include "System/Window.h"
-#include "System/Grid.h"
+#include "System/Voxels/Grid.h"
 #include "Rendering/RenderingPipeline.h"
 #include "Color.h"
 #include "Ray.h"
-#include "Rendering/LightBuffer.h"
 #include "Rendering/Light.h"
 #include "System/Scene.h"
 #include "Editor/Tiles/Viewport.h"
 #include "Keyboard.h"
 #include "EditorView.h"
 
+/**
+ * @brief  Editor is the main class controlling the app behaviour
+ * @note   Stores the Window Tile Manager and everything
+ * @retval None
+ */
 class Editor {
     public:
         Window window;
-        //Viewport viewport;
 
         uint32_t drawQuad;
         uint32_t deferredProgram;
@@ -38,6 +41,7 @@ class Editor {
 
         void update_cursor();
         void update_keyboard();
+        void update_key(uint32_t key, uint32_t& state);
 
         void draw_menubar();
         void draw_ui();
