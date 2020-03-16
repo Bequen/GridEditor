@@ -59,7 +59,7 @@ class RenderingPipeline {
          * @retval None
          */
         void draw_scene(Framebuffer framebuffer, Scene* scene);
-        void draw_grid(_Grid grid);
+        void draw_grid(_Grid grid, glm::mat4 model);
         void draw_sky();
 
         /**

@@ -75,13 +75,14 @@ void RenderingPipeline::draw_sky() {
     glDepthMask(GL_TRUE);
 }
 
-void RenderingPipeline::draw_grid(_Grid grid) {
+void RenderingPipeline::draw_grid(_Grid grid, glm::mat4 model) {
     uint32_t streak = 0;
     uint32_t streakBegin = 0;
 
     glUseProgram(voxelProgram);
     glBindVertexArray(voxel);
     glUniform3ui(glGetUniformLocation(voxelProgram, "size"), grid.width, grid.depth, grid.height);
+    glUniformMatrix4fv(glGetUniformLocation(voxelProgram, "model"), 1, GL_FALSE, &model[0][0]);
 
     for(uint32_t i = 0; i < grid.width * grid.depth * grid.height; i++) {
         if(grid.get(i) > 0) {

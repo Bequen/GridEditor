@@ -15,6 +15,7 @@
 struct Scene {
     _Grid* _grids;
     char** names;
+    glm::mat4* transforms;
     uint32_t gridsBufferSize;
     int32_t gridsCount;
 

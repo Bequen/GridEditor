@@ -57,6 +57,7 @@ class Viewport : public WindowTile {
         uint32_t polygonMode;
 
         uint32_t drawMode;
+        uint32_t editMode;
 
         uint32_t undoState;
         uint32_t redoState;

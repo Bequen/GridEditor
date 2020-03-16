@@ -16,12 +16,13 @@
 #include "Editor/Tiles/PaletteTile.h"
 #include "Editor/Tiles/PerformanceMonitor.h"
 #include "Editor/Tiles/SceneSetupTile.h"
+#include "Editor/Tiles/TerminalTile.h"
 #include <csignal>
 
 void Editor::init() {
     MESSAGE("Starting the editor initialization");
     scene = Scene();
-    scene.init(1);
+    scene.init(10);
 
     scene.voxelVAO = RenderLib::create_voxel();
     scene.boxShader = ShaderLib::program_create("box");
@@ -51,7 +52,7 @@ void Editor::init() {
 
     editorWindow.children[0].children[1].init();
     editorWindow.children[0].children[1].width = 1.0f;
-    editorWindow.children[0].children[1].assign(new PerformanceMonitor(&scene, deltaTime), &window);
+    editorWindow.children[0].children[1].assign(new TerminalTile(&scene), &window);
 
     editorWindow.children[1].init(10);
     editorWindow.children[1].childrenCount = 2;

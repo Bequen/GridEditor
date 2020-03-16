@@ -175,7 +175,7 @@ void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
     render.draw_sky();
     // Draws the cage
     if(selectedGrid != -1) {
-        render.draw_grid(tempGrid);
+        render.draw_grid(tempGrid, scene->transforms[selectedGrid]);
 
         RenderLib::front_face(GL_CW);
         RenderLib::bind_vertex_array(scene->voxelVAO);
@@ -184,6 +184,7 @@ void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
     } else {
         for(uint32_t i = 0; i < scene->gridsCount; i++) {
             RenderLib::bind_vertex_array(scene->voxelVAO);
+            render.draw_grid(tempGrid, scene->transforms[i]);
             RenderLib::draw_voxel(scene->boxShader, glm::vec3((float)0, (float)0, (float)0), glm::vec3(scene->_grids[i].width, scene->_grids[i].depth, scene->_grids[i].height));
         }
     }
