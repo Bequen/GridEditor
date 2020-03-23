@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <cstdint>
@@ -102,7 +101,7 @@ namespace RenderLib {
     uint32_t create_buffer_stream(uint32_t target, uint32_t size, void* data);
     uint32_t create_buffer_dynamic(uint32_t target, uint32_t size, void* data);
 
-
+    void remove_buffer(uint32_t buffer);
 
     /**
      * @brief  Sets the buffer binding

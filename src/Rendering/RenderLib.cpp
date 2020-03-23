@@ -323,6 +323,11 @@ uint32_t RenderLib::create_buffer_dynamic(uint32_t target, uint32_t size, void* 
 
     return result;
 }
+
+
+void RenderLib::remove_buffer(uint32_t buffer) {
+    glDeleteBuffers(1, &buffer);
+}
 #pragma endregion
 
 

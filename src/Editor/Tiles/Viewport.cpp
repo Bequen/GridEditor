@@ -18,7 +18,7 @@ typedef std::chrono::high_resolution_clock Clock;
 void Viewport::init() {
     // Initializes few things
     render.init();
-    init_camera();
+    camera.init();
 
     // Set some default values
     selectedGrid = 0;
@@ -48,28 +48,21 @@ void Viewport::init() {
     scene->colorSelected = 2;
     floodFillSelection.floodFillCount = 0;
 
-    input.init(3);
+    input.init(32);
     input.add_key({GLFW_KEY_TAB, 0});
     input.add_key({GLFW_KEY_A, 0});
     input.add_key({GLFW_KEY_LEFT_SHIFT, 0});
+    input.add_key({GLFW_KEY_LEFT_CONTROL, 0});
+    input.add_key({GLFW_KEY_LEFT_ALT, 0});
+    input.add_key({GLFW_KEY_1, 0});
+    input.add_key({GLFW_KEY_3, 0});
+    input.add_key({GLFW_KEY_5, 0});
+    input.add_key({GLFW_KEY_7, 0});
+    input.add_key({GLFW_KEY_9, 0});
 
     input.add_mouse_key({GLFW_MOUSE_BUTTON_1, 0});
     input.add_mouse_key({GLFW_MOUSE_BUTTON_2, 0});
-}
-
-void Viewport::init_camera() {
-    panSpeed = 10.0f;
-    rotationSpeed = 100.0f;
-    camDirection = glm::normalize(glm::vec3(0.0f, 1.0f, -1.0f));
-
-    camOrigin = glm::vec3(16.0f, 16.0f, 0.0f);
-    camOffset = 20.0f;
-
-    cameraBuffer = RenderLib::create_buffer_stream(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, nullptr);
-    camera = (Camera*)RenderLib::map_buffer_range(cameraBuffer, GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4) * 2);
-    RenderLib::buffer_binding_range(cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
-    camera->projection = glm::perspective(glm::radians(45.0f), 720.0f / (480.0f), 0.1f, 100.0f);
-    camera->view = glm::lookAt(camOrigin + (-camDirection * camOffset), camOrigin, glm::vec3(0.0f, 0.0f, 1.0f));
+    input.add_mouse_key({GLFW_MOUSE_BUTTON_3, 0});
 }
 
 void Viewport::init_framebuffer() {
@@ -124,17 +117,15 @@ void Viewport::terminate() {
 }
 
 void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
-    solve_mouse();
-    solve_input();
     input.update(window);
+    solve_input();
 
     // Capture mouse for camera, but only if tile is hovered
     if(ImGui::IsWindowHovered()) {
+        camera.update(input);
         float offsetX = tileInfo.x * window.width; float offsetY = tileInfo.y * window.height;
         cursor.cursorX = (2.0f * (((float)cursor.cursorX - offsetX) / tileInfo.width)) / (window.width) - 1.0f;
         cursor.cursorY = 1.0 - ((2.0f * ((((float)cursor.cursorY) - offsetY) / tileInfo.height)) / (window.height));
-
-        solve_camera(cursor);
 
         if(selectedGrid != -1) {
             if(input.get(GLFW_KEY_TAB) == KEY_STATE_PRESS) {
@@ -144,9 +135,8 @@ void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
 
             solve_voxel_placing(cursor);
         } else {
-            Ray ray;
-            ray.create_camera_ray(cursor, *camera);
-            ray.origin = (camOrigin + (-camDirection * camOffset));
+            Ray ray = camera.create_ray(window.get_normalized_cursor_pos());
+            //ray.origin = (camOrigin + (-camDirection * camOffset));
 
             if(input.get(GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
                 for(uint32_t i = 0; i < scene->gridsCount; i++) {
@@ -166,13 +156,13 @@ void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
     }
 
     // Bounds the camera
-    RenderLib::buffer_binding_range(cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
+    RenderLib::buffer_binding_range(camera.cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
 
     // Actual rendering code
     auto start_time = Clock::now();
 
     render.draw_scene(framebuffer, scene);
-    render.draw_sky();
+    //render.draw_sky();
     // Draws the cage
     if(selectedGrid != -1) {
         render.draw_grid(tempGrid, scene->transforms[selectedGrid]);
@@ -184,6 +174,7 @@ void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
     } else {
         for(uint32_t i = 0; i < scene->gridsCount; i++) {
             RenderLib::bind_vertex_array(scene->voxelVAO);
+            
             render.draw_grid(tempGrid, scene->transforms[i]);
             RenderLib::draw_voxel(scene->boxShader, glm::vec3((float)0, (float)0, (float)0), glm::vec3(scene->_grids[i].width, scene->_grids[i].depth, scene->_grids[i].height));
         }
@@ -209,9 +200,9 @@ void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
 
 void Viewport::solve_voxel_placing(Cursor cursor) {
     // Initialize a new ray
-    Ray ray;
-    ray.create_camera_ray(cursor, *camera);
-    ray.origin = (camOrigin + (-camDirection * camOffset));
+    Ray ray = camera.create_ray(glm::vec3(cursor.cursorX, cursor.cursorY, 0.0f));
+    //ray.create_camera_ray(cursor, *camera, cameraMode);
+    //ray.origin = (camOrigin + (-camDirection * camOffset));
     const float step = 0.01f; // Ray step
 
     // If the user wants to delete stuff
@@ -283,7 +274,6 @@ void Viewport::solve_voxel_placing(Cursor cursor) {
     }
 
     if(window.is_key_down(GLFW_KEY_LEFT_ALT) && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1) && !extruding) {
-        ray.create_camera_ray(cursor, *camera);
         float distance = 0.0f;
         float step = 0.05f;
 
@@ -322,7 +312,7 @@ void Viewport::solve_voxel_placing(Cursor cursor) {
             }
         }
     } else if(window.is_key_down(GLFW_KEY_LEFT_ALT) && window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1) && extruding) {
-        ray.create_camera_ray(cursor, *camera);
+        //ray.create_camera_ray(cursor, *camera, cameraMode);
         float distance = 0.0f;
         float step = 0.05f;
 
@@ -358,7 +348,6 @@ void Viewport::solve_voxel_placing(Cursor cursor) {
 }
 
 void Viewport::extrude(int32_t height) {
-    //ERROR(height);
     int32_t direction = height > 0 ? 1 : -1;
     for(uint32_t i = 0; i < floodFillSelection.floodFillCount; i++) {
         for(int32_t x = 0; x < height; x++) {
@@ -454,6 +443,26 @@ void Viewport::solve_input() {
             redoState = STATE_NONE;
         }
     }
+
+    if(input.get(GLFW_KEY_5) == KEY_STATE_PRESS) {
+        MESSAGE("Changing mode");
+        camera.set_mode(1 - camera.mode);
+    } if(input.get(GLFW_KEY_1) == KEY_STATE_PRESS) {
+        MESSAGE("Front View");
+        camera.set_mode(CAMERA_MODE_ORTHOGRAPHIC);
+        camera.direction = glm::vec3(0.0f, 1.0f, 0.0f);
+    } if(input.get(GLFW_KEY_3) == KEY_STATE_PRESS) {
+        MESSAGE("Side View");
+        camera.set_mode(CAMERA_MODE_ORTHOGRAPHIC);
+        camera.direction = glm::vec3(-1.0f, 0.0f, 0.0f);
+    } if(input.get(GLFW_KEY_7) == KEY_STATE_PRESS) {
+        MESSAGE("Top View");
+        camera.set_mode(CAMERA_MODE_ORTHOGRAPHIC);
+        camera.direction = glm::vec3(0.0f, 0.0f, -0.9f);
+    } if(input.get(GLFW_KEY_9) == KEY_STATE_PRESS) {
+        MESSAGE("Opposite View");
+        camera.direction *= glm::vec3(-1.0f);
+    }
 }
 
 void Viewport::solve_rectangle(_Grid* grid, glm::vec3 start, glm::vec3 end) {
@@ -492,19 +501,8 @@ void Viewport::solve_rectangle(_Grid* grid, glm::vec3 start, glm::vec3 end) {
     }
 }
 
-void Viewport::solve_mouse() {
-    glm::vec3 cursor = window.get_normalized_cursor_pos();
-    mouseDeltaX = mouseLastX - cursor.x;
-    mouseDeltaY = mouseLastY - cursor.y;
-
-    mouseLastX = cursor.x;
-    mouseLastY = cursor.y;
-}
-
-void Viewport::update_grid(Grid<int8_t> grid) {
-    //TextureLib::update_texture_3d(scene->grids[0].gridTexture, grid.size, grid.size, grid.size, grid.grid);
-} void Viewport::update_grid(_Grid grid) {
-    TextureLib::update_texture_3d(scene->_grids[selectedGrid].gridTexture, grid.width, grid.depth, grid.height, grid.buffer);
+void Viewport::update_grid(_Grid grid) {
+    TextureLib::update_texture_3d(grid.gridTexture, grid.width, grid.depth, grid.height, grid.buffer);
 }
 
 void Viewport::update_cache() {
@@ -563,30 +561,14 @@ void Viewport::change_grid(int32_t index) {
 
     tempGrid = scene->_grids[selectedGrid];
 
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, tempGrid.gridTexture);
+
     ERROR("GRID " << tempGrid.width << "|" << tempGrid.height << "|" << tempGrid.depth);
     tempGrid.buffer = new int8_t[tempGrid.width * tempGrid.depth * tempGrid.height];
     memcpy(tempGrid.buffer, scene->_grids[selectedGrid].buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
 }
 
-
-void Viewport::solve_camera(Cursor cursor) {
-    // Camera Panning
-    if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_3) && window.is_key_down(GLFW_KEY_LEFT_SHIFT)) {
-        camOrigin += (float)mouseDeltaY * panSpeed * glm::normalize(glm::vec3(camera->view[0][1], camera->view[1][1], camera->view[2][1]));
-        camOrigin += (float)mouseDeltaX * panSpeed * glm::normalize(glm::vec3(camera->view[0][0], camera->view[1][0], camera->view[2][0]));
-    } 
-    // Camera Zooming
-    else if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_3) && window.is_key_down(GLFW_KEY_LEFT_CONTROL)) {
-        camOffset += mouseDeltaY * 10.0f;
-    } 
-    // Camera Rotation
-    else if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_3)) {
-        camDirection = glm::rotate(camDirection, (float)mouseDeltaX * rotationSpeed * (float)*deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
-        camDirection = glm::rotate(camDirection, (float)mouseDeltaY * rotationSpeed * (float)*deltaTime, -glm::normalize(glm::vec3(camera->view[0][0], camera->view[1][0], camera->view[2][0])));
-    }
-    
-    camera->view = glm::lookAt(camOrigin + (-camDirection * camOffset), camOrigin, glm::vec3(0.0f, 0.0f, 1.0f));
-}
 
 void Viewport::resize_callback(uint32_t width, uint32_t height) {
     this->window.width = width;
@@ -596,7 +578,7 @@ void Viewport::resize_callback(uint32_t width, uint32_t height) {
         tileInfo.width = 1.0f;
     if(tileInfo.height == 0.0f)
         tileInfo.height = 1.0f;
-    camera->projection = glm::perspective(glm::radians(45.0f), (float)(width * tileInfo.width) / (float)(height * tileInfo.height), 0.1f, 1000.0f);
+    //camera->projection = glm::perspective(glm::radians(45.0f), (float)(width * tileInfo.width) / (float)(height * tileInfo.height), 0.1f, 1000.0f);
     framebuffer.width = width;
     framebuffer.height = height;
 

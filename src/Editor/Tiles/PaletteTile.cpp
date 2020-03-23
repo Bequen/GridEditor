@@ -13,6 +13,8 @@ void PaletteTile::update() {
 }
 
 void PaletteTile::draw(Cursor cursor, WindowTileInfo tileInfo) {
+    assert_msg(scene != nullptr, "Cannot draw palette, scene was not initialized");
+    assert_msg(scene->palette != nullptr, "Cannot draw palette, palette was not initialized");
     ImGui::BeginChild("PickerWindow", ImVec2(200.0f, 200.0f), true);
 
     if(ImGui::ColorPicker3("picker", &scene->palette[scene->colorSelected].r))

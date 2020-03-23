@@ -2,8 +2,8 @@
 
 #include <cstdint>
 #include <vector>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <map>
 
 #define KEY_STATE_NONE 0x0000
 #define KEY_STATE_PRESS 0x0001
@@ -26,7 +26,18 @@ struct Input {
     uint32_t mouseKeyCount;
     uint32_t mouseKeyBufferSize;
 
+    double mouseDeltaX;
+    double mouseDeltaY;
+
+    double mouseLastX;
+    double mouseLastY;
+
+    double lastTime;
+    double deltaTime;
+
     void init(uint32_t count) {
+        lastTime = 0.0;
+        deltaTime = 0.0;
         keys = new InputKey[count];
         keyCount = 0;
         bufferSize = count;
@@ -34,6 +45,9 @@ struct Input {
         mouseKeys = new InputKey[count];
         mouseKeyCount = 0;
         mouseKeyBufferSize = count;
+
+        mouseDeltaX = mouseDeltaY = 0.0;
+        mouseLastX = mouseLastY = 0.0;
     }
 
     void add_key(InputKey key) {
@@ -49,6 +63,17 @@ struct Input {
     }
 
     void update(Window window) {
+
+        deltaTime = glfwGetTime() - lastTime;
+        lastTime = glfwGetTime();
+
+        glm::vec3 cursor = window.get_normalized_cursor_pos();
+        mouseDeltaX = mouseLastX - cursor.x;
+        mouseDeltaY = mouseLastY - cursor.y;
+
+        mouseLastX = cursor.x;
+        mouseLastY = cursor.y;
+
         for(uint32_t i = 0; i < keyCount; i++) {
             if(window.is_key_down(keys[i].key) == GLFW_PRESS) {
                 if(keys[i].state == KEY_STATE_PRESS)

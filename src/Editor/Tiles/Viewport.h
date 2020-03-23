@@ -10,6 +10,7 @@
 #include "Editor/FloodFillSelect.h"
 #include "WindowTile.h"
 #include "Editor/Input.h"
+#include "Editor/CameraController.h"
 
 #define STATE_NONE          0x0000
 #define STATE_PRESS         0x0001
@@ -25,21 +26,19 @@
 
 #define MAX_LIGHT_COUNT     32
 
+#define CAMERA_MODE_PERSPECTIVE     0x0000
+#define CAMERA_MODE_ORTHOGRAPHIC    0x0001
+
 class Viewport : public WindowTile {
     public:
         bool edit;
         int32_t selectedGrid;
 
-        Camera* camera;
-        uint32_t cameraBuffer;
-
         Window window;
 
+        CameraController camera;
         RenderingPipeline render;
         Input input;
-
-        double mouseDeltaX, mouseDeltaY;
-        double mouseLastX, mouseLastY;
 
         float rotationSpeed = 50.0f;
         float panSpeed = 10.0f;
@@ -78,10 +77,10 @@ class Viewport : public WindowTile {
         Viewport(Scene* scene, Window window, double* deltaTime) :
         WindowTile(scene), window(window), deltaTime(deltaTime) {
             assert_msg(deltaTime, "Invalid delta time");
+            assert_msg(scene, "Scene assigned to Viewport tile is not initialized");
         }
 
         void init();
-        void init_camera();
         void init_framebuffer();
         void init_profiler();
 
@@ -95,7 +94,6 @@ class Viewport : public WindowTile {
         void extrude(int32_t height);
         glm::vec3 ray_cast(Ray ray);
 
-        void update_grid(Grid<int8_t> grid);
         void update_grid(_Grid grid);
         void update_cache();
 
@@ -104,8 +102,6 @@ class Viewport : public WindowTile {
 
         void solve_input();
         void solve_voxel_placing(Cursor cursor);
-        void solve_mouse();
-        void solve_camera(Cursor cursor);
         void solve_rectangle(Grid<int8_t>* grid, glm::vec3 start, glm::vec3 end);
         void solve_rectangle(_Grid* grid, glm::vec3 start, glm::vec3 end);
 

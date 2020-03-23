@@ -17,7 +17,7 @@ typedef std::chrono::high_resolution_clock Clock;
 
 void RenderingPipeline::init() {
     RenderLib::init();
-    skyColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    skyColor = glm::vec4(0.529411765f, 0.807843137f, 0.921568627f, 1.0f);
 
     voxel = RenderLib::create_voxel();
     quadVAO = RenderLib::create_quad();
@@ -49,18 +49,6 @@ void RenderingPipeline::draw_scene(Framebuffer framebuffer, Scene* scene) {
 
     RenderLib::bind_framebuffer(framebuffer.framebuffer);
     RenderLib::update();
-
-    /* draw_sky();
-
-    if(polygonMode == 1)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-    for(uint32_t i = 1; i < 1; i++) {
-        draw_grid(scene->_grids[i]);
-    }
-
-    if(polygonMode == 1)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); */
 }
 
 void RenderingPipeline::draw_sky() {
@@ -80,9 +68,13 @@ void RenderingPipeline::draw_grid(_Grid grid, glm::mat4 model) {
     uint32_t streakBegin = 0;
 
     glUseProgram(voxelProgram);
+    
     glBindVertexArray(voxel);
     glUniform3ui(glGetUniformLocation(voxelProgram, "size"), grid.width, grid.depth, grid.height);
     glUniformMatrix4fv(glGetUniformLocation(voxelProgram, "model"), 1, GL_FALSE, &model[0][0]);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, grid.gridTexture);
 
     for(uint32_t i = 0; i < grid.width * grid.depth * grid.height; i++) {
         if(grid.get(i) > 0) {
