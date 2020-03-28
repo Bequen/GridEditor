@@ -19,11 +19,6 @@ struct Scene {
     uint32_t gridsBufferSize;
     int32_t gridsCount;
 
-
-/*     VoxelGrid* grids;
-    uint32_t gridSize;
-    uint32_t gridCount; */
-
     uint32_t paletteTexture;
 
     // TODO Move into separate structure
@@ -36,10 +31,6 @@ struct Scene {
     RGB32* palette;
     int8_t colorSelected;
     int8_t colorCache;
-
-    uint32_t voxelVAO;
-    uint32_t boxShader;
-    uint32_t quadShader;
 
     void init(uint32_t gridCount);
 

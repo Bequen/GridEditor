@@ -16,6 +16,7 @@
 #include "Editor/Tiles/PaletteTile.h"
 #include "Editor/Tiles/PerformanceMonitor.h"
 #include "Editor/Tiles/SceneSetupTile.h"
+#include "System/ContentPipeline.h"
 #include "Editor/Tiles/TerminalTile.h"
 #include <csignal>
 
@@ -24,8 +25,11 @@ void Editor::init() {
     scene = Scene();
     scene.init(10);
 
-    scene.voxelVAO = RenderLib::create_voxel();
-    scene.boxShader = ShaderLib::program_create("box");
+    scene.colorSelected = 2;
+    scene.add_grid(_Grid(32), "Grid1");
+
+    renderInfo.voxelVAO = RenderLib::create_voxel();
+    renderInfo.boxProgram = ShaderLib::program_create("box");
 
     deferredProgram = ShaderLib::program_create("deferred");
     drawQuad = RenderLib::create_render_quad();
@@ -48,7 +52,7 @@ void Editor::init() {
 
     editorWindow.children[0].children[0].init();
     editorWindow.children[0].children[0].width = 0.75f;
-    editorWindow.children[0].children[0].assign(new Viewport(&scene, window, deltaTime), &window);
+    editorWindow.children[0].children[0].assign(new Viewport(&scene, window, deltaTime, renderInfo), &window);
 
     editorWindow.children[0].children[1].init();
     editorWindow.children[0].children[1].width = 1.0f;
@@ -65,9 +69,6 @@ void Editor::init() {
     editorWindow.children[1].children[1].assign(new SceneSetupTile(&scene), &window);
 
     editorWindow.childrenCount = 2;
-
-    scene.colorSelected = 2;
-    scene.add_grid(_Grid(32), "Grid1");
 }
 
 void Editor::update() {
@@ -126,8 +127,17 @@ void Editor::update_key(uint32_t key, uint32_t& state) {
 void Editor::draw_menubar() {
     if(ImGui::BeginMainMenuBar()) {
         if(ImGui::BeginMenu("File")) {
-            ImGui::MenuItem("Load", NULL);
-            ImGui::MenuItem("Save", NULL);
+            if(ImGui::MenuItem("Load", NULL)) {
+                scene = ContentPipeline::load_grid("/home/martin/test.grid");
+                editorWindow.refresh();
+            }
+            if(ImGui::BeginMenu("Save")) {
+                if(ImGui::MenuItem(".grid", NULL)) {
+                    ContentPipeline::save_grid(scene, "/home/martin/test.grid");
+                }
+                ImGui::MenuItem(".obj", NULL);
+                ImGui::EndMenu();
+            }
             
             if(ImGui::MenuItem("Quit", NULL)) {
                 glfwSetWindowShouldClose(window.window, 1);

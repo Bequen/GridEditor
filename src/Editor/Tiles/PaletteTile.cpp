@@ -56,3 +56,8 @@ void PaletteTile::update_palette() {
 void PaletteTile::resize_callback(uint32_t width, uint32_t height) {
 
 }
+
+
+void PaletteTile::refresh() {
+    update_palette();
+}

@@ -233,3 +233,10 @@ void EditorView::resize_callback(uint32_t width, uint32_t height) {
     for(uint32_t i = 0; i < childrenCount; i++)
         children[i].resize_callback(width, height);
 }
+
+void EditorView::refresh() {
+    if(tile != nullptr)
+        tile->refresh();
+    for(uint32_t i = 0; i < childrenCount; i++)
+        children[i].refresh();
+}

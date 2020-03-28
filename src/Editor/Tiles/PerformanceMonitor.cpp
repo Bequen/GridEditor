@@ -39,3 +39,7 @@ void PerformanceMonitor::draw(Cursor cursor, WindowTileInfo tileInfo) {
 void PerformanceMonitor::resize_callback(uint32_t width, uint32_t height) {
 
 }
+
+void PerformanceMonitor::refresh() {
+    
+}

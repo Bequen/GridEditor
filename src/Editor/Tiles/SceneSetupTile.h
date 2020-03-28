@@ -15,6 +15,8 @@ class SceneSetupTile : public WindowTile {
         void update();
         void terminate();
 
+        void refresh();
+
         void draw(Cursor cursor, WindowTileInfo tileInfo);
         void resize_callback(uint32_t width, uint32_t height);
 

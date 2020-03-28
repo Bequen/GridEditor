@@ -63,4 +63,11 @@ class WindowTile {
          * @retval None
          */
         virtual void resize_callback(uint32_t width, uint32_t height) = 0;
+
+        /**
+         * @brief  Gets called when the window needs to be refreshed
+         * @note   Example of need for refresh might be sudden change in scene etc.
+         * @retval None
+         */
+        virtual void refresh() = 0;
 };

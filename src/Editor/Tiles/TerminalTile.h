@@ -17,6 +17,8 @@ class TerminalTile : public WindowTile {
         void draw(Cursor cursor, WindowTileInfo tileInfo);
         void terminate();
 
+        void refresh();
+
         void solve_command();
         void remove_border(char* str);
 

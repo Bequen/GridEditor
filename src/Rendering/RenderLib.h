@@ -123,6 +123,7 @@ namespace RenderLib {
     void draw_voxel(uint32_t program, float x, float y, float z);
     void draw_voxel(uint32_t program, glm::vec3 position);
     void draw_voxel(uint32_t program, glm::vec3 position, glm::vec3 scale);
+    void draw_voxel(uint32_t program, glm::mat4 model, glm::vec3 gridScale);
 
     void draw_triangles(uint32_t triangles);
     void draw_triangle_strip(uint32_t triangles);

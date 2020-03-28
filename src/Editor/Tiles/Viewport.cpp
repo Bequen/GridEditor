@@ -24,18 +24,21 @@ void Viewport::init() {
     selectedGrid = 0;
     rectangle = 0;
     extrudeIndex = 0;
+    snapping = false;
+    snappingSwitch = 0;
     isEditMode = 1;
     drawing = false;
     extruding = false;
     edit = false;
+    transformMode = TRANSFORM_MODE_NONE;
 
     extrudeSelect = new glm::vec3(0.0f);
     drawMode = DRAW_MODE_BRUSH;
 
     if(scene->gridsCount > 0)
-        change_grid(0);
+        select_grid(0);
     else
-        change_grid(-1);
+        select_grid(-1);
 
     // Updates all that is needed
     update_grid(scene->_grids[selectedGrid]);
@@ -51,6 +54,9 @@ void Viewport::init() {
     input.init(32);
     input.add_key({GLFW_KEY_TAB, 0});
     input.add_key({GLFW_KEY_A, 0});
+    input.add_key({GLFW_KEY_R, 0});
+    input.add_key({GLFW_KEY_G, 0});
+    input.add_key({GLFW_KEY_S, 0});
     input.add_key({GLFW_KEY_LEFT_SHIFT, 0});
     input.add_key({GLFW_KEY_LEFT_CONTROL, 0});
     input.add_key({GLFW_KEY_LEFT_ALT, 0});
@@ -127,17 +133,16 @@ void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
         cursor.cursorX = (2.0f * (((float)cursor.cursorX - offsetX) / tileInfo.width)) / (window.width) - 1.0f;
         cursor.cursorY = 1.0 - ((2.0f * ((((float)cursor.cursorY) - offsetY) / tileInfo.height)) / (window.height));
 
-        if(selectedGrid != -1) {
-            if(input.get(GLFW_KEY_TAB) == KEY_STATE_PRESS) {
-                MESSAGE("Leaving edit mode");
-                change_grid(-1);
-            }
+        // Switch edit mode
+        if(input.get(GLFW_KEY_TAB) == KEY_STATE_PRESS && selectedGrid != -1) {
+            isEditMode = 1 - isEditMode;
+            MESSAGE("Edit mode switch");
+        }
 
-            solve_voxel_placing(cursor);
-        } else {
+        if(!isEditMode) {
             Ray ray = camera.create_ray(window.get_normalized_cursor_pos());
-            //ray.origin = (camOrigin + (-camDirection * camOffset));
 
+            // Selecting 
             if(input.get(GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
                 for(uint32_t i = 0; i < scene->gridsCount; i++) {
                     float result = 0.0f;
@@ -145,38 +150,55 @@ void Viewport::draw(Cursor cursor, WindowTileInfo tileInfo) {
 
                     if(result != 0.0f) {
                         MESSAGE(scene->names[i]);
-                        change_grid(i);
+                        select_grid(i);
                     }
                 }
-            } else if(input.get(GLFW_KEY_LEFT_SHIFT) != KEY_STATE_NONE && input.get(GLFW_KEY_A) == KEY_STATE_PRESS) {
-                MESSAGE("Opening object creation context menu");
-                
+            } 
+
+            if(input.get(GLFW_KEY_G) == GLFW_PRESS) {
+                transformMode = TRANSFORM_MODE_TRANSLATE;
             }
+        } else {
+            solve_voxel_placing(cursor);
         }
+    }
+
+    if(transformMode == TRANSFORM_MODE_TRANSLATE) {
+        if(input.get(GLFW_MOUSE_BUTTON_1)) {
+            transformMode = TRANSFORM_MODE_NONE;
+        }
+        glm::vec3 translation;
+        scene->transforms[selectedGrid] = glm::translate(scene->transforms[selectedGrid], glm::vec3(-input.mouseDeltaX * 10.0f, -input.mouseDeltaY * 10.0f, 0.0f));
+    }
+
+    if(input.get(GLFW_KEY_LEFT_CONTROL) && !snappingSwitch) {
+        snappingSwitch = true;
+    } else if(!input.get(GLFW_KEY_LEFT_CONTROL) && snappingSwitch) {
+        snappingSwitch = false;
     }
 
     // Bounds the camera
     RenderLib::buffer_binding_range(camera.cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
-
+    
     // Actual rendering code
     auto start_time = Clock::now();
 
     render.draw_scene(framebuffer, scene);
     //render.draw_sky();
     // Draws the cage
-    if(selectedGrid != -1) {
+    if(isEditMode) {
         render.draw_grid(tempGrid, scene->transforms[selectedGrid]);
 
         RenderLib::front_face(GL_CW);
-        RenderLib::bind_vertex_array(scene->voxelVAO);
-        RenderLib::draw_voxel(scene->boxShader, glm::vec3((float)0, (float)0, (float)0), glm::vec3(scene->_grids[selectedGrid].width, scene->_grids[selectedGrid].depth, scene->_grids[selectedGrid].height));
+        RenderLib::bind_vertex_array(renderInfo.voxelVAO);
+        RenderLib::draw_voxel(renderInfo.boxProgram, scene->transforms[selectedGrid], glm::vec3(scene->_grids[selectedGrid].width, scene->_grids[selectedGrid].depth, scene->_grids[selectedGrid].height));
         RenderLib::front_face(GL_CCW);
     } else {
         for(uint32_t i = 0; i < scene->gridsCount; i++) {
-            RenderLib::bind_vertex_array(scene->voxelVAO);
+            RenderLib::bind_vertex_array(renderInfo.voxelVAO);
             
-            render.draw_grid(tempGrid, scene->transforms[i]);
-            RenderLib::draw_voxel(scene->boxShader, glm::vec3((float)0, (float)0, (float)0), glm::vec3(scene->_grids[i].width, scene->_grids[i].depth, scene->_grids[i].height));
+            render.draw_grid(scene->_grids[i], scene->transforms[i]);
+            RenderLib::draw_voxel(renderInfo.boxProgram, scene->transforms[i], glm::vec3(scene->_grids[i].width, scene->_grids[i].depth, scene->_grids[i].height));
         }
     }
 
@@ -280,13 +302,13 @@ void Viewport::solve_voxel_placing(Cursor cursor) {
 
         while(distance < 100.0f) {
             distance += step;
-            if(scene->_grids[selectedGrid].get((camOrigin + (-camDirection * camOffset)) + ray.direction * distance) > 0) {
-                glm::vec3 position = (camOrigin + (-camDirection * camOffset)) + ray.direction * distance;
+            if(scene->_grids[selectedGrid].get((ray.origin) + ray.direction * distance) > 0) {
+                glm::vec3 position = ((ray.origin)) + ray.direction * distance;
                 position.x = std::floor(position.x);
                 position.y = std::floor(position.y);
                 position.z = std::floor(position.z);
 
-                glm::vec3 normal = (camOrigin + (-camDirection * camOffset)) + (ray.direction * (distance - step));
+                glm::vec3 normal = ((ray.origin)) + (ray.direction * (distance - step));
                 normal.x = std::floor(normal.x);
                 normal.y = std::floor(normal.y);
                 normal.z = std::floor(normal.z);
@@ -316,7 +338,7 @@ void Viewport::solve_voxel_placing(Cursor cursor) {
         float distance = 0.0f;
         float step = 0.05f;
 
-        glm::vec3 c = (camOrigin + (-camDirection * camOffset));
+        glm::vec3 c = ray.origin;
 
         float result = 0.0f;
         glm::vec3 n = c - shapeStart;
@@ -363,16 +385,17 @@ glm::vec3 Viewport::ray_cast(Ray ray) {
     _Grid grid = scene->_grids[selectedGrid];
     while(distance < 240.0f) {
         distance += step;
-        if(grid.intersects(ray.origin + ray.direction * distance)) {
-            if(grid.get(ray.origin + ray.direction * distance) > 0) {
+        glm::vec3 offset = -scene->transforms[selectedGrid][3];
+        if(grid.intersects((ray.origin + offset + ray.direction * distance))) {
+            if(grid.get(ray.origin + offset + ray.direction * distance) > 0) {
                 if(window.is_key_down(GLFW_KEY_LEFT_CONTROL))
-                    return ray.origin + ray.direction * (distance);
+                    return ray.origin + offset + ray.direction * (distance);
                 else
-                    return ray.origin + ray.direction * (distance - step);
+                    return ray.origin + offset + ray.direction * (distance - step);
             }
         } else {
-            if(grid.intersects(ray.origin + ray.direction * (distance - step))) {
-                return ray.origin + ray.direction * (distance - step);
+            if(grid.intersects(ray.origin + offset + ray.direction * (distance - step))) {
+                return ray.origin + offset + ray.direction * (distance - step);
             }
         }
     }
@@ -544,7 +567,7 @@ void Viewport::redo() {
 }
 
 
-void Viewport::change_grid(int32_t index) {
+void Viewport::select_grid(uint32_t index) {
     if(index > scene->gridsCount)
         return;
 
@@ -594,4 +617,25 @@ void Viewport::resize_callback(uint32_t width, uint32_t height) {
     glBindRenderbuffer(GL_RENDERBUFFER, framebuffer.depth);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, framebuffer.depth);
+}
+
+
+void Viewport::enter_edit_mode() {
+    isEditMode = 1;
+} void Viewport::leave_edit_mode() {
+    isEditMode = 0;
+}
+
+void Viewport::refresh() {
+    MESSAGE("Refreshing the viewport");
+    if(scene->gridsCount > 0) {
+        select_grid(0);
+        isEditMode = true;
+    } else {
+        select_grid(-1);
+        isEditMode = false;
+    }
+
+    update_grid(scene->_grids[selectedGrid]);
+    update_cache();
 }

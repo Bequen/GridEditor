@@ -14,6 +14,8 @@ class PaletteTile : public WindowTile {
         void draw(Cursor cursor, WindowTileInfo tileInfo);
         void terminate();
 
+        void refresh();
+
         void update_palette();
         void resize_callback(uint32_t width, uint32_t height);
 };

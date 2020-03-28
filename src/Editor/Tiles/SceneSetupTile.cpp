@@ -59,3 +59,7 @@ void SceneSetupTile::update_lights() {
 
     RenderLib::unmap_buffer(GL_UNIFORM_BUFFER); 
 }
+
+void SceneSetupTile::refresh() {
+    
+}

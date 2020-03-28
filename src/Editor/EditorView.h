@@ -61,5 +61,7 @@ class EditorView {
         void resize_callback(uint32_t width, uint32_t height);
         
         void resize_buffer(uint32_t newBufferSize);
+
+        void refresh();
 };
 

@@ -68,3 +68,7 @@ void TerminalTile::terminate() {
 void TerminalTile::resize_callback(uint32_t width, uint32_t height) {
 
 }
+
+void TerminalTile::refresh() {
+    
+}

@@ -21,3 +21,7 @@ void ObjectExplorerTile::terminate() {
 void ObjectExplorerTile::resize_callback(uint32_t width, uint32_t height) {
 
 }
+
+void ObjectExplorerTile::refresh() {
+    
+}

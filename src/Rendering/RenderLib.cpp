@@ -383,7 +383,17 @@ void RenderLib::draw_voxel(uint32_t program, float x, float y, float z) {
     ShaderLib::uniform_mat4(program, "model", &model[0][0]);
 
     glDrawArrays(GL_TRIANGLES, 0, 36);
+} void RenderLib::draw_voxel(uint32_t program, glm::mat4 model, glm::vec3 gridScale) {
+    glUseProgram(program);
+
+    glm::vec3 position = glm::vec3(0.0f);
+    ShaderLib::uniform_vec3(program, "position", &position[0]);
+    ShaderLib::uniform_vec3(program, "scale", &gridScale[0]);
+    ShaderLib::uniform_mat4(program, "model", &model[0][0]);
+
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 }
+
 
 
 void RenderLib::culling(uint32_t mode) {

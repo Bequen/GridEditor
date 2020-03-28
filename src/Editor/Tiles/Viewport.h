@@ -10,6 +10,7 @@
 #include "Editor/FloodFillSelect.h"
 #include "WindowTile.h"
 #include "Editor/Input.h"
+#include "Editor/RenderInfo.h"
 #include "Editor/CameraController.h"
 
 #define STATE_NONE          0x0000
@@ -28,6 +29,11 @@
 
 #define CAMERA_MODE_PERSPECTIVE     0x0000
 #define CAMERA_MODE_ORTHOGRAPHIC    0x0001
+
+#define TRANSFORM_MODE_NONE         0
+#define TRANSFORM_MODE_TRANSLATE    1
+#define TRANSFORM_MODE_ROTATE       2
+#define TRANSFORM_MODE_SCALE        3
 
 class Viewport : public WindowTile {
     public:
@@ -62,9 +68,11 @@ class Viewport : public WindowTile {
         uint32_t redoState;
         uint32_t isEditMode;
 
-        glm::vec3 camDirection;
-        glm::vec3 camOrigin;
-        float camOffset;
+        uint32_t transformMode;
+        float tranformDistance;
+        uint32_t snapping;
+        uint32_t snappingSwitch;
+        RenderInfo renderInfo;
 
         Framebuffer framebuffer;
         uint32_t renderQuad;
@@ -74,8 +82,8 @@ class Viewport : public WindowTile {
 
         FloodFillSelect floodFillSelection;
 
-        Viewport(Scene* scene, Window window, double* deltaTime) :
-        WindowTile(scene), window(window), deltaTime(deltaTime) {
+        Viewport(Scene* scene, Window window, double* deltaTime, RenderInfo info) :
+        WindowTile(scene), window(window), deltaTime(deltaTime), renderInfo(info) {
             assert_msg(deltaTime, "Invalid delta time");
             assert_msg(scene, "Scene assigned to Viewport tile is not initialized");
         }
@@ -86,6 +94,7 @@ class Viewport : public WindowTile {
 
         void update();
         void terminate();
+        void refresh();
 
         void draw(Cursor cursor, WindowTileInfo tileInfo);
 
@@ -109,5 +118,8 @@ class Viewport : public WindowTile {
 
         void change_grid(int32_t index);
 
+        void select_grid(uint32_t index);
+
+        void leave_edit_mode();
         void enter_edit_mode();
 };

@@ -11,6 +11,7 @@
 #include "Editor/Tiles/Viewport.h"
 #include "Keyboard.h"
 #include "EditorView.h"
+#include "RenderInfo.h"
 
 /**
  * @brief  Editor is the main class controlling the app behaviour
@@ -31,6 +32,7 @@ class Editor {
 
         Cursor cursor;
         Scene scene;
+        RenderInfo renderInfo;
 
         double* deltaTime;
         Keyboard keyboard;
