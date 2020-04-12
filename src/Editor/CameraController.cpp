@@ -7,13 +7,18 @@
 #include <avg/Debug.h>
 
 void CameraController::init() {
+    // Set some initial values
+    // TODO Make these adjustable
     panSpeed = 10.0f;
     rotationSpeed = 100.0f;
     direction = glm::normalize(glm::vec3(0.0f, 1.0f, -1.0f));
 
+    // Set the controlling elements of our camera
     origin = glm::vec3(16.0f, 16.0f, 0.0f);
     offset = 20.0f;
     mode = CAMERA_MODE_PERSPECTIVE;
+
+    
 
     cameraBuffer = RenderLib::create_buffer_stream(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, nullptr);
     camera = (Camera*)RenderLib::map_buffer_range(cameraBuffer, GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4) * 2);
@@ -22,27 +27,28 @@ void CameraController::init() {
     camera->view = glm::lookAt(origin + (-direction * offset), origin, glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
-void CameraController::update(Input input) {
+void CameraController::update() {
+    aspect = Input.windowWidth / Input.windowHeight;
     // Camera Panning
-    if(input.get(GLFW_MOUSE_BUTTON_3) && input.get(GLFW_KEY_LEFT_SHIFT)) {
-        origin += (float)input.mouseDeltaY * panSpeed * glm::normalize(glm::vec3(camera->view[0][1], camera->view[1][1], camera->view[2][1]));
-        origin += (float)input.mouseDeltaX * panSpeed * glm::normalize(glm::vec3(camera->view[0][0], camera->view[1][0], camera->view[2][0]));
+    if(Input.get(GLFW_MOUSE_BUTTON_3) && Input.get(GLFW_KEY_LEFT_SHIFT)) {
+        origin += (float)Input.mouseDeltaY * panSpeed * glm::normalize(glm::vec3(camera->view[0][1], camera->view[1][1], camera->view[2][1]));
+        origin += (float)Input.mouseDeltaX * panSpeed * glm::normalize(glm::vec3(camera->view[0][0], camera->view[1][0], camera->view[2][0]));
     } 
     // Camera Zooming
-    else if(input.get(GLFW_MOUSE_BUTTON_3) && input.get(GLFW_KEY_LEFT_CONTROL)) {
-        offset += input.mouseDeltaY * 10.0f;
+    else if(Input.get(GLFW_MOUSE_BUTTON_3) && Input.get(GLFW_KEY_LEFT_CONTROL)) {
+        offset += Input.mouseDeltaY * 10.0f;
     } 
     // Camera Rotation
-    else if(input.get(GLFW_MOUSE_BUTTON_3)) {
-        direction = glm::rotate(direction, (float)input.mouseDeltaX * rotationSpeed * (float)input.deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
-        direction = glm::rotate(direction, (float)input.mouseDeltaY * rotationSpeed * (float)input.deltaTime, -glm::normalize(glm::vec3(camera->view[0][0], camera->view[1][0], camera->view[2][0])));
+    else if(Input.get(GLFW_MOUSE_BUTTON_3)) {
+        direction = glm::rotate(direction, (float)Input.mouseDeltaX * rotationSpeed * (float)Input.deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
+        direction = glm::rotate(direction, (float)Input.mouseDeltaY * rotationSpeed * (float)Input.deltaTime, -glm::normalize(glm::vec3(camera->view[0][0], camera->view[1][0], camera->view[2][0])));
         if(mode == CAMERA_MODE_ORTHOGRAPHIC)
             set_mode(CAMERA_MODE_PERSPECTIVE);
     }
 
     camera->view = glm::lookAt(origin + (-direction * offset), origin, glm::vec3(0.0f, 0.0f, 1.0f));
     if(mode == CAMERA_MODE_ORTHOGRAPHIC) {
-        camera->projection = glm::ortho(-offset / 2.0f, offset / 2.0f, -offset / 2.0f, offset / 2.0f, 0.1f, 1000.0f);
+        camera->projection = glm::ortho(-offset / 2.0f * aspect, offset / 2.0f * aspect, -offset / 2.0f, offset / 2.0f, 0.1f, 1000.0f);
     }
 }
 
@@ -51,7 +57,11 @@ void CameraController::terminate() {
 }
 
 void CameraController::resize_callback(uint32_t width, uint32_t height) {
-
+    aspect = (float)Input.windowWidth / (float)Input.windowHeight;
+    if(mode == CAMERA_MODE_PERSPECTIVE)
+        camera->projection = glm::perspective(glm::radians(65.0f), aspect, 0.1f, 1000.0f);
+    else
+        camera->projection = glm::ortho(-offset / 2.0f * aspect, offset / 2.0f * aspect, -offset / 2.0f, offset / 2.0f, 0.1f, 1000.0f);
 }
 
 Ray CameraController::create_ray(glm::vec3 cursor) {
@@ -92,10 +102,14 @@ void CameraController::set_mode(uint32_t mode) {
             break;
         } case CAMERA_MODE_PERSPECTIVE: {
             this->mode = mode;
-            camera->projection = glm::perspective(glm::radians(45.0f), 720.0f / (480.0f), 0.1f, 100.0f);
+            camera->projection = glm::perspective(glm::radians(45.0f), (float)Input.windowWidth / (float)(Input.windowHeight), 0.1f, 100.0f);
             break;
         } default: {
             ERROR("No such camera mode");
         }
     }
+}
+
+glm::vec3 CameraController::up() {
+    return glm::normalize(camera->view[1]);
 }

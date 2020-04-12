@@ -2,12 +2,12 @@
 
 #include "Editor/WindowManager/WindowEditor.h"
 
-class PaletteTile : public WindowEditor {
+class PropertiesTile : public WindowEditor {
     public:
         Scene* scene;
         RenderInfo renderInfo;
         
-        PaletteTile(Scene* scene, RenderInfo renderInfo);
+        PropertiesTile(Scene* scene, RenderInfo renderInfo);
 
         void init();
         void update();
@@ -16,6 +16,5 @@ class PaletteTile : public WindowEditor {
 
         void refresh();
 
-        void update_palette();
         void resize_callback(uint32_t width, uint32_t height);
 };

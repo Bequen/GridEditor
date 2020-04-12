@@ -145,6 +145,10 @@ uint32_t RenderLib::create_voxel() {
     return result;
 }
 
+void RenderLib::delete_vertex_array(uint32_t vao) {
+    glDeleteVertexArrays(1, &vao);
+}
+
 uint32_t RenderLib::create_quad() {
     uint32_t result;
     glGenVertexArrays(1, &result);
@@ -356,6 +360,57 @@ void RenderLib::buffer_binding_range(uint32_t buffer, uint32_t binding, uint32_t
     glBindBufferRange(GL_UNIFORM_BUFFER, binding, buffer, offset, size);
 }
 
+void RenderLib::draw_sky(RenderInfo renderInfo, uint32_t mode) {
+    glDepthMask(GL_FALSE);
+    glDisable(GL_CULL_FACE);
+
+    glm::vec4 skyColor = glm::vec4(0.529411765f, 0.807843137f, 0.921568627f, 1.0f);
+
+    // If we are drawing in perspective mode
+    if(mode == 0) {
+        RenderLib::bind_vertex_array(renderInfo.voxelVAO);
+        ShaderLib::uniform_vec4(renderInfo.skyProgram, "skyColor", &skyColor.x);
+        RenderLib::draw_voxel(renderInfo.skyProgram, glm::vec3(-100.0f, -100.0f, -100.0f), glm::vec3(200.0f, 200.0f, 200.0f));
+    } else {
+        glClearColor(skyColor.x, skyColor.y, skyColor.z, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
+
+    glEnable(GL_CULL_FACE);
+    glDepthMask(GL_TRUE);
+}
+
+void RenderLib::draw_grid(RenderInfo renderInfo, Grid grid, Transform transform) {
+    uint32_t streak = 0;
+    uint32_t streakBegin = 0;
+
+    glUseProgram(renderInfo.voxelProgram);
+    
+    glBindVertexArray(renderInfo.voxelVAO);
+    glUniform3ui(glGetUniformLocation(renderInfo.voxelProgram, "size"), grid.width, grid.depth, grid.height);
+    glUniformMatrix4fv(glGetUniformLocation(renderInfo.voxelProgram, "model"), 1, GL_FALSE, &transform.transform[0][0]);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, grid.gridTexture);
+
+    uint32_t positionUniform = glGetUniformLocation(renderInfo.voxelProgram, "index");
+
+    for(uint32_t i = 0; i < grid.width * grid.depth * grid.height; i++) {
+        if(grid.get(i) > 0) {
+            streak++;
+        } else {
+            if(streak > 0) {
+                glUniform1i(positionUniform, streakBegin);
+                glDrawArraysInstanced(GL_TRIANGLES, 0, 36, streak);
+                streakBegin += streak; streak = 0;
+            }
+            streakBegin++;
+        }
+    }
+}
+
+
+#pragma region Voxel Drawing
 void RenderLib::draw_voxel(uint32_t program, float x, float y, float z) {
     glUseProgram(program);
 
@@ -394,6 +449,7 @@ void RenderLib::draw_voxel(uint32_t program, float x, float y, float z) {
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
+#pragma endregion
 
 
 void RenderLib::culling(uint32_t mode) {

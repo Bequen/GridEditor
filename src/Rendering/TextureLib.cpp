@@ -73,3 +73,8 @@ Framebuffer TextureLib::create_framebuffer(uint32_t width, uint32_t height) {
 void TextureLib::framebuffer_attachment(uint32_t texture, uint32_t target, uint32_t type) {
     glFramebufferTexture2D(GL_FRAMEBUFFER, type, target, texture, 0);
 }
+
+
+void TextureLib::delete_texture(uint32_t texture) {
+    glDeleteTextures(1, &texture);
+}

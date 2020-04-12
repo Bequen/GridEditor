@@ -44,7 +44,7 @@ char* ContentPipeline::load_text(char* path, uint32_t* length) {
 }
 
 void ContentPipeline::save_grid(Scene scene, char* path) {
-    std::ofstream stream = std::ofstream(path, std::ios::binary | std::ios::out);
+    /* std::ofstream stream = std::ofstream(path, std::ios::binary | std::ios::out);
 
     uint32_t value = 0;
     stream.write((char*)&value, 4);
@@ -55,7 +55,7 @@ void ContentPipeline::save_grid(Scene scene, char* path) {
 
     stream.write((char*)&scene.gridsCount, 4);
     for(uint32_t i = 0; i < scene.gridsCount; i++) {
-        _Grid grid = scene._grids[i];
+        Grid grid = scene._grids[i];
         stream.write((char*)&grid.width, 4);
         stream.write((char*)&grid.depth, 4);
         stream.write((char*)&grid.height, 4);
@@ -63,11 +63,11 @@ void ContentPipeline::save_grid(Scene scene, char* path) {
         stream.write("\0", 1);
     }
 
-    stream.close();
+    stream.close(); */
 }
 
 Scene ContentPipeline::load_grid(char* path) {
-    Scene result;
+    /* Scene result;
     
     std::ifstream stream = std::ifstream(path, std::ios::binary | std::ios::in);
 
@@ -87,14 +87,14 @@ Scene ContentPipeline::load_grid(char* path) {
     delete [] palette;
 
     for(uint32_t i = 0; i < gridCount; i++) {
-        _Grid grid;
+        Grid grid;
         uint32_t width, depth, height;
 
         stream.read((char*)&width, 4);
         stream.read((char*)&depth, 4);
         stream.read((char*)&height, 4);
 
-        grid = _Grid(width, depth, height);
+        grid = Grid(width, depth, height);
         if(grid.buffer == nullptr)
             grid.buffer = new int8_t[width * depth * height];
 
@@ -105,5 +105,5 @@ Scene ContentPipeline::load_grid(char* path) {
     }
     stream.close();
 
-    return result;
+    return result; */
 }

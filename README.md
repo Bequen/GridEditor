@@ -15,6 +15,18 @@ Basic voxel editing.
 
 Project should be pretty self-contained, meaning all the external libs are packed with it, but, I might have some lib preinstalled in system dir and therefore I didn't notice it's needed, PLEASE, notify me if you find any (your compilation won't go good).
 
+Libs that are not included:
+OpenGL:
+- libGL
+- libOpenGL
+XLib:
+- libX11
+- libXxf86vm
+- libXrandr
+Other:
+- dl
+- libpthread
+
 Compilation:
 `make debug` for debug release, quick result with gdb support and outputting.
 `make release` fully optimized version, use in case you won't be editing the source code.

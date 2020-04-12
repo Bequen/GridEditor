@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Input.h"
+#include "InputManager.h"
 #include "Ray.h"
 #include "Camera.h"
 
@@ -13,6 +13,7 @@ class CameraController {
         float rotationSpeed;
 
         float offset;
+        float aspect;
 
         glm::vec3 direction;
         glm::vec3 origin;
@@ -23,11 +24,13 @@ class CameraController {
         Camera* camera;
 
         void init();
-        void update(Input input);
+        void update();
         void terminate();
 
         void resize_callback(uint32_t width, uint32_t height);
 
         Ray create_ray(glm::vec3 cursor);
         void set_mode(uint32_t mode);
+
+        glm::vec3 up();
 };

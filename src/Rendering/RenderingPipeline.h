@@ -3,8 +3,9 @@
 #include <cstdint>
 
 #include "System/Voxels/Grid.h"
-#include "System/Scene.h"
-#include "Editor/Tiles/PerformanceMonitor.h"
+#include "Editor/Scene.h"
+#include "Editor/RenderInfo.h"
+#include "Framebuffer.h"
 
 /**
  * @brief  Where all the rendering is done
@@ -13,27 +14,15 @@
  */
 class RenderingPipeline {
     private:
-        uint32_t voxel;
-
-        uint32_t cameraBuffer;
-        void* camera;
-
         uint32_t position;
         uint32_t positionIndex;
         uint32_t scale;
 
     public:
-        uint32_t voxelProgram;
-        uint32_t boxShader;
-        uint32_t skyShader;
-
         glm::vec4 skyColor;
-
-        uint32_t quadVAO;
-        uint32_t quadProgram;
         uint32_t polygonMode;
 
-        PerformanceStat* perfStat;
+        RenderInfo renderInfo;
 
         /**
          * @brief  Initializes the rendering pipeline
@@ -45,7 +34,7 @@ class RenderingPipeline {
 
         /**
          * @brief  Update loop doing all the rendering
-         * @note   Don't use this function, the Grid system is already doing it
+         * @note   Don't use this function, the Grid's system is already doing it
          * @retval None
          */
         void update();
@@ -59,8 +48,8 @@ class RenderingPipeline {
          * @retval None
          */
         void draw_scene(Framebuffer framebuffer, Scene* scene);
-        void draw_grid(_Grid grid, glm::mat4 model);
-        void draw_sky();
+        void draw_grid(Grid grid, glm::mat4 model);
+        void draw_sky(uint32_t mode);
 
         /**
          * @brief  Terminates the rendering pipeline and cleans up after it

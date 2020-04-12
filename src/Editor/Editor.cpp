@@ -1,77 +1,107 @@
 #include "Editor.h"
 
-#include "ImGUI/imgui.h"
-#include "ImGUI/imgui_impl_glfw.h"
-#include "ImGUI/imgui_impl_opengl3.h"
+#include "ImGui/imgui.h"
+#include "ImGui/imgui_impl_glfw.h"
+#include "ImGui/imgui_impl_opengl3.h"
 
-#include "Rendering/RenderLib.h"
 #include <avg/Debug.h>
 #include <avg/Random/PermutationTable.h>
 #include <avg/Random/PerlinNoise.h>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <csignal>
 
+#include "Rendering/RenderLib.h"
 #include "Rendering/TextureLib.h"
 #include "Rendering/ShaderLib.h"
 #include "Editor/Tiles/PaletteTile.h"
-#include "Editor/Tiles/PerformanceMonitor.h"
-#include "Editor/Tiles/SceneSetupTile.h"
 #include "System/ContentPipeline.h"
-#include "Editor/Tiles/TerminalTile.h"
-#include <csignal>
+#include "Tiles/PaletteTile.h"
+#include "Tiles/SceneExplorerTile.h"
+#include "Tiles/PropertiesTile.h"
 
 void Editor::init() {
     MESSAGE("Starting the editor initialization");
     scene = Scene();
     scene.init(10);
 
-    scene.colorSelected = 2;
-    scene.add_grid(_Grid(32), "Grid1");
+    RenderLib::init();
 
+    #pragma region INPUT INITIALIZATION
+    Input.init(32);
+
+    Input.add_key({GLFW_KEY_TAB, 0});
+    Input.add_key({GLFW_KEY_A, 0});
+    Input.add_key({GLFW_KEY_R, 0});
+    Input.add_key({GLFW_KEY_G, 0});
+    Input.add_key({GLFW_KEY_P, 0});
+    Input.add_key({GLFW_KEY_S, 0});
+    Input.add_key({GLFW_KEY_LEFT_SHIFT, 0});
+    Input.add_key({GLFW_KEY_LEFT_CONTROL, 0});
+    Input.add_key({GLFW_KEY_LEFT_ALT, 0});
+    Input.add_key({GLFW_KEY_1, 0});
+    Input.add_key({GLFW_KEY_3, 0});
+    Input.add_key({GLFW_KEY_5, 0});
+    Input.add_key({GLFW_KEY_7, 0});
+    Input.add_key({GLFW_KEY_9, 0});
+    Input.add_key({GLFW_KEY_DELETE, 0});
+
+    Input.add_mouse_key({GLFW_MOUSE_BUTTON_1, 0});
+    Input.add_mouse_key({GLFW_MOUSE_BUTTON_2, 0});
+    Input.add_mouse_key({GLFW_MOUSE_BUTTON_3, 0});
+    #pragma endregion
+
+    scene.colorSelected = 2;
+    scene.sceneGraph.add_child(SceneObject(OBJECT_TYPE_GRID, scene.add_grid(Grid(32))));
+    scene.selected = &scene.sceneGraph.children[0];
+
+    #pragma region RENDERING PIPELINE INITIALIZATION
     renderInfo.voxelVAO = RenderLib::create_voxel();
     renderInfo.boxProgram = ShaderLib::program_create("box");
 
     deferredProgram = ShaderLib::program_create("deferred");
     drawQuad = RenderLib::create_render_quad();
 
-    windowQuad = RenderLib::create_render_quad();
-    windowProgram = ShaderLib::program_create("window");
+    renderInfo.quadProgram = ShaderLib::program_create("deferred");
+    renderInfo.quadVAO = RenderLib::create_render_quad();
+    renderInfo.skyProgram = ShaderLib::program_create("skybox");
+    renderInfo.voxelProgram = ShaderLib::program_create("voxel");
+    #pragma endregion
 
-    // Basic layout
-    // TODO Make layout saveable
-    editorWindow.init(10);
-    editorWindow.width = 1.0f;
-    editorWindow.tileInfo.width = 1.0f;
-    editorWindow.tileInfo.height = 1.0f;
-    editorWindow.tileInfo.x = 0.0f;
-    editorWindow.tileInfo.y = 0.0f;
+    #pragma region WINDOW MANAGER INITIALIZATION
+    windowManager.init();
+    windowManager.tiles.editors = new PaletteTile(&scene, renderInfo);
+    windowManager.tiles.editors->init();
+    windowManager.tiles.editorCount = 1;
 
-    editorWindow.children[0].init(10);
-    editorWindow.children[0].childrenCount = 2;
-    editorWindow.children[0].width = 0.5f;
+    _WindowTile viewport;
+    viewport.init();
+    viewport.editors = new Viewport(&scene, renderInfo);
+    viewport.editors->init();
+    viewport.editorCount = 1;
+    windowManager.tiles.insert_window(viewport, 1);
 
-    editorWindow.children[0].children[0].init();
-    editorWindow.children[0].children[0].width = 0.75f;
-    editorWindow.children[0].children[0].assign(new Viewport(&scene, window, deltaTime, renderInfo), &window);
+    _WindowTile sceneExplorer;
+    sceneExplorer.init();
+    sceneExplorer.editors = new SceneExplorerTile(&scene, renderInfo);
+    sceneExplorer.editors->init();
+    sceneExplorer.editorCount = 1;
+    windowManager.tiles.children[0].insert_window(sceneExplorer, 1);
 
-    editorWindow.children[0].children[1].init();
-    editorWindow.children[0].children[1].width = 1.0f;
-    editorWindow.children[0].children[1].assign(new TerminalTile(&scene), &window);
-
-    editorWindow.children[1].init(10);
-    editorWindow.children[1].childrenCount = 2;
-    editorWindow.children[1].width = 1.0f;
-    editorWindow.children[1].children[0].init();
-    editorWindow.children[1].children[0].width = 0.5f;
-    editorWindow.children[1].children[0].assign(new PaletteTile(&scene), &window);
-    editorWindow.children[1].children[1].init();
-    editorWindow.children[1].children[1].width = 1.0f;
-    editorWindow.children[1].children[1].assign(new SceneSetupTile(&scene), &window);
-
-    editorWindow.childrenCount = 2;
+    _WindowTile propertiesTile;
+    propertiesTile.init();
+    propertiesTile.editors = new PropertiesTile(&scene, renderInfo);
+    propertiesTile.editors->init();
+    propertiesTile.editorCount = 1;
+    windowManager.tiles.insert_window(propertiesTile, 1);
+    
+    #pragma endregion
 }
 
 void Editor::update() {
+    Input.update();
+    render.update();
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -82,54 +112,17 @@ void Editor::update() {
 
     draw_menubar();
 
-    update_cursor();
-    update_keyboard();
-    editorWindow.update(cursor, keyboard, 0.0f, 0.0f, 1.0f, windowProgram, EDITOR_WINDOW_FLOW_X, window.width, window.height - 19);
+    windowManager.update();
+    windowManager.draw();
 }
 
-void Editor::update_cursor() {
-    if(window.is_mouse_button_down(GLFW_MOUSE_BUTTON_1)) {
-        if(cursor.leftButtonState == MOUSE_BUTTON_STATE_PRESS || cursor.leftButtonState == MOUSE_BUTTON_STATE_HOLD)
-            cursor.leftButtonState = MOUSE_BUTTON_STATE_HOLD;
-        else
-            cursor.leftButtonState = MOUSE_BUTTON_STATE_PRESS;
-    } else {
-        cursor.leftButtonState = MOUSE_BUTTON_STATE_NONE;
-    }
-
-    double x, y;
-    window.cursor_pos(&x, &y);
-
-    cursor.deltaX = cursor.cursorX - x; 
-    cursor.deltaY = cursor.cursorY - y;
-
-    cursor.cursorX = x; 
-    cursor.cursorY = y;
-}
-
-void Editor::update_keyboard() {
-    update_key(GLFW_KEY_LEFT_ALT, keyboard.leftAlt);
-    update_key(GLFW_KEY_LEFT_CONTROL, keyboard.leftControl);
-    update_key(GLFW_KEY_LEFT_SHIFT, keyboard.leftShift);
-}
-
-void Editor::update_key(uint32_t key, uint32_t& state) {
-    if(window.is_key_down(key)) {
-        if(state == KEY_STATE_PRESS)
-            state = KEY_STATE_HOLD;
-        else if(state == KEY_STATE_NONE)
-            state = KEY_STATE_PRESS;
-    } else {
-        state = KEY_STATE_NONE;
-    } 
-}
 
 void Editor::draw_menubar() {
     if(ImGui::BeginMainMenuBar()) {
         if(ImGui::BeginMenu("File")) {
             if(ImGui::MenuItem("Load", NULL)) {
                 scene = ContentPipeline::load_grid("/home/martin/test.grid");
-                editorWindow.refresh();
+                windowManager.refresh();
             }
             if(ImGui::BeginMenu("Save")) {
                 if(ImGui::MenuItem(".grid", NULL)) {
@@ -140,7 +133,7 @@ void Editor::draw_menubar() {
             }
             
             if(ImGui::MenuItem("Quit", NULL)) {
-                glfwSetWindowShouldClose(window.window, 1);
+                //glfwSetWindowShouldClose(window.window, 1);
             }
             ImGui::EndMenu();
         }
@@ -150,12 +143,18 @@ void Editor::draw_menubar() {
 }
 
 void Editor::terminate() {
+    ShaderLib::program_delete(renderInfo.boxProgram);
+    ShaderLib::program_delete(renderInfo.voxelProgram);
+    ShaderLib::program_delete(renderInfo.skyProgram);
+    ShaderLib::program_delete(renderInfo.quadProgram);
 
+    ShaderLib::program_delete(deferredProgram);
+
+    RenderLib::delete_vertex_array(renderInfo.quadVAO);
+    RenderLib::delete_vertex_array(renderInfo.voxelVAO);
 }
 
 void Editor::resize_callback(int32_t width, int32_t height) {
-    this->window.width = width;
-    this->window.height = height;
     glViewport(0, 0, width, height);
-    editorWindow.resize_callback(width, height);
+    windowManager.resize_callback();
 }

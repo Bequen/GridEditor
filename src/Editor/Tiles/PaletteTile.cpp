@@ -2,7 +2,15 @@
 
 #include <Rendering/ShaderLib.h>
 #include <glad/glad.h>
-#include <ImGUI/imgui.h>
+#include <ImGui/imgui.h>
+#include <avg/Debug.h>
+
+#include "Rendering/TextureLib.h"
+
+PaletteTile::PaletteTile(Scene* scene, RenderInfo renderInfo) :
+scene(scene), renderInfo(renderInfo) {
+
+}
 
 void PaletteTile::init() {
     scene->colorSelected = 1;
@@ -12,7 +20,7 @@ void PaletteTile::update() {
 
 }
 
-void PaletteTile::draw(Cursor cursor, WindowTileInfo tileInfo) {
+void PaletteTile::draw(WindowTileInfo tileInfo) {
     assert_msg(scene != nullptr, "Cannot draw palette, scene was not initialized");
     assert_msg(scene->palette != nullptr, "Cannot draw palette, palette was not initialized");
     ImGui::BeginChild("PickerWindow", ImVec2(200.0f, 200.0f), true);
@@ -50,7 +58,6 @@ void PaletteTile::update_palette() {
     TextureLib::update_texture_1d(scene->paletteTexture, 256, scene->palette);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_1D, scene->paletteTexture);
-/*     ShaderLib::uniform_int32(render.shader, "palette", 1); */
 }
 
 void PaletteTile::resize_callback(uint32_t width, uint32_t height) {

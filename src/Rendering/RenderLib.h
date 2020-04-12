@@ -4,6 +4,10 @@
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 
+#include "System/Voxels/Grid.h"
+#include "Editor/RenderInfo.h"
+#include "System/Transform.h"
+
 #define DIR_Z 0x0000
 #define DIR_Y 0x0001
 #define DIR_X 0x0002
@@ -63,6 +67,8 @@ namespace RenderLib {
     uint32_t create_render_quad();
     
 
+    void delete_vertex_array(uint32_t vao);
+
 
     /**
      * @brief  Bounds the vertex array
@@ -120,6 +126,9 @@ namespace RenderLib {
 
 
     #pragma region DRAWING
+    void draw_grid(RenderInfo renderInfo, Grid grid, Transform transform);
+    void draw_sky(RenderInfo renderInfo, uint32_t mode);
+
     void draw_voxel(uint32_t program, float x, float y, float z);
     void draw_voxel(uint32_t program, glm::vec3 position);
     void draw_voxel(uint32_t program, glm::vec3 position, glm::vec3 scale);

@@ -4,9 +4,14 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#define WINDOW_SIZE_WINDOWED 0x0000
-#define WINDOW_SIZE_FULLSCREEN 0x0001
-#define WINDOW_SIZE_BORDERLESS_FULLSCREEN 0x0002
+#define WINDOW_SIZE_WINDOWED                0x0000
+#define WINDOW_SIZE_FULLSCREEN              0x0001
+#define WINDOW_SIZE_BORDERLESS_FULLSCREEN   0x0002
+
+#define CURSOR_TYPE_DEFAULT                 GLFW_ARROW_CURSOR
+#define CURSOR_TYPE_HRESIZE                 GLFW_HRESIZE_CURSOR
+#define CURSOR_TYPE_VRESIZE                 GLFW_VRESIZE_CURSOR
+#define CURSOR_TYPE_POINTER                 0x0002
 
 class Window {
     private:

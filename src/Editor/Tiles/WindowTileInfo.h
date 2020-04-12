@@ -7,8 +7,6 @@
 #define WINDOW_TILE_STATE_FOCUSED   0x0002
 
 struct WindowTileInfo {
-    uint32_t state;
-
-    float width, height;
     float x, y;
+    float width, height;
 };

@@ -7,11 +7,11 @@
 #include "Color.h"
 #include "Ray.h"
 #include "Rendering/Light.h"
-#include "System/Scene.h"
+#include "Editor/Scene.h"
 #include "Editor/Tiles/Viewport.h"
-#include "Keyboard.h"
 #include "EditorView.h"
 #include "RenderInfo.h"
+#include "WindowManager/WindowManager.h"
 
 /**
  * @brief  Editor is the main class controlling the app behaviour
@@ -20,32 +20,24 @@
  */
 class Editor {
     public:
-        Window window;
-
         uint32_t drawQuad;
         uint32_t deferredProgram;
 
         EditorView editorWindow;
+        WindowManager windowManager;
 
-        uint32_t windowProgram;
-        uint32_t windowQuad;
-
-        Cursor cursor;
         Scene scene;
+        // Rendering Pipeline is probably deprecated by now
+        RenderingPipeline render;
         RenderInfo renderInfo;
-
-        double* deltaTime;
-        Keyboard keyboard;
 
         void init();
         void update();
         void terminate();
 
-        void update_cursor();
-        void update_keyboard();
-        void update_key(uint32_t key, uint32_t& state);
-
         void draw_menubar();
+        void draw_statusbar();
+
         void draw_ui();
         void draw_palette();
         void draw_toolbar();

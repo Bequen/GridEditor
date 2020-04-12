@@ -60,6 +60,10 @@ uint32_t ShaderLib::program_create(char* name) {
     return program;
 }
 
+void ShaderLib::program_delete(uint32_t program) {
+    glDeleteProgram(program);
+}
+
 int32_t ShaderLib::shader_create(uint32_t type, char* path) {
     MESSAGE("Creating shader")
 

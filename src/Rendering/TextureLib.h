@@ -16,4 +16,6 @@ namespace TextureLib {
     Framebuffer create_framebuffer(uint32_t width, uint32_t height);
 
     void framebuffer_attachment(uint32_t texture, uint32_t target, uint32_t type);
+
+    void delete_texture(uint32_t texture);
 };

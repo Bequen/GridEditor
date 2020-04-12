@@ -1,5 +1,6 @@
 #include "Window.h" 
 #include <avg/Debug.h>
+#include "Editor/InputManager.h"
 
 void Window::init() {
     MESSAGE("Creating default window");
@@ -169,7 +170,7 @@ glm::vec3 Window::get_normalized_cursor_pos() {
     double x, y;
     glfwGetCursorPos(window, &x, &y);
 
-    glm::vec3 result = glm::vec3((2.0f * (float)x) / width - 1.0f, 1.0f - (2.0f * (float)y) / height, 1.0f);
+    glm::vec3 result = glm::vec3((2.0f * (float)x) / (float)Input.windowWidth - 1.0f, 1.0f - (2.0f * (float)y) / (float)Input.windowHeight, 1.0f);
 
     return result;
 }

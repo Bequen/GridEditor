@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include "Editor/Tiles/WindowTile.h"
-#include "Keyboard.h"
 
 #define EDITOR_WINDOW_STATE_NONE        0x0000
 #define EDITOR_WINDOW_STATE_RESIZE      0x0001
@@ -13,6 +12,8 @@
 #define EDITOR_WINDOW_FLOW_Y            0x0001
 
 #define MENUBAR_HEIGHT                  19
+
+#define RESIZE_LINE_WIDTH               5
 
 /**
  * @brief  Window node used inside of the editor
@@ -31,11 +32,13 @@ class EditorView {
         float lowestBound, highestBound;
         float crossLowestBound, crossHighestBound;
         float resizeLowestBound, resizeHighestBound;
-        float width;
+
+        float width, height;
 
         uint32_t state;
 
         WindowTile* tile;
+        // Tile info stores information about the tile that are used directly for rendering
         WindowTileInfo tileInfo;
 
         EditorView() {
@@ -47,11 +50,11 @@ class EditorView {
         void init();
         void init(uint32_t bufferSize);
 
-        void assign(WindowTile* tile, Window* window);
+        void assign(WindowTile* tile);
 
-        uint32_t update(Cursor cursor, Keyboard keyboard, float x, float y, float height, uint32_t program, uint32_t flow, uint32_t winWidth, uint32_t winHeight);
+        uint32_t update(float x, float y, float height, uint32_t flow);
 
-        void render(Cursor cursor, float x, float y, float height, uint32_t flow, uint32_t winWidth, uint32_t winHeight);
+        void draw(float x, float y, float height, uint32_t flow);
 
         float find_bound_highest(uint32_t flow, float initial);
         float find_bound_lowest(uint32_t flow);
@@ -63,5 +66,8 @@ class EditorView {
         void resize_buffer(uint32_t newBufferSize);
 
         void refresh();
+
+        void drop_window(EditorView view, uint32_t flow);
+        void insert_window(EditorView window, uint32_t index);
 };
 

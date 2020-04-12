@@ -3,7 +3,7 @@
 #include <cstdint>
 
 #include "string256.h"
-#include "Scene.h"
+#include "Editor/Scene.h"
 
 namespace ContentPipeline {
     string256 asset_path(char* dir, char* name, char* extension);

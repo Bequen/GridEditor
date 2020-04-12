@@ -4,17 +4,16 @@
 
 #include "Rendering/RenderLib.h"
 
-#include "ImGUI/imgui.h"
-#include "ImGUI/imgui_impl_glfw.h"
-#include "ImGUI/imgui_impl_opengl3.h"
+#include "ImGui/imgui.h"
+#include "ImGui/imgui_impl_glfw.h"
+#include "ImGui/imgui_impl_opengl3.h"
 
 void Application::init() {
     MESSAGE("Application initialization has started");
 
     window.init(PROJECT_NAME, 720, 480);
 
-    editor.deltaTime = &deltaTime;
-    editor.window = window;
+    memcpy(&Input + 0, &window, sizeof(Window));
     editor.init();
 
     init_imgui();

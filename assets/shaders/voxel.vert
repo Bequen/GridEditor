@@ -51,5 +51,5 @@ void main() {
     } else {
         shadowValue = 0.0;
     }
-    gl_Position = projection * view * model * vec4(vPos + pos + vec3(0.5), 1.0);
+    gl_Position = projection * view * vec4(vPos + pos + vec3(0.5), 1.0);
 }

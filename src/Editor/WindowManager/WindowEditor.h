@@ -1,37 +1,13 @@
 #pragma once
 
+#include <cstdint>
+
 #include "Editor/Scene.h"
-#include "WindowTileInfo.h"
-#include "System/Window.h"
-#include "Rendering/RenderingPipeline.h"
+#include "Editor/RenderInfo.h"
+#include "Editor/Tiles/WindowTileInfo.h"
 
-class WindowTile {
+class WindowEditor {
     public:
-        WindowTileInfo tileInfo;
-        Scene* scene;
-        RenderInfo renderInfo;
-
-        /**
-         * @brief  Default constructor
-         * @note   Initializes the variables to it's default value
-         * @retval 
-         */
-        WindowTile() :
-        scene(nullptr)  {
-
-        }
-
-        /**
-         * @brief  Constructor that also sets the scene that is edited
-         * @note   Will be probably removed soon because it is not good for some standarized UI
-         * @param  scene: Scene that the user is working with in the software
-         * @retval 
-         */
-        WindowTile(Scene* scene, RenderInfo renderInfo) :
-        scene(scene), renderInfo(renderInfo) {
-            
-        }
-
         /**
          * @brief  Gets called when the instance is assigned to some window tile
          * @note   Gets called only once, use for initializing some data for future, per frame usage

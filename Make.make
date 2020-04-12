@@ -8,12 +8,12 @@ INCLUDE_DIR=src/
 LIB_DIR=deps/
 
 # If your source files have some sub directories, specify them here 
-FILES_SUB_DIRS=System System/Tiles Rendering Editor ImGUI ImGUI/GL Editor/Tiles System/Voxels
+FILES_SUB_DIRS=System System/Tiles Rendering Editor ImGui ImGui/GL Editor/Tiles System/Voxels Editor/Viewport Editor/WindowManager
 
 # Where libraries, other than those in /usr/lib64/ are put
 THIRD_PARTY=./third-party/
 # All the dependencies that are in use
-DEPS=dl GL OpenGL GLU X11 Xxf86vm Xrandr pthread gdiplus AvgLib glfw3
+DEPS=dl GL OpenGL X11 Xxf86vm Xrandr pthread AvgLib glfw3
 # Where should we look for the .so files in sub projects
 LIB_DIRS=AvgLib glfw/src glm/glm
 # Where we can find include files in these libs

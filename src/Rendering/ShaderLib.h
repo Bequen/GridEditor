@@ -40,6 +40,8 @@ namespace ShaderLib {
      */
     int32_t shader_create(uint32_t type, char* path);
 
+    void program_delete(uint32_t program);
+
     // UNIFORMS
     // ========
     #pragma region UNIFORMS

@@ -1,83 +1,53 @@
 #pragma once
 
-#include <cstring>
-#include <cmath>
+#include <cstdint>
 #include <glm/glm.hpp>
-#include <avg/Debug.h>
 
-#define CACHE_SIZE 128
+#define CACHE_SIZE 32
 
-template<typename T>
+struct _CacheCell {
+    int32_t index;
+
+    int8_t newValue;
+    int8_t oldValue;
+};
+
+struct SubGrid {
+    int8_t buffer[16 * 16 * 16];
+    
+};
+
+/**
+ * @brief  Grid containing buffer of indexes to palette
+ * @note   
+ * @retval None
+ * @TODO a) Split grid into smaller grids for greedy meshing
+ */
 struct Grid {
-    T* grid;
-    uint32_t size;
+    uint32_t gridTexture;
 
-    Grid() :
-    size(0), grid(nullptr) {
-        
-    }
+    int8_t* buffer;
+    uint32_t width, depth, height;
 
-    Grid(uint32_t size) :
-    size(size), grid(new T[size * size * size]) {
-        memset(grid, 0, size * size * size * sizeof(T));
-    }
+    uint32_t max;
+    uint32_t min;
 
-    void init(uint32_t size) {
-        this->size = size;
-        this->grid = (T*)malloc(sizeof(T) * (size * size * size));
+    _CacheCell* cache[CACHE_SIZE];
+    uint32_t cacheLengths[CACHE_SIZE];
+    uint32_t cacheIndex;
+    uint32_t cacheDepth;
 
-        memset(this->grid, 0, this->size * this->size * this->size * sizeof(T));
-    } void init(uint32_t size, T* buffer) {
-        this->size = size;
-        grid = new T(size * size * size);
-        memcpy(grid, buffer, sizeof(T) * (size * size * size));
+    Grid();
+    Grid(uint32_t size);
+    Grid(uint32_t width, uint32_t depth, uint32_t height);
 
-        //memset(grid, 0, size * size * size * sizeof(T));
-    }
+    int32_t get(uint32_t index);
+    int32_t get(glm::vec3 pos);
 
-    void set(uint32_t index, T data) {
-        grid[index] = data;
-    } void set(uint32_t x, uint32_t y, uint32_t z, T data) {
-        grid[x + y * size + z * (size * size)] = data;
-    } bool set(glm::vec3 position, T data) {
-        if(position.x < 0.0f || position.x > size ||
-            position.y < 0.0f || position.y > size ||
-            position.z < 0.0f || position.z > size)
-            return false;
-        grid[(uint32_t)std::floor(position.x) + (uint32_t)std::floor(position.y) * size + (uint32_t)std::floor(position.z) * (size * size)] = data;
-        return true;
-    }
+    void set(uint32_t index, int8_t value);
+    void set(glm::vec3 pos, int8_t value);
 
-    inline T get(uint32_t index) {
-        if(index < 0)
-            return -1;
-        else if(index > size * size * size)
-            return -1;
-        return grid[index];
-    } inline T get(uint32_t x, uint32_t y, uint32_t z) {
-        if(x >= 0 && x < size &&
-            y >= 0 && y < size &&
-            z >= 0 && z < size)
-            return grid[x + y * size + z * (size * size)];
-        else
-            return -1;
-    } inline int32_t get(glm::vec3 position) {
-        if(position.x >= 0.0f && position.x < size &&
-            position.y >= 0.0f && position.y < size &&
-            position.z >= 0.0f && position.z < size)
-            return grid[(uint32_t)std::floor(position.x) + 
-                        (uint32_t)std::floor(position.y) * size + 
-                        (uint32_t)std::floor(position.z) * (size * size)];
-        else
-            return -1;
-    }
+    bool intersects(glm::vec3 point);
 
-    bool point_intersection(glm::vec3 point) {
-        if(point.x > 0 && point.y > 0 && point.z > 0 &&
-            point.x < 0 + size && point.y < 0 + size && point.z < 0 + size) {
-            return true;
-        } else {
-            return false;
-        }
-    }
+    void resize(uint32_t width, uint32_t depth, uint32_t height);
 };
