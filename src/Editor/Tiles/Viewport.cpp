@@ -129,19 +129,9 @@ void Viewport::draw(WindowTileInfo tileInfo) {
                     }
                 }
             } 
-
-            /* if(Input.get(GLFW_KEY_G) == GLFW_PRESS) {
-                transformMode = TRANSFORM_MODE_TRANSLATE;
-            } */
         } else {
             if(scene->selected != nullptr && isEditMode)
                 solve_voxel_placing();
-            /* if(input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_HELD) {
-                Brush brush;
-                brush.colorID = scene->colorSelected;
-                editor->solve_brush(camera.create_ray(glm::vec3(cursor.cursorX, cursor.cursorY, 0.0f)), brush);
-            }
-            editor->update(input); */
         }
     }
 
@@ -194,6 +184,25 @@ void Viewport::draw(WindowTileInfo tileInfo) {
                                         ImVec2((tileInfo.x + tileInfo.width) * Input.windowWidth,
                                         (tileInfo.y + tileInfo.height) * Input.windowHeight), 
                                         ImVec2(0, 1), ImVec2(1, 0));
+
+    draw_ui();
+}
+
+void Viewport::draw_ui() {
+    ImGui::BeginChild("viewport_panel", ImVec2(ImVec2((tileInfo.x + tileInfo.width) * Input.windowWidth, 100)));
+    if (ImGui::RadioButton("Add", brushMode == BRUSH_MODE_ADD)) { 
+        brushMode = BRUSH_MODE_ADD; 
+        brushModeCache = brushMode;
+    } ImGui::SameLine();
+    if (ImGui::RadioButton("Substract", brushMode == BRUSH_MODE_SUBSTRACT)) { 
+        brushMode = BRUSH_MODE_SUBSTRACT;
+        brushModeCache = brushMode;
+    } ImGui::SameLine();
+    if (ImGui::RadioButton("Paint", brushMode == BRUSH_MODE_PAINT)) { 
+        brushMode = BRUSH_MODE_PAINT; 
+        brushModeCache = brushMode;
+    }
+    ImGui::EndChild();
 }
 
 void Viewport::solve_voxel_placing() {
@@ -204,20 +213,6 @@ void Viewport::solve_voxel_placing() {
 
     Ray ray = camera.create_ray(glm::vec3(cursorX, cursorY, 0.0f));
     RayHit hit = ray_cast(ray);
-
-    // If the user wants to delete stuff
-    if(Input.get(GLFW_KEY_LEFT_CONTROL) == KEY_STATE_HELD) {
-        scene->colorSelected = 0;
-
-        this->brushMode = BRUSH_MODE_SUBSTRACT;
-    } else {
-        scene->colorSelected = scene->colorCache;
-
-        this->brushMode = this->brushModeCache;
-        MESSAGE("Brush mode : " << this->brushMode);
-    }
-
-
 
     // If user want to draw a shape
     if(Input.get(GLFW_KEY_LEFT_SHIFT))
@@ -238,16 +233,21 @@ void Viewport::solve_voxel_placing() {
         } if(isDrawing && Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_NONE) {
             isDrawing = false;
 
-            shapeEnd = hit.point + hit.normal;
+            
+            shapeEnd = brushMode == BRUSH_MODE_ADD ? hit.point + hit.normal : hit.point;
             MESSAGE("Shape End: " << shapeEnd.x << "," << shapeEnd.y << "," << shapeEnd.z);
+            memcpy(tempGrid.buffer, selectedGrid->buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
+            solve_rectangle(&tempGrid, shapeStart, shapeEnd);
             memcpy(selectedGrid->buffer, tempGrid.buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
-            solve_rectangle(selectedGrid, shapeStart, shapeEnd);
             update_grid(*selectedGrid);
+
+            shapeEnd = glm::vec3(0.0f);
+            shapeStart = glm::vec3(0.0f);
 
             if(isEditMode)
                 update_cache();
         } else if(isDrawing && Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_HELD) {
-            glm::vec3 shapeEndTemp = hit.point + hit.normal;
+            glm::vec3 shapeEndTemp = brushMode == BRUSH_MODE_ADD ? hit.point + hit.normal : hit.point;
             if(std::floor(shapeEnd[0]) != std::floor(shapeEndTemp[0]) ||
                 std::floor(shapeEnd[1]) != std::floor(shapeEndTemp[1]) ||
                 std::floor(shapeEnd[2]) != std::floor(shapeEndTemp[2])) {
@@ -275,7 +275,14 @@ void Viewport::solve_voxel_placing() {
                 shapeEnd = shapeEndTemp;
 
                 if(selectedGrid->intersects(shapeEnd)) {
-                    tempGrid.set(shapeEnd, scene->colorSelected);
+                    if(brushMode == BRUSH_MODE_ADD) {
+                        tempGrid.set(shapeEnd, scene->colorSelected);
+                    } else if(brushMode == BRUSH_MODE_PAINT) {
+                        if(tempGrid.get(shapeEnd) > 0)
+                            tempGrid.set(shapeEnd, scene->colorSelected);
+                    } else if(brushMode == BRUSH_MODE_SUBSTRACT) {
+                        tempGrid.set(shapeEnd, 0);
+                    }
                     update_grid(tempGrid);
                     requireUpdate = true;
                 }
@@ -491,7 +498,14 @@ void Viewport::solve_rectangle(Grid* grid, glm::vec3 start, glm::vec3 end) {
             for(float x = std::floor(start.x); x <= std::floor(end.x); x++) {
                 for(float y = std::floor(start.y); y <= std::floor(end.y); y++) {
                     for(float z = std::floor(start.z); z <= std::floor(end.z); z++) {
-                        grid->set(glm::vec3(x, y, z), scene->colorSelected);
+                        if(brushMode == BRUSH_MODE_ADD) {
+                            grid->set(glm::vec3(x, y, z), scene->colorSelected);
+                        } if(brushMode == BRUSH_MODE_PAINT) {
+                            if(grid->get(glm::vec3(x, y, z)) > 0)
+                            grid->set(glm::vec3(x, y, z), scene->colorSelected);
+                        } else if(brushMode == BRUSH_MODE_SUBSTRACT) {
+                            grid->set(glm::vec3(x, y, z), 0);
+                        }
                         requireUpdate = true;
                     }
                 }
@@ -508,7 +522,14 @@ void Viewport::solve_rectangle(Grid* grid, glm::vec3 start, glm::vec3 end) {
             while(distance < length) {
                 distance += step;
 
-                grid->set(start + direction * distance, scene->colorSelected);
+                if(brushMode == BRUSH_MODE_ADD) {
+                    grid->set(start + direction * distance, scene->colorSelected);
+                } else if(brushMode == BRUSH_MODE_PAINT) {
+                    if(grid->get(start + direction * distance) > 0)
+                        grid->set(start + direction * distance, scene->colorSelected);
+                } else {
+                    grid->set(start + direction * distance, 0);
+                }
                 requireUpdate = true;
             }
             break;

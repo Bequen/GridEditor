@@ -59,7 +59,10 @@ class Viewport : public WindowEditor {
         uint32_t shapeNormalOffset;
 
         Selection selection;
+
+        // Grid we use to draw temporarily before copying data into $selectedGrid
         Grid tempGrid;
+        // Selected grid is the current grid in the array, use to paste the final result or retrieve the current grid
         Grid* selectedGrid;
         uint32_t selectIndex;
 
@@ -94,6 +97,7 @@ class Viewport : public WindowEditor {
         void refresh();
 
         void draw(WindowTileInfo tileInfo);
+        void draw_ui();
 
         void extrude(glm::vec3 position, glm::vec3 normal);
         void flood_fill(glm::vec3 position, glm::vec3 normal, int8_t brush);
