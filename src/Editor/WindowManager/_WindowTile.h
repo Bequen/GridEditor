@@ -9,7 +9,9 @@
 #define TILE_FLOW_VERTICAL      0x0001
 
 #define TILE_STATE_NONE         0x0000
-#define TILE_STATE_RESIZE       0x0001
+#define TILE_STATE_RESIZE_BEGIN 0x0001
+#define TILE_STATE_RESIZE       0x0002
+#define TILE_STATE_RESIZE_END   0x0003
 
 struct _WindowTile {
     static uint32_t ID;

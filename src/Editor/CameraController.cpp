@@ -57,7 +57,7 @@ void CameraController::terminate() {
 }
 
 void CameraController::resize_callback(uint32_t width, uint32_t height) {
-    aspect = (float)Input.windowWidth / (float)Input.windowHeight;
+    aspect = (float)width / (float)height;
     if(mode == CAMERA_MODE_PERSPECTIVE)
         camera->projection = glm::perspective(glm::radians(65.0f), aspect, 0.1f, 1000.0f);
     else

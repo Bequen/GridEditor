@@ -68,3 +68,11 @@ Light* Scene::add_light(Light light) {
 
     return &lights[lightCount++];
 }
+
+void Scene::update_lights() {
+    MESSAGE("Updating lights");
+    void* pointer = RenderLib::map_buffer_range(lightBuffer, GL_UNIFORM_BUFFER, 0, sizeof(Light) * MAX_LIGHT_COUNT);
+    memcpy(pointer, lights, sizeof(Light) * MAX_LIGHT_COUNT);
+
+    RenderLib::unmap_buffer(GL_UNIFORM_BUFFER); 
+}

@@ -53,20 +53,21 @@ void PropertiesTile::draw(WindowTileInfo tileInfo) {
             break;
         } case OBJECT_TYPE_LIGHT: {
             ImGui::Text("Light");
-            Light light;
-            memcpy(&light, scene->selected->data, sizeof(Light));
+            Light* light = (Light*)scene->selected->data;
 
-            float direction[] = {light.direction.x, light.direction.y, light.direction.z, light.direction.w};
-            float position[] = {light.position.x, light.position.y, light.position.z, light.position.w};
-            float ambient[] = {light.ambient.x, light.ambient.y, light.ambient.z, light.ambient.w};
+            float direction[] = {light->direction.x, light->direction.y, light->direction.z, light->direction.w};
+            float position[] = {light->position.x, light->position.y, light->position.z, light->position.w};
+            float ambient[] = {light->ambient.x, light->ambient.y, light->ambient.z, light->ambient.w};
 
             if(ImGui::InputFloat4("Direction", direction)) {
-
+                light->direction = glm::vec4(direction[0], direction[1], direction[2], direction[3]);
             } if(ImGui::InputFloat4("Position", position)) {
-                
+                light->position = glm::vec4(position[0], position[1], position[2], position[3]);
             } if(ImGui::InputFloat4("Ambient", ambient)) {
-                
+                light->ambient = glm::vec4(ambient[0], ambient[1], ambient[2], ambient[3]);
             }
+
+            scene->update_lights();
             break;
         }
     }

@@ -610,27 +610,29 @@ void Viewport::select_grid(uint32_t index) {
 
 
 void Viewport::resize_callback(uint32_t width, uint32_t height) {
+    MESSAGE("Resizing Viewport");
     /* if(tileInfo.width == 0.0)
         tileInfo.width = 1.0f;
     if(tileInfo.height == 0.0f)
         tileInfo.height = 1.0f; */
 
-    float aspect = (float)(width * tileInfo.width) / (float)(height * tileInfo.height);
-    camera.resize_callback(width * tileInfo.width,height * tileInfo.height);
-    framebuffer.width = width;
-    framebuffer.height = height;
+    float aspect = (float)(Input.windowWidth * tileInfo.width) / (float)(Input.windowHeight * tileInfo.height);
+    MESSAGE("Aspect: " << aspect);
+    camera.resize_callback(Input.windowWidth * tileInfo.width, Input.windowHeight * tileInfo.height);
+    framebuffer.width = Input.windowWidth;
+    framebuffer.height = Input.windowHeight;
 
     glDeleteTextures(1, &framebuffer.texture);
     glDeleteRenderbuffers(1, &framebuffer.depth);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.framebuffer);
 
-    uint32_t colorAttachment = TextureLib::create_texture_2d(GL_TEXTURE_2D, width, height, GL_UNSIGNED_BYTE, GL_RGBA, GL_RGBA, nullptr);
+    uint32_t colorAttachment = TextureLib::create_texture_2d(GL_TEXTURE_2D, Input.windowWidth, Input.windowHeight, GL_UNSIGNED_BYTE, GL_RGBA, GL_RGBA, nullptr);
     TextureLib::framebuffer_attachment(colorAttachment, GL_TEXTURE_2D, GL_COLOR_ATTACHMENT0);
     framebuffer.texture = colorAttachment;
 
     glGenRenderbuffers(1, &framebuffer.depth);
     glBindRenderbuffer(GL_RENDERBUFFER, framebuffer.depth);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, Input.windowWidth, Input.windowHeight);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, framebuffer.depth);
 }
 

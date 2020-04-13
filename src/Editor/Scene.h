@@ -44,4 +44,6 @@ struct Scene {
 
     Grid* add_grid(Grid grid);
     Light* add_light(Light light);
+
+    void update_lights();
 };

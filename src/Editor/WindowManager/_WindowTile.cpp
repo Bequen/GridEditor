@@ -39,11 +39,11 @@ void _WindowTile::update(float offsetX, float offsetY, float height) {
     if(width < 1.0f) {
         if(Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_PRESS) {
             if(y > width - 0.01f && y < width) {
-                state = TILE_STATE_RESIZE;
+                state = TILE_STATE_RESIZE_BEGIN;
                 resizeHighestBound = resizeLowestBound = 0.0f;
             }
         } else if(Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_NONE && state == TILE_STATE_RESIZE) {
-            state = TILE_STATE_NONE;
+            state = TILE_STATE_RESIZE_END;
             resizeHighestBound = resizeLowestBound = 0.0f;
         }
     }
@@ -66,12 +66,19 @@ void _WindowTile::update(float offsetX, float offsetY, float height) {
             children[i].update(offset, offsetX, width);
 
             // If the player started resizing, find the bounds
-            if(children[i].state == TILE_STATE_RESIZE && children[i].resizeLowestBound == children[i].resizeHighestBound) {
+            if(children[i].state == TILE_STATE_RESIZE_BEGIN) {
                 if(i < childrenCount - 1) {
+                    children[i].state = TILE_STATE_RESIZE;
                     children[i].resizeLowestBound = children[i].find_highest_bound(flow, offset);
                     children[i].resizeHighestBound = children[i + 1].find_lowest_bound(flow);
                     MESSAGE("Resize bounds: " << children[i].resizeLowestBound << ":" << children[i].resizeHighestBound);
+                } else {
+                    children[i].state = TILE_STATE_NONE;
                 }
+            } else if(children[i].state == TILE_STATE_RESIZE_END) {
+                children[i].resize_callback();
+                children[i + 1].resize_callback();
+                children[i].state = TILE_STATE_NONE;
             }
 
             offset = children[i].width;
@@ -94,6 +101,11 @@ void _WindowTile::draw(float offsetX, float offsetY, float height, uint32_t flow
         ImGui::SetWindowPos(ImVec2(offsetX * Input.windowWidth, (offsetY) * Input.windowHeight));
         ImGui::SetWindowSize(ImVec2((w - offsetX) * Input.windowWidth, (height - offsetY) * Input.windowHeight));
 
+        tileInfo.x = offsetX;
+        tileInfo.y = offsetY;
+        tileInfo.width = w - offsetX;
+        tileInfo.height = height - offsetY;
+
         label = "tile_tabs##" + std::to_string(id);
         if(ImGui::BeginTabBar(label.c_str(), ImGuiTabBarFlags_None)) {
             label = "tile_tab_item##" + std::to_string(id);
@@ -109,13 +121,13 @@ void _WindowTile::draw(float offsetX, float offsetY, float height, uint32_t flow
                     ImGui::Text("Select Editor");
                 } else {
                     if(editors != nullptr) {
-                        float offsetHeight = 24.0f + 19.0f;
+                        float offsetHeight = 26.0f;
                         offsetHeight = offsetHeight / Input.windowHeight;
 
                         editors->draw({ offsetX, 
-                                        offsetY + 24.0f / Input.windowHeight, 
+                                        offsetY + offsetHeight, 
                                         w - offsetX, 
-                                        height - offsetY - (24.0f / Input.windowHeight)});
+                                        height - offsetY - offsetHeight});
                     }
                 }
 
