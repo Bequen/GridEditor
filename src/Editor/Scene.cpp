@@ -31,9 +31,13 @@ void Scene::init(uint32_t gridCount) {
 
     sceneGraph = SceneObject(OBJECT_TYPE_EMPTY, nullptr);
     sceneGraph.name = "Scene";
+
+    selected = nullptr;
 }
 
 Grid* Scene::add_grid(Grid grid) {
+    assert_msg(grids != nullptr, "Grid array was not initialized");
+
     // If the resize is needed
     if(gridBufferSize == gridCount) {
         gridBufferSize += 8;
@@ -75,4 +79,14 @@ void Scene::update_lights() {
     memcpy(pointer, lights, sizeof(Light) * MAX_LIGHT_COUNT);
 
     RenderLib::unmap_buffer(GL_UNIFORM_BUFFER); 
+}
+
+void Scene::assign_grid(SceneObject* sceneObject, uint32_t gridID) {
+    sceneObject->data = &grids[gridID];
+    sceneObject->type = SCENE_GRID;
+}
+
+void Scene::assign_light(SceneObject* sceneObject, uint32_t lightID) {
+    sceneObject->data = &lights[lightID];
+    sceneObject->type = SCENE_LIGHT;
 }

@@ -46,4 +46,7 @@ struct Scene {
     Light* add_light(Light light);
 
     void update_lights();
+
+    void assign_grid(SceneObject* sceneObject, uint32_t gridID);
+    void assign_light(SceneObject* SceneObject, uint32_t lightID);
 };

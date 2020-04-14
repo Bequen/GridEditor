@@ -5,6 +5,7 @@
 #include <ImGui/imgui.h>
 #include <avg/Debug.h>
 
+#include "Editor/InputManager.h"
 #include "Rendering/TextureLib.h"
 
 PaletteTile::PaletteTile(Scene* scene, RenderInfo renderInfo) :
@@ -44,9 +45,19 @@ void PaletteTile::draw(WindowTileInfo tileInfo) {
             if(ImGui::ColorButton(label, ImVec4(scene->palette[i].r, scene->palette[i].g, scene->palette[i].b, 1.0f), 0, ImVec2(buttonSize, buttonSize))) {
                 scene->colorSelected = i;
                 scene->colorCache = i;
+
+                /* if(Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_PRESS && Input.get(GLFW_KEY_LEFT_ALT) == KEY_STATE_HELD) {
+                    expandingColor = i;
+                }
+                if(Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_HELD && Input.get(GLFW_KEY_LEFT_ALT) == KEY_STATE_HELD) {
+                    if(expandingColor != i) {
+                        
+                    }
+                } */
             }
         }
     }
+    
     ImGui::EndChild();
 }
 

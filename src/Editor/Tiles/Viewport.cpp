@@ -23,7 +23,6 @@ void Viewport::init() {
     // Set some default values
     snapping = false;
     snappingSwitch = 0;
-    isEditMode = 1;
     isDrawing = false;
     drawMode = DRAW_MODE_BRUSH;
     brushMode = BRUSH_MODE_ADD;
@@ -31,10 +30,13 @@ void Viewport::init() {
     shapeMode = SHAPE_CUBE;
     transformMode = TRANSFORM_MODE_NONE;
 
-    if(scene->gridCount > 0)
-        select_grid(0);
-    else
-        select_grid(-1);
+    if(scene->selected != nullptr) {
+        select_grid((Grid*)scene->selected->data);
+        isEditMode = true;
+    } else {
+        select_grid(nullptr);
+        isEditMode = false;
+    }
 
     // Updates all that is needed
     update_grid(scene->grids[0]);
@@ -119,15 +121,16 @@ void Viewport::draw(WindowTileInfo tileInfo) {
 
             // Selecting 
             if(Input.get(GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
-                for(uint32_t i = 0; i < scene->gridCount; i++) {
+                /* for(uint32_t i = 0; i < scene->gridCount; i++) {
                     float result = 0.0f;
                     glm::intersectRaySphere(ray.origin, ray.direction, glm::vec3(scene->grids[i].width, scene->grids[i].depth, scene->grids[i].height) / 2.0f, 16.0f * 16.0f, result);
 
+                    scene->selected = &scene->[i];
                     if(result != 0.0f) {
                         MESSAGE(scene->selected->name);
                         select_grid(i);
                     }
-                }
+                } */
             } 
         } else {
             if(scene->selected != nullptr && isEditMode)
@@ -168,7 +171,7 @@ void Viewport::draw(WindowTileInfo tileInfo) {
         for(uint32_t i = 0; i < scene->gridCount; i++) {
             RenderLib::bind_vertex_array(renderInfo.voxelVAO);
             
-            RenderLib::draw_grid(renderInfo, scene->grids[i], scene->selected->transform);
+            //RenderLib::draw_grid(renderInfo, scene->grids[i], scene->selected->transform);
             //RenderLib::draw_voxel(renderInfo.boxProgram, scene->selected->transform.transform, glm::vec3(scene->_grids[i].width, scene->_grids[i].depth, scene->_grids[i].height));
         }
     }
@@ -606,16 +609,32 @@ void Viewport::select_grid(uint32_t index) {
 
     tempGrid.buffer = new int8_t[tempGrid.width * tempGrid.depth * tempGrid.height];
     memcpy(tempGrid.buffer, selectedGrid->buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
+} void Viewport::select_grid(Grid* grid) {
+    if(grid == nullptr) {
+        MESSAGE("Deselecting");
+        selectedGrid = nullptr;
+
+        return;
+    }
+
+    // If there is something in cache
+    // TODO might be cool to save it for future undo/redo :)
+    if(tempGrid.buffer)
+        delete [] tempGrid.buffer;
+
+    tempGrid = *grid;
+    selectedGrid = grid;
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, tempGrid.gridTexture);
+
+    tempGrid.buffer = new int8_t[tempGrid.width * tempGrid.depth * tempGrid.height];
+    memcpy(tempGrid.buffer, selectedGrid->buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
 }
 
 
 void Viewport::resize_callback(uint32_t width, uint32_t height) {
     MESSAGE("Resizing Viewport");
-    /* if(tileInfo.width == 0.0)
-        tileInfo.width = 1.0f;
-    if(tileInfo.height == 0.0f)
-        tileInfo.height = 1.0f; */
-
     float aspect = (float)(Input.windowWidth * tileInfo.width) / (float)(Input.windowHeight * tileInfo.height);
     MESSAGE("Aspect: " << aspect);
     camera.resize_callback(Input.windowWidth * tileInfo.width, Input.windowHeight * tileInfo.height);
@@ -645,6 +664,13 @@ void Viewport::enter_edit_mode() {
 
 void Viewport::refresh() {
     MESSAGE("Refreshing the viewport");
-    update_grid(*selectedGrid);
-    update_cache();
+    if(scene->selected != nullptr) {
+        select_grid((Grid*)scene->selected->data);
+
+        update_grid(*selectedGrid);
+        update_cache();
+    } else {
+        isEditMode = false;
+        selectedGrid = nullptr;
+    }
 }

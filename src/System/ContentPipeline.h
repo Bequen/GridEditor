@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <fstream>
 
 #include "string256.h"
 #include "Editor/Scene.h"
@@ -18,5 +19,8 @@ namespace ContentPipeline {
     #define GRID_FILE_PARTICLES     0x0003
 
     void save_grid(Scene scene, char* path);
+    void save_scene_object(const Scene* scene, const SceneObject* sceneObject, std::ofstream* stream);
+
+    SceneObject load_scene_object(Scene* scene, std::ifstream* stream);
     Scene load_grid(char* path);
 };

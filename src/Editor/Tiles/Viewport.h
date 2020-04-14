@@ -119,6 +119,7 @@ class Viewport : public WindowEditor {
         void change_grid(int32_t index);
 
         void select_grid(uint32_t index);
+        void select_grid(Grid* grid);
 
         void leave_edit_mode();
         void enter_edit_mode();

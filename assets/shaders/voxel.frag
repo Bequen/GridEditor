@@ -3,6 +3,10 @@
 #define PI 3.14159265359
 #define MAX_LIGHT_COUNT 32
 
+#define LIGHT_TYPE_DIRECTIONAL      0.0
+#define LIGHT_TYPE_POINT            1.0
+#define LIGHT_TYPE_SPOT             2.0
+
 layout(location = 0) out vec4 fragColor;
 
 
@@ -33,26 +37,38 @@ in float shadowValue;
 
 
 float roughness = 0.8;
+float metalness = 0.1;
 
+vec3 fresnel_schlick(float cosTheta, vec3 f0) {
+    return f0 + (1.0 - f0) * pow(1.0 - cosTheta, 5.0);
+}
 
-float trowbridge_normal_distribution(vec3 halfway) {
+float normal_distribution_ggx(vec3 normal, vec3 halfway) {
     float a2 = roughness * roughness;
-    float divider = PI * pow(pow(dot(normal, halfway), 2) * (a2 - 1) + 1, 2);
+    float NdotH = max(dot(normal, halfway), 0.0);
 
-    return a2 / divider;
+    float denom = (NdotH * NdotH * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+
+    return a2 / denom;
 }
 
-float schlick_geometry(float d, float k) {
-    return d / (d * (1.0 - k) + k);
+float geometry_schlick_ggx(float NdotV) {
+    float r = roughness + 1.0;
+    float k = (r * r) / 8.0;
+
+    float denom = NdotV * (1.0 - k) + k;
+
+    return NdotV / denom;
 }
 
-vec3 fresnel_schlick(float theta, vec3 f0) {
-    return f0 + (1.0 - f0) * pow(1.0 - theta, 5.0); 
-}
+float geometry_smith(vec3 normal, vec3 viewDir, vec3 lightDir) {
+    float NdotV = max(dot(normal, viewDir), 0.0);
+    float NdotL = max(dot(normal, lightDir), 0.0);
 
-float smith_ggx(vec3 normal, vec3 lightDir, vec3 viewDir, float k) {
-    float ggx1 = schlick_geometry(dot(lightDir, normal), k);
-    float ggx2 = schlick_geometry(dot(viewDir, normal), k);
+    float ggx1 = geometry_schlick_ggx(NdotV);
+    float ggx2 = geometry_schlick_ggx(NdotL);
+
     return ggx1 * ggx2;
 }
 
@@ -60,34 +76,28 @@ void main() {
     int value = int(texelFetch(grid, ivec3(pos.x, pos.y, pos.z), 0).r * 255.0);
     vec3 color = vec3(texelFetch(palette, value, 0).rgb);
 
+    vec3 output = vec3(0.0);
+
     vec3 viewDir = normalize(camPos - pos);
-    vec3 lightDir = normalize(lights[0].direction).xyz;
-    vec3 halfway = normalize(viewDir + lightDir);
-
-    float metallic = 0.1;
-    vec3 f0 = vec3(0.04); 
+    vec3 f0 = vec3(0.04);
     f0 = mix(f0, color, metallic);
+    for(int i = 0; i < lightCount; i++) {
+        vec3 lightDir = vec3(0.0);
+        if(lights[i].position.w == LIGHT_TYPE_DIRECTIONAL) {
+            lightDir = lights[i].direction;
+        } else if(lights[i].position.w == LIGHT_TYPE_POINT) {
+            lightDir = normalize(lights[i].position - pos).xyz;
+        }
 
-    float k = (roughness + 1) * (roughness + 1) / 8;
-    float ndf = trowbridge_normal_distribution(halfway);
-    float smith = smith_ggx(normal, lightDir, viewDir, k);
-    vec3 fresnel = fresnel_schlick(clamp(dot(halfway, viewDir), 0.0, 1.0), f0);
+        vec3 halfway = normalize(lightDir + viewDir);
 
-    vec3 nominator = ndf * smith * fresnel;
-    float denominator = 4 * max(dot(normal, viewDir), 0.0) * max(dot(normal, lightDir), 0.0);
-    vec3 specular = nominator / max(denominator, 0.001);
+        float distance = length(lights[i].position - pos);
+        float attenuation = 1.0 / (distance * distance);
 
-    vec3 kS = fresnel;
-    vec3 kD = vec3(1.0) - kS;
-    kD *= 1.0 - metallic;
+        vec3 radiance = lights[i].ambient * attenuation;
 
-    float d = max(dot(normal, lightDir), 0.0);
-    vec3 Lo = (kD * color / PI + specular) * 1.0 * d;
-
-    vec3 ambient = vec3(0.03) * color * (1.0 - shadow * 0.1);
-    vec3 result = ambient + Lo;
-
-    result = pow(result, vec3(1.0/2.2)); 
+        vec3 fresnel = fresnel_schlick(max(dot(halfway, viewDir), 0.0), f0);
+    }
 
     fragColor = vec4(color * max(dot(lightDir, normal), 0.1) - shadowValue * 0.05, 1.0);
 }

@@ -7,6 +7,8 @@ class PaletteTile : public WindowEditor {
         Scene* scene;
         RenderInfo renderInfo;
         
+        uint32_t expandingColor;
+        
         PaletteTile(Scene* scene, RenderInfo renderInfo);
 
         void init();

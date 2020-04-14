@@ -24,15 +24,6 @@ void SceneExplorerTile::update() {
 
 void SceneExplorerTile::draw(WindowTileInfo tileInfo) {
     ImGui::BeginChild("scene_explorer");
-    /* if(ImGui::TreeNode("Configuration##2")) {
-        ImGui::TreeNodeEx("Field", ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet, "Field_%d", 0);
-        if(ImGui::TreeNode("Configuration##2")) {
-            ImGui::TreeNodeEx("Field", ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet, "Field_%d", 0);
-            ImGui::TreePop();
-        }
-
-        ImGui::TreePop();
-    } */
 
     tree_node(&scene->sceneGraph);
 
@@ -79,11 +70,6 @@ void SceneExplorerTile::tree_node(SceneObject* sceneObject) {
         }
     } else {
         std::string str_id = "tree_node##" + std::to_string(sceneObject->id);
-        /* if(ImGui::TreeNode(str_id.c_str())) {
-            scene->selected = sceneObject;
-            ERROR("Selected " << sceneObject->id << " of type " << sceneObject->type);
-            ImGui::TreePop();
-        } */
         ImGui::BulletText(sceneObject->name);
         if(ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
             scene->selected = sceneObject;
