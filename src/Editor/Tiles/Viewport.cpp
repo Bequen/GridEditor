@@ -29,6 +29,7 @@ void Viewport::init() {
     brushModeCache = BRUSH_MODE_ADD;
     shapeMode = SHAPE_CUBE;
     transformMode = TRANSFORM_MODE_NONE;
+    tempGrid.buffer = nullptr;
 
     if(scene->selected != nullptr) {
         select_grid((Grid*)scene->selected->data);
@@ -40,7 +41,6 @@ void Viewport::init() {
 
     // Updates all that is needed
     update_grid(scene->grids[0]);
-    update_cache();
     scene->colorSelected = 2;
 
     init_framebuffer();
@@ -49,6 +49,11 @@ void Viewport::init() {
     ShaderLib::uniform_int32(renderInfo.voxelProgram, "palette", 1);
     selection.selectedCount = 0;
     selection.selection = nullptr;
+
+    cacheSize = 32;
+    cache = new GridCache[cacheSize];
+    cacheDepth = 0;
+    cacheIndex = 0;
 }
 
 void Viewport::init_framebuffer() {
@@ -133,8 +138,14 @@ void Viewport::draw(WindowTileInfo tileInfo) {
                 } */
             } 
         } else {
-            if(scene->selected != nullptr && isEditMode)
+            if(scene->selected != nullptr)
                 solve_voxel_placing();
+
+            if(Input.get(GLFW_KEY_LEFT_CONTROL) == KEY_STATE_HELD && Input.get(GLFW_KEY_LEFT_SHIFT) == KEY_STATE_NONE && Input.get(GLFW_KEY_Z) == KEY_STATE_PRESS) {
+                undo();
+            } if(Input.get(GLFW_KEY_LEFT_CONTROL) == KEY_STATE_HELD && Input.get(GLFW_KEY_LEFT_SHIFT) == KEY_STATE_HELD && Input.get(GLFW_KEY_Z) == KEY_STATE_PRESS) {
+                redo();
+            }
         }
     }
 
@@ -277,14 +288,19 @@ void Viewport::solve_voxel_placing() {
 
                 shapeEnd = shapeEndTemp;
 
+                uint32_t index = get_index(shapeEnd);
                 if(selectedGrid->intersects(shapeEnd)) {
                     if(brushMode == BRUSH_MODE_ADD) {
-                        tempGrid.set(shapeEnd, scene->colorSelected);
+                        tempCache.buffer[tempCache.count++] = {index, selectedGrid->get(index), scene->colorSelected};
+                        tempGrid.set(index, scene->colorSelected);
                     } else if(brushMode == BRUSH_MODE_PAINT) {
-                        if(tempGrid.get(shapeEnd) > 0)
-                            tempGrid.set(shapeEnd, scene->colorSelected);
+                        if(tempGrid.get(index) > 0) {
+                            tempCache.buffer[tempCache.count++] = {index, selectedGrid->get(index), scene->colorSelected};
+                            tempGrid.set(index, scene->colorSelected);
+                        }
                     } else if(brushMode == BRUSH_MODE_SUBSTRACT) {
-                        tempGrid.set(shapeEnd, 0);
+                        tempCache.buffer[tempCache.count++] = {index, selectedGrid->get(index), 0};
+                        tempGrid.set(index, 0);
                     }
                     update_grid(tempGrid);
                     requireUpdate = true;
@@ -560,6 +576,19 @@ void Viewport::update_cache() {
         scene->grids[selectedGrid].usedCache++;
 
     edit = false; */
+
+    if(cacheIndex > 0) {
+        cacheDepth = 0;
+    }
+
+    cache[cacheDepth].init(tempCache.count);
+    memcpy(cache[cacheDepth].buffer, tempCache.buffer, sizeof(GridCacheCell) * tempCache.count);
+    cache[cacheDepth].count = tempCache.count;
+    cacheDepth++;
+    MESSAGE("Updating cache " << cacheDepth);
+
+    tempCache.count = 0;
+    cacheIndex = 0;
 }
 
 void Viewport::undo() {
@@ -570,9 +599,29 @@ void Viewport::undo() {
         MESSAGE("Undo " << scene->grids[selectedGrid].cacheIndex);
         update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
     } */
+    if(cacheDepth > cacheIndex) {
+        MESSAGE("Undo " << cacheIndex << " for " << cache[cacheIndex].count);
+        cacheIndex++;
+        for(uint32_t i = 0; i < cache[cacheDepth - cacheIndex].count; i++) {
+            tempGrid.set(cache[cacheDepth - cacheIndex].buffer[i].index, cache[cacheDepth - cacheIndex].buffer[i].color);
+        }
+
+        memcpy(selectedGrid->buffer, tempGrid.buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
+        update_grid(*selectedGrid);
+    }
 }
 
 void Viewport::redo() {
+    if(cacheIndex > 0) {
+        MESSAGE("Redo " << cacheIndex);
+        for(uint32_t i = 0; i < cache[cacheDepth - cacheIndex].count; i++) {
+            tempGrid.set(cache[cacheDepth - cacheIndex].buffer[i].index, cache[cacheDepth - cacheIndex].buffer[i].newColor);
+        }
+        cacheIndex--;
+
+        memcpy(selectedGrid->buffer, tempGrid.buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
+        update_grid(*selectedGrid);
+    }
     /* if(scene->grids[selectedGrid].undoCount > 0) {
         scene->grids[selectedGrid].undoCount--;
         scene->grids[selectedGrid].cacheIndex++;
@@ -630,6 +679,10 @@ void Viewport::select_grid(uint32_t index) {
 
     tempGrid.buffer = new int8_t[tempGrid.width * tempGrid.depth * tempGrid.height];
     memcpy(tempGrid.buffer, selectedGrid->buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
+
+ /*    if(tempCache.buffer != nullptr)
+        delete [] tempCache.buffer; */
+    tempCache.init(tempGrid.width * tempGrid.depth * tempGrid.height);
 }
 
 
@@ -673,4 +726,9 @@ void Viewport::refresh() {
         isEditMode = false;
         selectedGrid = nullptr;
     }
+}
+
+uint32_t Viewport::get_index(glm::vec3 pos) {
+    ERROR("Index on :" << pos.x << "," << pos.y << "," << pos.z);
+    return std::floor(pos.x) + std::floor(pos.y) * tempGrid.width + std::floor(pos.z) * (tempGrid.depth * tempGrid.width);
 }

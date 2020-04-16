@@ -14,6 +14,7 @@
 #include "WindowTile.h"
 #include "Editor/Viewport/Selection.h"
 #include "Editor/WindowManager/WindowEditor.h"
+#include "System/Voxels/GridCache.h"
 
 typedef uint32_t DrawMode;
 typedef uint32_t ShapeMode;
@@ -83,6 +84,12 @@ class Viewport : public WindowEditor {
         RenderInfo renderInfo;
         WindowTileInfo tileInfo;
 
+        GridCache tempCache;
+        GridCache* cache;
+        uint32_t cacheDepth;
+        uint32_t cacheSize;
+        uint32_t cacheIndex;
+
         Viewport(Scene* scene, RenderInfo renderInfo) :
         scene(scene), renderInfo(renderInfo) {
             
@@ -123,4 +130,6 @@ class Viewport : public WindowEditor {
 
         void leave_edit_mode();
         void enter_edit_mode();
+
+        uint32_t get_index(glm::vec3 pos);
 };

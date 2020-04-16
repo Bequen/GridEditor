@@ -36,6 +36,7 @@ void Editor::init() {
     Input.add_key({GLFW_KEY_G, 0});
     Input.add_key({GLFW_KEY_P, 0});
     Input.add_key({GLFW_KEY_S, 0});
+    Input.add_key({GLFW_KEY_Z, 0});
     Input.add_key({GLFW_KEY_LEFT_SHIFT, 0});
     Input.add_key({GLFW_KEY_LEFT_CONTROL, 0});
     Input.add_key({GLFW_KEY_LEFT_ALT, 0});
