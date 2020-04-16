@@ -54,7 +54,7 @@ void SceneExplorerTile::tree_node(SceneObject* sceneObject) {
             } if (ImGui::MenuItem("Add Light")) {
                 Light light = Light();
                 light.direction = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-                light.ambient = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+                light.ambient = glm::vec4(23.47f, 21.31f, 20.79f, 1.0f);
                 sceneObject->add_child(SceneObject(OBJECT_TYPE_LIGHT, scene->add_light(light)));
                 update_lights();
             } if (ImGui::MenuItem("Add Grid")) {

@@ -64,12 +64,29 @@ void PropertiesTile::draw(WindowTileInfo tileInfo) {
                 float position[] = {light->position.x, light->position.y, light->position.z, light->position.w};
                 float ambient[] = {light->ambient.x, light->ambient.y, light->ambient.z, light->ambient.w};
 
-                if(ImGui::InputFloat4("Direction", direction)) {
+                if(ImGui::InputFloat3("Direction", direction)) {
                     light->direction = glm::vec4(direction[0], direction[1], direction[2], direction[3]);
-                } if(ImGui::InputFloat4("Position", position)) {
+                } if(ImGui::InputFloat3("Position", position)) {
                     light->position = glm::vec4(position[0], position[1], position[2], position[3]);
-                } if(ImGui::InputFloat4("Ambient", ambient)) {
+                } if(ImGui::ColorEdit3("Ambient", ambient)) {
                     light->ambient = glm::vec4(ambient[0], ambient[1], ambient[2], ambient[3]);
+                } 
+ImGui::SliderFloat("light_strength", &light->ambient.w, 0.0, 100.0);
+
+                const char* items[] = { "Directional", "Point"};
+                static const char* current_item = items[(uint32_t)light->position.w];
+
+                if (ImGui::BeginCombo("##combo", current_item)) // The second parameter is the label previewed before opening the combo.
+                {
+                    for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+                    {
+                        bool is_selected = (current_item == items[n]); // You can store your selection however you want, outside or inside your objects
+                        if (ImGui::Selectable(items[n], is_selected))
+                            light->position.w = (float)n;
+                        if (is_selected)
+                            ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+                    }
+                    ImGui::EndCombo();
                 }
 
                 scene->update_lights();

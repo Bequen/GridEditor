@@ -171,7 +171,7 @@ void Viewport::draw(WindowTileInfo tileInfo) {
         for(uint32_t i = 0; i < scene->gridCount; i++) {
             RenderLib::bind_vertex_array(renderInfo.voxelVAO);
             
-            //RenderLib::draw_grid(renderInfo, scene->grids[i], scene->selected->transform);
+            RenderLib::draw_grid(renderInfo, scene->grids[i], {glm::mat4(1.0f)});
             //RenderLib::draw_voxel(renderInfo.boxProgram, scene->selected->transform.transform, glm::vec3(scene->_grids[i].width, scene->_grids[i].depth, scene->_grids[i].height));
         }
     }
