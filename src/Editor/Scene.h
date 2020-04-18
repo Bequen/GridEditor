@@ -6,6 +6,7 @@
 #include "Rendering/Light.h"
 #include "System/Voxels/Grid.h"
 #include "Editor/SceneObject.h"
+#include "Rendering/Material.h"
 
 #define INITIAL_GRID_COUNT 8
 #define INITIAL_LIGHT_COUNT 32
@@ -32,6 +33,9 @@ struct Scene {
     RGB32* palette;
     int8_t colorSelected;
     int8_t colorCache;
+
+    uint32_t materialsBuffer;
+    Material* materials;
     #pragma endregion
 
     #pragma region Scene objects

@@ -123,20 +123,6 @@ void Viewport::draw(WindowTileInfo tileInfo) {
             double cursorX, cursorY;
             Input.get_mapped_cursor(tileInfo, &cursorX, &cursorY);
             Ray ray = camera.create_ray(glm::vec3(cursorX, cursorY, 0.0f));
-
-            // Selecting 
-            if(Input.get(GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
-                /* for(uint32_t i = 0; i < scene->gridCount; i++) {
-                    float result = 0.0f;
-                    glm::intersectRaySphere(ray.origin, ray.direction, glm::vec3(scene->grids[i].width, scene->grids[i].depth, scene->grids[i].height) / 2.0f, 16.0f * 16.0f, result);
-
-                    scene->selected = &scene->[i];
-                    if(result != 0.0f) {
-                        MESSAGE(scene->selected->name);
-                        select_grid(i);
-                    }
-                } */
-            } 
         } else {
             if(scene->selected != nullptr)
                 solve_voxel_placing();
@@ -149,23 +135,8 @@ void Viewport::draw(WindowTileInfo tileInfo) {
         }
     }
 
-    // Transform
-    if(transformMode == TRANSFORM_MODE_TRANSLATE) {
-        if(Input.get(GLFW_MOUSE_BUTTON_1)) {
-            transformMode = TRANSFORM_MODE_NONE;
-        }
-        glm::vec3 translation;
-        scene->selected->transform.transform = glm::translate(scene->selected->transform.transform, glm::vec3(-Input.mouseDeltaX * 10.0f, -Input.mouseDeltaY * 10.0f, 0.0f));
-    }
-
-    if(Input.get(GLFW_KEY_LEFT_CONTROL) && !snappingSwitch) {
-        snappingSwitch = true;
-    } else if(!Input.get(GLFW_KEY_LEFT_CONTROL) && snappingSwitch) {
-        snappingSwitch = false;
-    }
-
+    #pragma region Rendering
     // Bounds the camera
-    RenderLib::buffer_binding_range(camera.cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
     RenderLib::bind_framebuffer(framebuffer.framebuffer);
     RenderLib::update();
 
@@ -177,6 +148,11 @@ void Viewport::draw(WindowTileInfo tileInfo) {
         RenderLib::bind_vertex_array(renderInfo.voxelVAO);
         RenderLib::draw_voxel(renderInfo.boxProgram, scene->selected->transform.transform, glm::vec3(tempGrid.width, tempGrid.depth, tempGrid.height));
         RenderLib::front_face(GL_CCW);
+
+        ShaderLib::program_use(renderInfo.voxelProgram);
+        glm::vec3 camPos = camera.origin + camera.direction * -camera.offset;
+        ShaderLib::uniform_vec3(renderInfo.voxelProgram, "cameraPos", &camPos.x);
+
         RenderLib::draw_grid(renderInfo, tempGrid, scene->selected->transform);
     } else {
         for(uint32_t i = 0; i < scene->gridCount; i++) {
@@ -200,6 +176,7 @@ void Viewport::draw(WindowTileInfo tileInfo) {
                                         ImVec2(0, 1), ImVec2(1, 0));
 
     draw_ui();
+    #pragma endregion
 }
 
 void Viewport::draw_ui() {
@@ -243,13 +220,11 @@ void Viewport::solve_voxel_placing() {
         if(!isDrawing && Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_PRESS) {
             isDrawing = true;
             shapeStart = hit.point + hit.normal;
-            MESSAGE("Shape start: " << shapeStart.x << "," << shapeStart.y << "," << shapeStart.z);
         } if(isDrawing && Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_NONE) {
             isDrawing = false;
 
             
             shapeEnd = brushMode == BRUSH_MODE_ADD ? hit.point + hit.normal : hit.point;
-            MESSAGE("Shape End: " << shapeEnd.x << "," << shapeEnd.y << "," << shapeEnd.z);
             memcpy(tempGrid.buffer, selectedGrid->buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
             solve_rectangle(&tempGrid, shapeStart, shapeEnd);
             memcpy(selectedGrid->buffer, tempGrid.buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
@@ -281,7 +256,6 @@ void Viewport::solve_voxel_placing() {
         if(!Input.get(GLFW_KEY_LEFT_ALT) && Input.get(GLFW_MOUSE_BUTTON_1)) {
             glm::vec3 shapeEndTemp = brushMode == BRUSH_MODE_ADD ? hit.point + hit.normal : hit.point;
 
-            //ERROR("Drawing at " << shapeEndTemp.x << "|" << shapeEndTemp.y << "|" << shapeEndTemp.z);
             if(std::floor(shapeEnd[0]) != std::floor(shapeEndTemp[0]) ||
                 std::floor(shapeEnd[1]) != std::floor(shapeEndTemp[1]) ||
                 std::floor(shapeEnd[2]) != std::floor(shapeEndTemp[2])) {
@@ -561,22 +535,6 @@ void Viewport::update_grid(Grid grid) {
 }
 
 void Viewport::update_cache() {
-    /* if(scene->grids[selectedGrid].undoCount > 0) {
-        scene->grids[selectedGrid].undoCount = 0;
-        scene->grids[selectedGrid].usedCache = 0;
-    }
-
-    uint32_t original = scene->grids[selectedGrid].cacheIndex;
-
-    scene->grids[selectedGrid].cacheIndex++;
-    scene->grids[selectedGrid].cacheIndex %= CACHE_SIZE;
-    memcpy(scene->grids[selectedGrid].cache[scene->grids[selectedGrid].cacheIndex].grid, scene->grids[selectedGrid].cache[original].grid, std::pow(128, 3));
-
-    if(scene->grids[selectedGrid].usedCache < CACHE_SIZE)
-        scene->grids[selectedGrid].usedCache++;
-
-    edit = false; */
-
     if(cacheIndex > 0) {
         cacheDepth = 0;
     }
@@ -592,13 +550,6 @@ void Viewport::update_cache() {
 }
 
 void Viewport::undo() {
-    /* if(scene->grids[selectedGrid].undoCount < scene->grids[selectedGrid].usedCache) { 
-        scene->grids[selectedGrid].undoCount++;
-        scene->grids[selectedGrid].cacheIndex--;
-        scene->grids[selectedGrid].cacheIndex %= CACHE_SIZE;
-        MESSAGE("Undo " << scene->grids[selectedGrid].cacheIndex);
-        update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
-    } */
     if(cacheDepth > cacheIndex) {
         MESSAGE("Undo " << cacheIndex << " for " << cache[cacheIndex].count);
         cacheIndex++;
@@ -622,13 +573,6 @@ void Viewport::redo() {
         memcpy(selectedGrid->buffer, tempGrid.buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
         update_grid(*selectedGrid);
     }
-    /* if(scene->grids[selectedGrid].undoCount > 0) {
-        scene->grids[selectedGrid].undoCount--;
-        scene->grids[selectedGrid].cacheIndex++;
-        scene->grids[selectedGrid].cacheIndex %= CACHE_SIZE;
-        MESSAGE("Undo " << scene->grids[selectedGrid].cacheIndex);
-        update_grid(scene->grids[0].cache[scene->grids[0].cacheIndex]);
-    } */
 }
 
 

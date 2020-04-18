@@ -20,11 +20,12 @@ void CameraController::init() {
 
     
 
-    cameraBuffer = RenderLib::create_buffer_stream(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, nullptr);
-    camera = (Camera*)RenderLib::map_buffer_range(cameraBuffer, GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4) * 2);
-    RenderLib::buffer_binding_range(cameraBuffer, 0, 0, sizeof(glm::mat4) * 2);
+    cameraBuffer = RenderLib::create_buffer_stream(GL_UNIFORM_BUFFER, sizeof(Camera), nullptr);
+    camera = (Camera*)RenderLib::map_buffer_range(cameraBuffer, GL_UNIFORM_BUFFER, 0, sizeof(Camera));
+    RenderLib::buffer_binding_range(cameraBuffer, 0, 0, sizeof(Camera));
     camera->projection = glm::perspective(glm::radians(45.0f), 720.0f / (480.0f), 0.1f, 100.0f);
     camera->view = glm::lookAt(origin + (-direction * offset), origin, glm::vec3(0.0f, 0.0f, 1.0f));
+    /* camera->position = glm::vec4(origin + (-direction * offset), 1.0f); */
 }
 
 void CameraController::update() {
@@ -49,7 +50,7 @@ void CameraController::update() {
     camera->view = glm::lookAt(origin + (-direction * offset), origin, glm::vec3(0.0f, 0.0f, 1.0f));
     if(mode == CAMERA_MODE_ORTHOGRAPHIC) {
         camera->projection = glm::ortho(-offset / 2.0f * aspect, offset / 2.0f * aspect, -offset / 2.0f, offset / 2.0f, 0.1f, 1000.0f);
-    }
+    }/*  camera->position = glm::vec4(origin + (-direction * offset), 1.0f); */
 }
 
 void CameraController::terminate() {

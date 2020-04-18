@@ -27,6 +27,10 @@ void Scene::init(uint32_t gridCount) {
     memset(palette, 0, sizeof(RGB32) * 256);
     paletteTexture = TextureLib::create_texture_1d(256, GL_RGB, GL_RGB, palette);
     paletteTexture = paletteTexture;
+
+    materials = new Material[256];
+    materialsBuffer = RenderLib::create_buffer_dynamic(UNIFORM_BUFFER, sizeof(Light) * lightBufferSize + sizeof(glm::vec4), lights);
+    RenderLib::buffer_binding_range(materialsBuffer, 3, 0, sizeof(Material) * 256);
     #pragma endregion
 
     sceneGraph = SceneObject(OBJECT_TYPE_EMPTY, nullptr);
