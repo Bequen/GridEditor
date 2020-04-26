@@ -45,20 +45,21 @@ void SceneExplorerTile::refresh() {
 
 void SceneExplorerTile::tree_node(SceneObject* sceneObject) {
     if(sceneObject->childrenCount > 0) {
-        bool open = ImGui::TreeNode("pepa%s%i", sceneObject->name, sceneObject->id);
+        bool open = ImGui::TreeNode("scene_graph%s%i", sceneObject->name, sceneObject->id);
         if (ImGui::BeginPopupContextItem()) {
             if (ImGui::MenuItem("Add Grid")) {
                 MESSAGE("Adding at " << sceneObject->childrenCount << " to " << sceneObject->id);
                 Grid grid = Grid(32);
-                sceneObject->add_child(SceneObject("pepa", OBJECT_TYPE_GRID, scene->add_grid(grid)));
+                sceneObject->add_child(SceneObject("new grid", OBJECT_TYPE_GRID, scene->add_grid(grid)));
             } if (ImGui::MenuItem("Add Light")) {
                 Light light = Light();
                 light.direction = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
                 light.ambient = glm::vec4(23.47f, 21.31f, 20.79f, 1.0f);
                 sceneObject->add_child(SceneObject(OBJECT_TYPE_LIGHT, scene->add_light(light)));
                 update_lights();
-            } if (ImGui::MenuItem("Add Grid")) {
-                sceneObject->add_child(SceneObject(OBJECT_TYPE_GRID, nullptr));
+            } if (ImGui::MenuItem("Add Sprite")) {
+                Grid grid = Grid(32, 0, 32);
+                sceneObject->add_child(SceneObject("new sprite", OBJECT_TYPE_GRID, scene->add_grid(grid)));
             }
             ImGui::EndPopup();
         }

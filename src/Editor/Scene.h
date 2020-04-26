@@ -7,6 +7,8 @@
 #include "System/Voxels/Grid.h"
 #include "Editor/SceneObject.h"
 #include "Rendering/Material.h"
+#include "Scene/SceneSprite.h"
+#include "Scene/SceneGrid.h"
 
 #define INITIAL_GRID_COUNT 8
 #define INITIAL_LIGHT_COUNT 32
@@ -17,6 +19,10 @@ struct Scene {
     Grid* grids;
     uint32_t gridCount;
     uint32_t gridBufferSize;
+
+    SceneGrid* _grids;
+    uint32_t _gridCount;
+    uint32_t _gridBufferSize;
     #pragma endregion
 
     // TODO Move into separate structure
@@ -44,13 +50,23 @@ struct Scene {
     bool isEditMode;
     #pragma endregion
 
+    #pragma region Sprites
+    SceneSprite* sprites;
+    uint32_t spriteCount;
+    uint32_t spriteBufferSize;
+    #pragma endregion
+
     void init(uint32_t gridCount);
 
     Grid* add_grid(Grid grid);
+    SceneGrid* add_grid(SceneGrid grid);
+
     Light* add_light(Light light);
+    SceneSprite* add_sprite(SceneSprite sprite);
 
     void update_lights();
 
     void assign_grid(SceneObject* sceneObject, uint32_t gridID);
     void assign_light(SceneObject* SceneObject, uint32_t lightID);
+
 };

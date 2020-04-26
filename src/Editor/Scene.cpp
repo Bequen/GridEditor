@@ -11,6 +11,16 @@ void Scene::init(uint32_t gridCount) {
     gridBufferSize = 8;
     grids = new Grid[gridBufferSize];
     gridCount = 0;
+
+    _gridBufferSize = 8;
+    _grids = new SceneGrid[_gridBufferSize];
+    _gridCount = 0;
+    #pragma endregion
+
+    #pragma region Sprites
+    spriteBufferSize = 8;
+    sprites = new SceneSprite[spriteBufferSize];
+    spriteCount = 0;
     #pragma endregion
 
     #pragma region Lights
@@ -57,6 +67,24 @@ Grid* Scene::add_grid(Grid grid) {
     grids[gridCount] = grid;
     MESSAGE("Adding grid at " << gridCount);
     return &grids[gridCount++];
+} SceneGrid* Scene::add_grid(SceneGrid grid) {
+    assert_msg(_grids != nullptr, "Grid array was not initialized");
+
+    // If the resize is needed
+    if(_gridBufferSize == _gridCount) {
+        _gridBufferSize += 8;
+        SceneGrid* tempBuffer = new SceneGrid[_gridBufferSize];
+        if(grids != nullptr) {
+            memcpy(tempBuffer, _grids, _gridCount * sizeof(Grid));
+            delete [] _grids;
+        }
+
+        _grids = tempBuffer;
+    }
+
+    _grids[_gridCount] = grid;
+    MESSAGE("Adding grid at " << _gridCount);
+    return &_grids[_gridCount++];
 }
 
 Light* Scene::add_light(Light light) {
@@ -75,6 +103,26 @@ Light* Scene::add_light(Light light) {
     lights[lightCount] = light;
 
     return &lights[lightCount++];
+}
+
+SceneSprite* Scene::add_sprite(SceneSprite sprite) {
+    assert_msg(sprites != nullptr, "Sprite array was not initialized");
+
+    // If the resize is needed
+    if(spriteBufferSize == spriteCount) {
+        spriteBufferSize += 8;
+        SceneSprite* tempBuffer = new SceneSprite[spriteBufferSize];
+        if(grids != nullptr) {
+            memcpy(tempBuffer, sprites, spriteCount * sizeof(SceneSprite));
+            delete [] sprites;
+        }
+
+        sprites = tempBuffer;
+    }
+
+    sprites[spriteCount] = sprite;
+    MESSAGE("Adding sprite at " << spriteCount);
+    return &sprites[spriteCount++];
 }
 
 void Scene::update_lights() {

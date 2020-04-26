@@ -34,6 +34,9 @@ type(type), data(data), transform(Transform()), children(nullptr) {
         case OBJECT_TYPE_EMPTY:
             name = "New Empty";
             break;
+        case OBJECT_TYPE_SPRITE:
+            name = "New Sprite";
+            break;
         default:
             name = "New Unknown";
             break;
@@ -67,4 +70,9 @@ void SceneObject::add_child(SceneObject object) {
 
     MESSAGE("Adding child at " << childrenCount << " to " << id);
     children[childrenCount++] = object;
+}
+
+void SceneObject::assign(ObjectType type, void* data) {
+    this->type = type;
+    this->data = data;
 }

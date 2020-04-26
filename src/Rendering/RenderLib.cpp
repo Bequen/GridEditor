@@ -14,9 +14,9 @@ MessageCallback( GLenum source,
                  const GLchar* message,
                  const void* userParam )
 {
-  fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+    fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
            ( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ),
-            type, severity, message );
+             type, severity, message );
 }
 
 void RenderLib::polygon_mode(uint32_t mode) {
@@ -37,8 +37,8 @@ void RenderLib::init() {
 }
 
 void RenderLib::update() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(1.0, 1.0, 1.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 
@@ -409,6 +409,18 @@ void RenderLib::draw_grid(RenderInfo renderInfo, Grid grid, Transform transform)
     }
 }
 
+void RenderLib::draw_sprite(RenderInfo renderInfo, uint32_t texture, Transform transform) {
+    ShaderLib::program_use(renderInfo.spriteProgram);
+    glBindVertexArray(renderInfo.quadVAO);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glUniform1i(glGetUniformLocation(renderInfo.spriteProgram, "spriteTexture"), 1);
+    glUniformMatrix4fv(glGetUniformLocation(renderInfo.spriteProgram, "model"), 1, GL_FALSE, &transform.transform[0][0]);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
+}
+
 
 #pragma region Voxel Drawing
 void RenderLib::draw_voxel(uint32_t program, float x, float y, float z) {
@@ -456,4 +468,8 @@ void RenderLib::culling(uint32_t mode) {
     glCullFace(mode);
 } void RenderLib::front_face(uint32_t face) {
     glFrontFace(face);
+}
+
+void RenderLib::draw_instanced(uint32_t triangles, uint32_t count) {
+    glDrawArraysInstanced(GL_TRIANGLES, 0, triangles, count);
 }

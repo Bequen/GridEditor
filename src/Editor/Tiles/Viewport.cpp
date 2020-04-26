@@ -10,6 +10,7 @@
 #include <chrono>
 #include <avg/Debug.h>
 #include "Rendering/TextureLib.h"
+#include "Editor/Viewport/SpriteEditor.h"
 typedef std::chrono::high_resolution_clock Clock;
 
 
@@ -18,7 +19,7 @@ typedef std::chrono::high_resolution_clock Clock;
 ///
 void Viewport::init() {
     // Initializes few things
-    camera.init();
+    info.camera.init();
 
     // Set some default values
     snapping = false;
@@ -34,6 +35,7 @@ void Viewport::init() {
     if(scene->selected != nullptr) {
         select_grid((Grid*)scene->selected->data);
         isEditMode = true;
+        enter_edit_mode();
     } else {
         select_grid(nullptr);
         isEditMode = false;
@@ -57,10 +59,11 @@ void Viewport::init() {
 }
 
 void Viewport::init_framebuffer() {
+    ERROR("Test")
     renderQuad = RenderLib::create_quad();
 
     framebuffer = TextureLib::create_framebuffer(Input.windowWidth, Input.windowHeight);
-    uint32_t colorAttachment = TextureLib::create_texture_2d(GL_TEXTURE_2D, Input.windowWidth, Input.windowHeight, GL_UNSIGNED_BYTE, GL_RGBA, GL_RGBA, nullptr);
+    uint32_t colorAttachment = TextureLib::create_texture_2d(GL_TEXTURE_2D, Input.windowWidth, Input.windowHeight, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     TextureLib::framebuffer_attachment(colorAttachment, GL_TEXTURE_2D, GL_COLOR_ATTACHMENT0);
     framebuffer.texture = colorAttachment;
 
@@ -81,6 +84,7 @@ void Viewport::init_framebuffer() {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_3D, ((Grid*)scene->selected->data)->gridTexture);
     }
+    WARNING("Test");
 }
 
 
@@ -95,7 +99,57 @@ void Viewport::terminate() {
     
 }
 
+void Viewport::enter_edit_mode() {
+    switch(scene->selected->type) {
+        case OBJECT_TYPE_GRID: {
+            viewportEditor = new VoxelGridEditor();
+
+            viewportEditor->assign(scene->selected, scene, &info);
+            viewportEditor->init();
+            break;
+        } case OBJECT_TYPE_SPRITE: {
+            viewportEditor = new SpriteEditor();
+
+            viewportEditor->assign(scene->selected, scene, &info);
+            viewportEditor->init();
+            break;
+        } default: {
+            ERROR("No edit mode for object of type " << scene->selected->type << " available!");
+            break;
+        }
+    }
+}
+
 void Viewport::draw(WindowTileInfo tileInfo) {
+    info.camera.update();
+
+    solve_input();
+    this->info.tileInfo = tileInfo;
+    
+    RenderLib::bind_framebuffer(framebuffer.framebuffer);
+    RenderLib::update();
+
+    if(isEditMode) {
+        assert_msg(viewportEditor != nullptr, "You are trying to access edit mode, but no viewport editor is initialized");
+        viewportEditor->update(renderInfo);
+    }
+
+    // Draw the scene graph
+    draw_scene_object(&scene->sceneGraph);
+
+    RenderLib::bind_framebuffer(0);
+    RenderLib::update();
+
+    // Draws resulting image into the ImGui window
+    ImGui::GetWindowDrawList()->AddImage((void*)framebuffer.texture, 
+                                        ImVec2(tileInfo.x * Input.windowWidth, tileInfo.y * Input.windowHeight), 
+                                        ImVec2((tileInfo.x + tileInfo.width) * Input.windowWidth,
+                                        (tileInfo.y + tileInfo.height) * Input.windowHeight), 
+                                        ImVec2(0, 1), ImVec2(1, 0));
+
+    draw_ui();
+
+    #if DEPRECATED
     solve_input();
     this->tileInfo = tileInfo;
 
@@ -163,10 +217,10 @@ void Viewport::draw(WindowTileInfo tileInfo) {
         }
     }
 
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
     // Draws resulting image into the ImGui window
     ImGui::GetWindowDrawList()->AddImage((void*)framebuffer.texture, 
@@ -177,10 +231,16 @@ void Viewport::draw(WindowTileInfo tileInfo) {
 
     draw_ui();
     #pragma endregion
+
+    #endif
+}
+
+void Viewport::draw_scene_object(const SceneObject* sceneObject) {
+
 }
 
 void Viewport::draw_ui() {
-    ImGui::BeginChild("viewport_panel", ImVec2(ImVec2((tileInfo.x + tileInfo.width) * Input.windowWidth, 100)));
+    ImGui::BeginChild("viewport_panel", ImVec2(ImVec2((info.tileInfo.x + info.tileInfo.width) * Input.windowWidth, 100)));
     if (ImGui::RadioButton("Add", brushMode == BRUSH_MODE_ADD)) { 
         brushMode = BRUSH_MODE_ADD; 
         brushModeCache = brushMode;
@@ -200,9 +260,9 @@ void Viewport::solve_voxel_placing() {
     // Initialize a new ray 
     double cursorX, cursorY;
 
-    Input.get_mapped_cursor(tileInfo, &cursorX, &cursorY);
+    Input.get_mapped_cursor(info.tileInfo, &cursorX, &cursorY);
 
-    Ray ray = camera.create_ray(glm::vec3(cursorX, cursorY, 0.0f));
+    Ray ray = info.camera.create_ray(glm::vec3(cursorX, cursorY, 0.0f));
     RayHit hit = ray_cast(ray);
 
     // If user want to draw a shape
@@ -459,25 +519,36 @@ void Viewport::flood_fill(glm::vec3 position, glm::vec3 normal, int8_t brush) {
 }
 
 void Viewport::solve_input() {
+    // Switch edit mode
+    if(Input.get(GLFW_KEY_TAB) == KEY_STATE_PRESS && selectedGrid != nullptr) {
+        isEditMode = 1 - isEditMode;
+
+        if(isEditMode) {
+            enter_edit_mode();
+        }
+    }
+
+    #pragma region ORTHOGRAPHIC VIEWS
     if(Input.get(GLFW_KEY_5) == KEY_STATE_PRESS) {
         MESSAGE("Changing mode");
-        camera.set_mode(1 - camera.mode);
+        info.camera.set_mode(1 - info.camera.mode);
     } if(Input.get(GLFW_KEY_1) == KEY_STATE_PRESS) {
         MESSAGE("Front View");
-        camera.set_mode(CAMERA_MODE_ORTHOGRAPHIC);
-        camera.direction = glm::vec3(0.0f, 1.0f, 0.0f);
+        info.camera.set_mode(CAMERA_MODE_ORTHOGRAPHIC);
+        info.camera.direction = glm::vec3(0.0f, 1.0f, 0.0f);
     } if(Input.get(GLFW_KEY_3) == KEY_STATE_PRESS) {
         MESSAGE("Side View");
-        camera.set_mode(CAMERA_MODE_ORTHOGRAPHIC);
-        camera.direction = glm::vec3(-1.0f, 0.0f, 0.0f);
+        info.camera.set_mode(CAMERA_MODE_ORTHOGRAPHIC);
+        info.camera.direction = glm::vec3(-1.0f, 0.0f, 0.0f);
     } if(Input.get(GLFW_KEY_7) == KEY_STATE_PRESS) {
         MESSAGE("Top View");
-        camera.set_mode(CAMERA_MODE_ORTHOGRAPHIC);
-        camera.direction = glm::vec3(0.0f, 0.0f, -0.9f);
+        info.camera.set_mode(CAMERA_MODE_ORTHOGRAPHIC);
+        info.camera.direction = glm::vec3(0.0f, 0.0f, -0.9f);
     } if(Input.get(GLFW_KEY_9) == KEY_STATE_PRESS) {
         MESSAGE("Opposite View");
-        camera.direction *= glm::vec3(-1.0f);
+        info.camera.direction *= glm::vec3(-1.0f);
     }
+    #pragma endregion
 }
 
 void Viewport::solve_rectangle(Grid* grid, glm::vec3 start, glm::vec3 end) {
@@ -632,9 +703,9 @@ void Viewport::select_grid(uint32_t index) {
 
 void Viewport::resize_callback(uint32_t width, uint32_t height) {
     MESSAGE("Resizing Viewport");
-    float aspect = (float)(Input.windowWidth * tileInfo.width) / (float)(Input.windowHeight * tileInfo.height);
+    float aspect = (float)(Input.windowWidth * info.tileInfo.width) / (float)(Input.windowHeight * info.tileInfo.height);
     MESSAGE("Aspect: " << aspect);
-    camera.resize_callback(Input.windowWidth * tileInfo.width, Input.windowHeight * tileInfo.height);
+    info.camera.resize_callback(Input.windowWidth * info.tileInfo.width, Input.windowHeight * info.tileInfo.height);
     framebuffer.width = Input.windowWidth;
     framebuffer.height = Input.windowHeight;
 
@@ -642,7 +713,7 @@ void Viewport::resize_callback(uint32_t width, uint32_t height) {
     glDeleteRenderbuffers(1, &framebuffer.depth);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.framebuffer);
 
-    uint32_t colorAttachment = TextureLib::create_texture_2d(GL_TEXTURE_2D, Input.windowWidth, Input.windowHeight, GL_UNSIGNED_BYTE, GL_RGBA, GL_RGBA, nullptr);
+    uint32_t colorAttachment = TextureLib::create_texture_2d(GL_TEXTURE_2D, Input.windowWidth, Input.windowHeight, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     TextureLib::framebuffer_attachment(colorAttachment, GL_TEXTURE_2D, GL_COLOR_ATTACHMENT0);
     framebuffer.texture = colorAttachment;
 
@@ -652,12 +723,6 @@ void Viewport::resize_callback(uint32_t width, uint32_t height) {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, framebuffer.depth);
 }
 
-
-void Viewport::enter_edit_mode() {
-    isEditMode = 1;
-} void Viewport::leave_edit_mode() {
-    isEditMode = 0;
-}
 
 void Viewport::refresh() {
     MESSAGE("Refreshing the viewport");

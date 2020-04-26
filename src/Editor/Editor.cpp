@@ -53,7 +53,7 @@ void Editor::init() {
     #pragma endregion
 
     scene.colorSelected = 2;
-    scene.sceneGraph.add_child(SceneObject(OBJECT_TYPE_GRID, scene.add_grid(Grid(32))));
+    scene.sceneGraph.add_child(SceneObject(OBJECT_TYPE_GRID, scene.add_grid(SceneGrid(32, 32, 32))));
     scene.selected = &scene.sceneGraph.children[0];
 
     #pragma region RENDERING PIPELINE INITIALIZATION
@@ -67,6 +67,7 @@ void Editor::init() {
     renderInfo.quadVAO = RenderLib::create_render_quad();
     renderInfo.skyProgram = ShaderLib::program_create("skybox");
     renderInfo.voxelProgram = ShaderLib::program_create("voxel");
+    renderInfo.spriteProgram = ShaderLib::program_create("sprite");
     #pragma endregion
 
     #pragma region WINDOW MANAGER INITIALIZATION

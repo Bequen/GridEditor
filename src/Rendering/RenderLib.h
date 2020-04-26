@@ -128,6 +128,7 @@ namespace RenderLib {
     #pragma region DRAWING
     void draw_grid(RenderInfo renderInfo, Grid grid, Transform transform);
     void draw_sky(RenderInfo renderInfo, uint32_t mode);
+    void draw_sprite(RenderInfo renderInfo, uint32_t texture, Transform transform);
 
     void draw_voxel(uint32_t program, float x, float y, float z);
     void draw_voxel(uint32_t program, glm::vec3 position);
@@ -138,4 +139,5 @@ namespace RenderLib {
     void draw_triangle_strip(uint32_t triangles);
     #pragma endregion
 
+    void draw_instanced(uint32_t triangles, uint32_t count);
 };

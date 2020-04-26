@@ -3,6 +3,7 @@
 #include <cstring>
 #include <avg/Debug.h>
 #include "Rendering/TextureLib.h"
+#include <glad/glad.h>
 
 Grid::Grid() : 
 buffer(nullptr),
@@ -25,8 +26,13 @@ buffer(new int8_t[width * depth * height]),
 width(width), depth(depth), height(height),
 max(width * depth * height), min(0) {
     // Constructor body
-    memset(buffer, 0, width * depth * height);
-    gridTexture = TextureLib::create_texture_3d(width, depth, height, buffer);
+    if(depth <= 1.0f) {
+        memset(buffer, 0, width * height);
+        gridTexture = TextureLib::create_texture_2d(GL_TEXTURE_2D, width, height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+    } else {
+        memset(buffer, 0, width * depth * height);
+        gridTexture = TextureLib::create_texture_3d(width, depth, height, buffer);
+    }
 }
 
 

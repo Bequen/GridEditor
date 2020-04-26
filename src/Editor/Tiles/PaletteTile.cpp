@@ -49,18 +49,9 @@ void PaletteTile::draw(WindowTileInfo tileInfo) {
         if(rowSize > 0) {
             if(i % rowSize)
                 ImGui::SameLine((i % rowSize) * (buttonSize + padding) + padding * 2);
-            if(ImGui::ColorButton(label, ImVec4(scene->palette[i].r, scene->palette[i].g, scene->palette[i].b, 1.0f), 0, ImVec2(buttonSize, buttonSize))) {
+            if(ImGui::ColorButton(label, ImVec4(scene->materials[i].albedo.x, scene->materials[i].albedo.y, scene->materials[i].albedo.z, 1.0f), 0, ImVec2(buttonSize, buttonSize))) {
                 scene->colorSelected = i;
                 scene->colorCache = i;
-
-                /* if(Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_PRESS && Input.get(GLFW_KEY_LEFT_ALT) == KEY_STATE_HELD) {
-                    expandingColor = i;
-                }
-                if(Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_HELD && Input.get(GLFW_KEY_LEFT_ALT) == KEY_STATE_HELD) {
-                    if(expandingColor != i) {
-                        
-                    }
-                } */
             }
         }
     }

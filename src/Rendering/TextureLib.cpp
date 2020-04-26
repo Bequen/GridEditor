@@ -39,6 +39,20 @@ uint32_t TextureLib::create_texture_3d(uint32_t width, uint32_t height, uint32_t
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
 
     return result;
+} uint32_t TextureLib::create_texture_3d(uint32_t width, uint32_t height, uint32_t depth, uint32_t internalFormat, uint32_t format, uint32_t type, void* data) {
+    uint32_t result;
+    glGenTextures(1, &result);
+
+    glBindTexture(GL_TEXTURE_3D, result);
+    glTexImage3D(GL_TEXTURE_3D, 0, internalFormat, width, height, depth, 0, format, type, data);
+
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+
+    return result;
 }
 
 void TextureLib::update_texture_3d(uint32_t texture, uint32_t width, uint32_t height, uint32_t depth, void* data) {
@@ -46,17 +60,38 @@ void TextureLib::update_texture_3d(uint32_t texture, uint32_t width, uint32_t he
     glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, width, height, depth, GL_RED, GL_UNSIGNED_BYTE, data);
 }
 
-uint32_t TextureLib::create_texture_2d(uint32_t target, uint32_t width, uint32_t height, uint32_t type, uint32_t format, uint32_t internalFormat, void* data) {
+uint32_t TextureLib::create_texture_2d(uint32_t target, uint32_t width, uint32_t height, uint32_t internalFormat, uint32_t format, uint32_t type, void* data) {
     uint32_t result;
     glGenTextures(1, &result);
     glBindTexture(target, result);
 
     glTexImage2D(target, 0, internalFormat, width, height, 0, format, type, data);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+/*     glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_REPEAT); */
 
     return result;
+} uint32_t TextureLib::create_texture_2d(uint32_t width, uint32_t height, void* data) {
+    uint32_t result;
+    glGenTextures(1, &result);
+    glBindTexture(GL_TEXTURE_2D, result);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, data);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    return result;
+} void TextureLib::update_texture_2d(uint32_t texture, uint32_t width, uint32_t height, void* data) {
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+} void TextureLib::update_sub_texture_2d(uint32_t texture, uint32_t x, uint32_t y, uint32_t width, uint32_t height, void* data) {
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
 }
 
 Framebuffer TextureLib::create_framebuffer(uint32_t width, uint32_t height) {

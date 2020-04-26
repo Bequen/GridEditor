@@ -3,7 +3,7 @@
 #include <cstdint>
 
 struct RGB {
-    int8_t r, g, b;
+    char r, g, b;
 };
 
 struct RGB32 {

@@ -16,6 +16,8 @@
 #include "Editor/WindowManager/WindowEditor.h"
 #include "System/Voxels/GridCache.h"
 
+#include "Editor/Viewport/VoxelGridEditor.h"
+
 typedef uint32_t DrawMode;
 typedef uint32_t ShapeMode;
 typedef uint32_t BrushMode;
@@ -46,7 +48,6 @@ class Viewport : public WindowEditor {
     public:
         uint32_t isEditMode;
         uint32_t requireUpdate;
-        CameraController camera;
 
         DrawMode drawMode;
         BrushMode brushMode;
@@ -82,13 +83,16 @@ class Viewport : public WindowEditor {
 
         Scene* scene;
         RenderInfo renderInfo;
-        WindowTileInfo tileInfo;
+
+        ViewportInfo info;
 
         GridCache tempCache;
         GridCache* cache;
         uint32_t cacheDepth;
         uint32_t cacheSize;
         uint32_t cacheIndex;
+
+        ViewportEditor* viewportEditor;
 
         Viewport(Scene* scene, RenderInfo renderInfo) :
         scene(scene), renderInfo(renderInfo) {
@@ -99,12 +103,15 @@ class Viewport : public WindowEditor {
         void init_framebuffer();
         void init_profiler();
 
+        void enter_edit_mode();
+
         void update();
         void terminate();
         void refresh();
 
         void draw(WindowTileInfo tileInfo);
         void draw_ui();
+        void draw_scene_object(const SceneObject* sceneObject);
 
         void extrude(glm::vec3 position, glm::vec3 normal);
         void flood_fill(glm::vec3 position, glm::vec3 normal, int8_t brush);
@@ -127,9 +134,6 @@ class Viewport : public WindowEditor {
 
         void select_grid(uint32_t index);
         void select_grid(Grid* grid);
-
-        void leave_edit_mode();
-        void enter_edit_mode();
 
         uint32_t get_index(glm::vec3 pos);
 };
