@@ -4,6 +4,7 @@
 
 struct RenderInfo {
     uint32_t voxelProgram;
+    uint32_t voxelSelectedProgram;
     uint32_t quadProgram;
     uint32_t skyProgram;
     uint32_t boxProgram;

@@ -11,11 +11,8 @@
 
 class VoxelGridEditor : public ViewportEditor {
     public:
-        /* Grid* grid;
-        Grid tempGrid; */
-
-        SceneGrid* _grid;
-        SceneGrid _tempGrid;
+        SceneGrid* grid;
+        SceneGrid tempGrid;
 
         Scene* scene;
         ViewportInfo* viewport;
@@ -55,5 +52,6 @@ class VoxelGridEditor : public ViewportEditor {
         void update_grid(const Grid* grid);
 
         void draw_grid(RenderInfo renderInfo, const SceneGrid* grid);
+        glm::vec3 floor_vec(glm::vec3 vec);
         #pragma endregion
 };

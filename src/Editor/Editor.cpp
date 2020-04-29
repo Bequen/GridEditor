@@ -58,7 +58,7 @@ void Editor::init() {
 
     #pragma region RENDERING PIPELINE INITIALIZATION
     renderInfo.voxelVAO = RenderLib::create_voxel();
-    renderInfo.boxProgram = ShaderLib::program_create("box");
+    renderInfo.boxProgram = ShaderLib::program_create("boxes/gridBox");
 
     deferredProgram = ShaderLib::program_create("deferred");
     drawQuad = RenderLib::create_render_quad();
@@ -67,6 +67,7 @@ void Editor::init() {
     renderInfo.quadVAO = RenderLib::create_render_quad();
     renderInfo.skyProgram = ShaderLib::program_create("skybox");
     renderInfo.voxelProgram = ShaderLib::program_create("voxel");
+    renderInfo.voxelSelectedProgram = ShaderLib::program_create("VoxelSelected");
     renderInfo.spriteProgram = ShaderLib::program_create("sprite");
     #pragma endregion
 

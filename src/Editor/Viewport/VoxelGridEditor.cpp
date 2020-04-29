@@ -10,13 +10,13 @@
 
 void VoxelGridEditor::assign(const SceneObject* sceneObject, Scene* scene, ViewportInfo* viewport) {
     //this->grid = (Grid*)sceneObject->data;
-    this->_grid = (SceneGrid*)sceneObject->data;
+    this->grid = (SceneGrid*)sceneObject->data;
     this->scene = scene;
     this->viewport = viewport;
 
-    this->_tempGrid = *this->_grid;
-    this->_tempGrid.grid.buffer = new int8_t[_tempGrid.grid.width * _tempGrid.grid.depth * _tempGrid.grid.height];
-    memset(this->_tempGrid.grid.buffer, 0, _tempGrid.grid.width * _tempGrid.grid.depth * _tempGrid.grid.height);
+    this->tempGrid = *this->grid;
+    this->tempGrid.grid.buffer = new int8_t[tempGrid.grid.width * tempGrid.grid.depth * tempGrid.grid.height];
+    memset(this->tempGrid.grid.buffer, 0, tempGrid.grid.width * tempGrid.grid.depth * tempGrid.grid.height);
 }
 
 void VoxelGridEditor::init() {
@@ -34,7 +34,7 @@ void VoxelGridEditor::update(RenderInfo renderInfo) {
 
     RenderLib::front_face(GL_CW);
     RenderLib::bind_vertex_array(renderInfo.voxelVAO);
-    RenderLib::draw_voxel(renderInfo.boxProgram, scene->selected->transform.transform, glm::vec3(_tempGrid.grid.width, _tempGrid.grid.depth, _tempGrid.grid.height));
+    RenderLib::draw_voxel(renderInfo.boxProgram, scene->selected->transform.transform, glm::vec3(tempGrid.grid.width, tempGrid.grid.depth, tempGrid.grid.height));
     RenderLib::front_face(GL_CCW);
 
     ShaderLib::program_use(renderInfo.voxelProgram);
@@ -42,7 +42,7 @@ void VoxelGridEditor::update(RenderInfo renderInfo) {
     ShaderLib::uniform_vec3(renderInfo.voxelProgram, "cameraPos", &camPos.x);
 
     //RenderLib::draw_grid(renderInfo, _tempGrid, scene->selected->transform);
-    draw_grid(renderInfo, &_tempGrid);
+    draw_grid(renderInfo, &tempGrid);
 }
 
 void VoxelGridEditor::draw_grid(RenderInfo renderInfo, const SceneGrid* grid) {
@@ -57,7 +57,23 @@ void VoxelGridEditor::draw_grid(RenderInfo renderInfo, const SceneGrid* grid) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, grid->voxelGrid.texture);
 
-    uint32_t positionUniform = glGetUniformLocation(renderInfo.voxelProgram, "index");
+    
+
+    glUseProgram(renderInfo.voxelSelectedProgram);
+    uint32_t positionUniform = glGetUniformLocation(renderInfo.voxelSelectedProgram, "index");
+
+    glUniform3ui(glGetUniformLocation(renderInfo.voxelSelectedProgram, "size"), grid->grid.width, grid->grid.depth, grid->grid.height);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, grid->voxelGrid.texture);
+
+    for(uint32_t i = 0; i < selection.selectedCount; i++) {
+        glUniform1i(positionUniform, selection.selection[i]);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+
+    glUseProgram(renderInfo.voxelProgram);
+    positionUniform = glGetUniformLocation(renderInfo.voxelProgram, "index");
 
     for(uint32_t i = 0; i < grid->grid.width * grid->grid.depth * grid->grid.height; i++) {
         if(grid->get(i) > 0) {
@@ -117,18 +133,18 @@ void VoxelGridEditor::solve_voxel_drawing() {
         if(Input.get(GLFW_MOUSE_BUTTON_1) != KEY_STATE_NONE) {
             if(isDrawing) {
                 if(brushMode == BRUSH_MODE_PAINT) {
-                    if(_tempGrid.get(index) > 0) {
+                    if(tempGrid.get(index) > 0) {
                         
                         //tempCache.buffer[tempCache.count++] = {index, selectedGrid->get(index), scene->colorSelected};
-                        _tempGrid.set(index, scene->colorSelected);
+                        tempGrid.set(index, scene->colorSelected);
                     }
                 } else {
                     //tempCache.buffer[tempCache.count++] = {index, selectedGrid->get(index), 0};
-                    _tempGrid.set(index, scene->colorSelected);
+                    tempGrid.set(index, scene->colorSelected);
                 }
                 requireUpdate = true;
                 //update_grid(&_tempGrid);
-                _tempGrid.update_texture();
+                tempGrid.update_texture();
             } else {
                 isDrawing = true;
             }
@@ -136,20 +152,20 @@ void VoxelGridEditor::solve_voxel_drawing() {
             if(isDrawing) {
                 isDrawing = false;
                 //update_cache();
-                memcpy(_grid->grid.buffer, _tempGrid.grid.buffer, _tempGrid.grid.width * _tempGrid.grid.depth * _tempGrid.grid.height);
+                memcpy(grid->grid.buffer, tempGrid.grid.buffer, tempGrid.grid.width * tempGrid.grid.depth * tempGrid.grid.height);
                 /* update_grid(_grid); */
-                _grid->update_texture();
+                grid->update_texture();
                 requireUpdate = false;
             }
         }
     } else if(drawMode == DRAW_MODE_SHAPE) {
         if(Input.get(GLFW_MOUSE_BUTTON_1) != KEY_STATE_NONE) {
             if(isDrawing) {
-                memcpy(_tempGrid.grid.buffer, _grid->grid.buffer, _tempGrid.grid.width * _tempGrid.grid.depth * _tempGrid.grid.height);
+                memcpy(tempGrid.grid.buffer, grid->grid.buffer, tempGrid.grid.width * tempGrid.grid.depth * tempGrid.grid.height);
 
-                solve_shape(&_tempGrid, shape.start, shape.end);
+                solve_shape(&tempGrid, shape.start, shape.end);
                 //update_grid(&_tempGrid);
-                _tempGrid.update_texture();
+                tempGrid.update_texture();
             } else {
                 isDrawing = true;
                 shape.start = shape.end;
@@ -158,23 +174,23 @@ void VoxelGridEditor::solve_voxel_drawing() {
             if(isDrawing) {
                 isDrawing = false;
 
-                solve_shape(&_tempGrid, shape.start, shape.end);
-                memcpy(_grid->grid.buffer, _tempGrid.grid.buffer, _tempGrid.grid.width * _tempGrid.grid.depth * _tempGrid.grid.height);
+                solve_shape(&tempGrid, shape.start, shape.end);
+                memcpy(grid->grid.buffer, tempGrid.grid.buffer, tempGrid.grid.width * tempGrid.grid.depth * tempGrid.grid.height);
                 //update_grid(grid);
-                _grid->update_texture();
+                grid->update_texture();
             }
         }
     } else if(drawMode == DRAW_MODE_EXTRUDE) {
         if(Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_HELD) {
             if(isDrawing) {
-                float result = 0.0f;
+                /* float result = 0.0f;
 
                 glm::vec3 planeNormal = glm::normalize(ray.origin - shape.start);
                 planeNormal = planeNormal * (glm::vec3(1.0f, 1.0f, 1.0f) - glm::normalize(shape.normal));
-                glm::intersectRayPlane(ray.origin, ray.direction, shape.start, /* glm::normalize(ray.origin - shape.normal) */glm::normalize(planeNormal), result);
+                glm::intersectRayPlane(ray.origin, ray.direction, shape.start, glm::normalize(planeNormal), result);
                 glm::vec3 r = (ray.origin + ray.direction * result);
 
-                memcpy(_tempGrid.grid.buffer, _grid->grid.buffer, _tempGrid.width() * _tempGrid.depth() * _tempGrid.height());
+                memcpy(tempGrid.grid.buffer, grid->grid.buffer, tempGrid.width() * tempGrid.depth() * tempGrid.height());
                 float height = glm::distance(r * shape.normal, shape.start * shape.normal);
                 if(glm::dot(shape.normal, (r - shape.start)) < 0.0f)
                     height *= -1.0f;
@@ -182,44 +198,50 @@ void VoxelGridEditor::solve_voxel_drawing() {
                 extrude(height);
 
                 //update_grid(&tempGrid);
-                _tempGrid.update_texture();
+                tempGrid.update_texture(); */
             } else {
                 if(selection.selection != nullptr)
                     delete [] selection.selection;
 
-                selection.selection = new uint32_t[_tempGrid.width() * _tempGrid.depth() * _tempGrid.height()];
-                memset(selection.selection, 0, sizeof(uint32_t) * (_tempGrid.width() * _tempGrid.depth()));
+                shape.start = shape.end - hit.normal;
+                selection.selection = new uint32_t[tempGrid.width() * tempGrid.depth() * tempGrid.height()];
+                memset(selection.selection, 0, sizeof(uint32_t) * (tempGrid.width() * tempGrid.depth() * tempGrid.height()));
                 selection.selectedCount = 0;
-                WARNING(glm::distance(shape.start, viewport->camera.origin - viewport->camera.direction * viewport->camera.offset));
-
-                flood_fill(shape.start, hit.normal);
+                
+                MESSAGE("Selecting on " << shape.start.x << ":" << shape.start.y << ":" << shape.start.z);
+                ERROR("Normal: " << hit.normal.x << ":" << hit.normal.y << ":" << hit.normal.z);
+                flood_fill(floor_vec(shape.start), hit.normal);
+                MESSAGE("Selected " << selection.selectedCount);
+                for(uint32_t i = 0; i < selection.selectedCount; i++)
+                    WARNING(selection.selection[i]);
                 shape.normal = hit.normal;
                 isDrawing = true;
             }
         } else {
             if(isDrawing) {
                 isDrawing = false;
-                memcpy(_grid->grid.buffer, _tempGrid.grid.buffer, _tempGrid.width() * _tempGrid.depth() * _tempGrid.height());
+                memcpy(grid->grid.buffer, tempGrid.grid.buffer, tempGrid.width() * tempGrid.depth() * tempGrid.height());
                 //update_grid(grid);
-                _grid->update_texture();
-                selection.selectedCount = 0;
+                grid->update_texture();
+                //selection.selectedCount = 0;
             }
         }
     }
 }
 
 void VoxelGridEditor::extrude(int32_t height) {
+    //WARNING(height << " " << selection.selectedCount);
     int32_t shapeNormalOffset = get_index(shape.normal);
     if(height > 0) {
         for(uint32_t i = 0; i < selection.selectedCount; i++) {
             for(int32_t x = 0; x < height; x++) {
-                _tempGrid.set(selection.selection[i] + x * shapeNormalOffset, scene->colorSelected);
+                tempGrid.set(selection.selection[i] + x * shapeNormalOffset, scene->colorSelected);
             }
         }
     } else {
         for(uint32_t i = 0; i < selection.selectedCount; i++) {
             for(int32_t x = 0; x > height; x--) {
-                _tempGrid.set(selection.selection[i] + x * shapeNormalOffset, 0);
+                tempGrid.set(selection.selection[i] + x * shapeNormalOffset, 0);
             }
         }
     }
@@ -264,8 +286,8 @@ RayHit VoxelGridEditor::ray_cast(const Ray& ray) {
         distance += step;
         glm::vec3 offset;
         offset = glm::vec3(0.0f);
-        if(_grid->intersects((ray.origin + offset + ray.direction * distance))) {
-            if(_grid->get(ray.origin + offset + ray.direction * distance) > 0) {
+        if(grid->intersects((ray.origin + offset + ray.direction * distance))) {
+            if(grid->get(ray.origin + offset + ray.direction * distance) > 0) {
                 // Looks terrible
                 // TODO Clean up
                 //          - Probably putting the vector floor to separate function
@@ -278,7 +300,7 @@ RayHit VoxelGridEditor::ray_cast(const Ray& ray) {
                 break;
             }
         } else {
-            if(_grid->intersects(ray.origin + offset + ray.direction * (distance - step))) {
+            if(grid->intersects(ray.origin + offset + ray.direction * (distance - step))) {
                 result.point = ray.origin + offset + ray.direction * (distance);
                 
                 glm::vec3 n = (ray.origin + offset + ray.direction * (distance - step));
@@ -294,7 +316,7 @@ RayHit VoxelGridEditor::ray_cast(const Ray& ray) {
 }
 
 uint32_t VoxelGridEditor::get_index(glm::vec3 position) {
-    return std::floor(position.x) + std::floor(position.y) * _tempGrid.grid.width + std::floor(position.z) * (_tempGrid.grid.depth * _tempGrid.grid.width);
+    return std::floor(position.x) + std::floor(position.y) * tempGrid.grid.width + std::floor(position.z) * (tempGrid.grid.depth * tempGrid.grid.width);
 }
 
 void VoxelGridEditor::update_grid(const Grid* grid) {
@@ -302,13 +324,13 @@ void VoxelGridEditor::update_grid(const Grid* grid) {
 }
 
 void VoxelGridEditor::flood_fill(glm::vec3 position, glm::vec3 normal) {
-    if(position.x < 0 || position.x > _tempGrid.grid.width ||
-        position.y  < 0 || position.y > _tempGrid.grid.depth ||
-        position.z < 0 || position.z > _tempGrid.grid.height) {
+    if(position.x < 0 || position.x > tempGrid.grid.width ||
+        position.y  < 0 || position.y > tempGrid.grid.depth ||
+        position.z < 0 || position.z > tempGrid.grid.height) {
         return;
-    } if(_grid->get(position) <= 0)
+    } if(grid->get(position) <= 0)
         return;
-    if(_grid->get(position) != scene->colorSelected)
+    if(grid->get(position) != scene->colorSelected)
         return;
 
     glm::vec3 right = glm::vec3((1.0f - std::abs(normal.x)), (1.0f - std::abs(normal.y)), (1.0f - std::abs(normal.z)));
@@ -320,8 +342,8 @@ void VoxelGridEditor::flood_fill(glm::vec3 position, glm::vec3 normal) {
     }
     
     glm::vec3 forward = glm::cross(right, normal);
-    if(_grid->get(position + normal) <= 0) {
-        uint32_t index = (position + normal).x + (position + normal).y * (_tempGrid.width()) + (position + normal).z * (_tempGrid.width() * _tempGrid.depth());
+    if(grid->get(position + normal) <= 0) {
+        uint32_t index = get_index(position);
         for(uint32_t i = 0; i < selection.selectedCount; i++)
             if(selection.selection[i] == index)
                 return;
@@ -334,4 +356,8 @@ void VoxelGridEditor::flood_fill(glm::vec3 position, glm::vec3 normal) {
     }
 
     return;
+}
+
+glm::vec3 VoxelGridEditor::floor_vec(glm::vec3 vec) {
+    return glm::vec3(std::floor(vec.x), std::floor(vec.y), std::floor(vec.z));
 }
