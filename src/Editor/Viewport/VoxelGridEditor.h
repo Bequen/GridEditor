@@ -20,6 +20,7 @@ class VoxelGridEditor : public ViewportEditor {
         DrawMode drawMode;
         BrushMode brushMode;
         ShapeMode shapeMode;
+        SelectMode selectMode;
 
         Selection selection;
         Shape shape;
@@ -43,6 +44,7 @@ class VoxelGridEditor : public ViewportEditor {
         void update_camera();
         void solve_voxel_drawing();
         void solve_shape(SceneGrid* grid, glm::vec3 start, glm::vec3 end);
+        void select_shape(SceneGrid* grid, Shape shape);
 
 
         void extrude(int32_t height);

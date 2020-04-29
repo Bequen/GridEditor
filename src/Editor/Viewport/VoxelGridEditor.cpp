@@ -68,8 +68,10 @@ void VoxelGridEditor::draw_grid(RenderInfo renderInfo, const SceneGrid* grid) {
     glBindTexture(GL_TEXTURE_3D, grid->voxelGrid.texture);
 
     for(uint32_t i = 0; i < selection.selectedCount; i++) {
-        glUniform1i(positionUniform, selection.selection[i]);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        if(tempGrid.get(selection.selection[i]) > 0) {
+            glUniform1i(positionUniform, selection.selection[i]);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
     }
 
     glUseProgram(renderInfo.voxelProgram);
@@ -103,12 +105,32 @@ void VoxelGridEditor::refresh_callback() {
 }
 
 void VoxelGridEditor::solve_voxel_drawing() {
-    if(Input.get(GLFW_KEY_LEFT_SHIFT) == KEY_STATE_HELD)
-        drawMode = DRAW_MODE_SHAPE;
-    else if(Input.get(GLFW_KEY_LEFT_ALT) == KEY_STATE_HELD)
-        drawMode = DRAW_MODE_EXTRUDE;
-    else
-        drawMode = DRAW_MODE_BRUSH;
+    #pragma region Value preparation
+    if(Input.get(GLFW_KEY_B) == KEY_STATE_PRESS) {
+        drawMode = DRAW_MODE_SELECTION;
+        selectMode = SELECT_MODE_BOX;
+        brushMode = BRUSH_MODE_PAINT;
+    }
+
+    if(Input.get(GLFW_KEY_A) == KEY_STATE_PRESS) {
+        if(selection.selectedCount > 0) {
+            selection.selectedCount = 0;
+        } else {
+            selection.selection = new uint32_t[tempGrid.width() * tempGrid.depth() * tempGrid.height()];
+            for(uint32_t i = 0; i < tempGrid.width() * tempGrid.depth() * tempGrid.height(); i++) {
+                selection.selection[selection.selectedCount++] = i;
+            }
+        }
+    }
+
+    if(drawMode != DRAW_MODE_SELECTION) {
+        if(Input.get(GLFW_KEY_LEFT_SHIFT) == KEY_STATE_HELD)
+            drawMode = DRAW_MODE_SHAPE;
+        else if(Input.get(GLFW_KEY_LEFT_ALT) == KEY_STATE_HELD)
+            drawMode = DRAW_MODE_EXTRUDE;
+        else
+            drawMode = DRAW_MODE_BRUSH;
+    }
 
     double cursorX, cursorY;
 
@@ -118,6 +140,7 @@ void VoxelGridEditor::solve_voxel_drawing() {
     RayHit hit = ray_cast(ray);
 
     shape.end = brushMode == BRUSH_MODE_ADD ? hit.point + hit.normal : hit.point;
+    #pragma endregion
 
     if( std::floor(shape.end[0]) != std::floor(shapeEndTemp[0]) ||
         std::floor(shape.end[1]) != std::floor(shapeEndTemp[1]) ||
@@ -183,7 +206,7 @@ void VoxelGridEditor::solve_voxel_drawing() {
     } else if(drawMode == DRAW_MODE_EXTRUDE) {
         if(Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_HELD) {
             if(isDrawing) {
-                /* float result = 0.0f;
+                float result = 0.0f;
 
                 glm::vec3 planeNormal = glm::normalize(ray.origin - shape.start);
                 planeNormal = planeNormal * (glm::vec3(1.0f, 1.0f, 1.0f) - glm::normalize(shape.normal));
@@ -198,7 +221,7 @@ void VoxelGridEditor::solve_voxel_drawing() {
                 extrude(height);
 
                 //update_grid(&tempGrid);
-                tempGrid.update_texture(); */
+                tempGrid.update_texture();
             } else {
                 if(selection.selection != nullptr)
                     delete [] selection.selection;
@@ -226,6 +249,25 @@ void VoxelGridEditor::solve_voxel_drawing() {
                 //selection.selectedCount = 0;
             }
         }
+    } else if(drawMode == DRAW_MODE_SELECTION) {
+        if(selectMode == SELECT_MODE_BOX) {
+            if(Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_HELD) {
+                if(isDrawing) {
+                    selection.selectedCount = 0;
+                    select_shape(&tempGrid, shape);
+                } else {
+                    selection.selection = new uint32_t[tempGrid.width() * tempGrid.depth() * tempGrid.height()];
+                    isDrawing = true;
+                    shape.start = shape.end;
+                }
+            } else {
+                if(isDrawing) {
+                    drawMode = DRAW_MODE_BRUSH;
+                    brushMode = BRUSH_MODE_ADD;
+                    isDrawing = false;
+                }
+            }
+        }
     }
 }
 
@@ -236,13 +278,13 @@ void VoxelGridEditor::extrude(int32_t height) {
         for(uint32_t i = 0; i < selection.selectedCount; i++) {
             for(int32_t x = 0; x < height; x++) {
                 tempGrid.set(selection.selection[i] + x * shapeNormalOffset, scene->colorSelected);
-            }
+            } 
         }
     } else {
         for(uint32_t i = 0; i < selection.selectedCount; i++) {
             for(int32_t x = 0; x > height; x--) {
                 tempGrid.set(selection.selection[i] + x * shapeNormalOffset, 0);
-            }
+            } 
         }
     }
 }
@@ -267,6 +309,30 @@ void VoxelGridEditor::solve_shape(SceneGrid* grid, glm::vec3 start, glm::vec3 en
                             grid->set(glm::vec3(x, y, z), 0);
                         }
                         requireUpdate = true;
+                    }
+                }
+            }
+            
+            break;
+        }
+    }
+}
+
+void VoxelGridEditor::select_shape(SceneGrid* grid, Shape shape) {
+    switch(selectMode) {
+        case SELECT_MODE_BOX: {
+            if(shape.start.x > shape.end.x) { std::swap(shape.start.x, shape.end.x); }
+            if(shape.start.y > shape.end.y) { std::swap(shape.start.y, shape.end.y); }
+            if(shape.start.z > shape.end.z) { std::swap(shape.start.z, shape.end.z); }
+
+            uint32_t index = 0;
+            for(float x = std::floor(shape.start.x); x <= std::floor(shape.end.x); x++) {
+                for(float y = std::floor(shape.start.y); y <= std::floor(shape.end.y); y++) {
+                    for(float z = std::floor(shape.start.z); z <= std::floor(shape.end.z); z++) {
+                        uint32_t index = get_index(glm::vec3(x, y, z));
+                        if(grid->get(index) > 0) {
+                            selection.selection[selection.selectedCount++] = index;
+                        }
                     }
                 }
             }
