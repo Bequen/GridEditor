@@ -88,10 +88,10 @@ uint32_t TextureLib::create_texture_2d(uint32_t target, uint32_t width, uint32_t
     return result;
 } void TextureLib::update_texture_2d(uint32_t texture, uint32_t width, uint32_t height, void* data) {
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RED, GL_UNSIGNED_BYTE, data);
 } void TextureLib::update_sub_texture_2d(uint32_t texture, uint32_t x, uint32_t y, uint32_t width, uint32_t height, void* data) {
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RED, GL_UNSIGNED_BYTE, data);
 }
 
 Framebuffer TextureLib::create_framebuffer(uint32_t width, uint32_t height) {

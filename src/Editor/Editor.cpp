@@ -26,6 +26,7 @@ void Editor::init() {
     scene.init(10);
 
     RenderLib::init();
+    RenderLib::print_extensions();
 
     #pragma region INPUT INITIALIZATION
     Input.init(32);
@@ -54,7 +55,7 @@ void Editor::init() {
     #pragma endregion
 
     scene.colorSelected = 2;
-    scene.sceneGraph.add_child(SceneObject(OBJECT_TYPE_GRID, scene.add_grid(SceneGrid(32, 32, 32))));
+    scene.sceneGraph.add_child(SceneObject(OBJECT_TYPE_SPRITE, scene.add_sprite(SceneSprite(32, 32))));
     scene.selected = &scene.sceneGraph.children[0];
 
     #pragma region RENDERING PIPELINE INITIALIZATION

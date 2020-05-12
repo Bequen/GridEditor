@@ -28,6 +28,7 @@ namespace RenderLib {
      */
     void init();
     void update();
+    void print_extensions();
 
     /**
      * @brief  Sets the polygon mode

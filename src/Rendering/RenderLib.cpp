@@ -36,6 +36,19 @@ void RenderLib::init() {
     RenderLib::culling(GL_BACK);
 }
 
+void RenderLib::print_extensions() {
+    GLint n=0; 
+    glGetIntegerv(GL_NUM_EXTENSIONS, &n); 
+
+    for (GLint i=0; i<n; i++) 
+    { 
+    const char* extension = 
+        (const char*)glGetStringi(GL_EXTENSIONS, i);
+        printf("Ext %d: %s\n", i, extension); 
+    } 
+
+}
+
 void RenderLib::update() {
     glClearColor(1.0, 1.0, 1.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

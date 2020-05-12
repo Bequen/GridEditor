@@ -48,7 +48,8 @@ void Viewport::init() {
     init_framebuffer();
 
 
-    ShaderLib::uniform_int32(renderInfo.voxelProgram, "palette", 1);
+/*     ShaderLib::uniform_int32(renderInfo.voxelProgram, "palette", 1);
+    ShaderLib::uniform_int32(renderInfo.spriteProgram, "palette", 1); */
     selection.selectedCount = 0;
     selection.selection = nullptr;
 
@@ -59,7 +60,6 @@ void Viewport::init() {
 }
 
 void Viewport::init_framebuffer() {
-    ERROR("Test")
     renderQuad = RenderLib::create_quad();
 
     framebuffer = TextureLib::create_framebuffer(Input.windowWidth, Input.windowHeight);

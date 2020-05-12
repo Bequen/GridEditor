@@ -9,7 +9,6 @@
 #include <glm/gtx/intersect.hpp>
 
 void VoxelGridEditor::assign(const SceneObject* sceneObject, Scene* scene, ViewportInfo* viewport) {
-    //this->grid = (Grid*)sceneObject->data;
     this->grid = (SceneGrid*)sceneObject->data;
     this->scene = scene;
     this->viewport = viewport;

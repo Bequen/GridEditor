@@ -22,17 +22,32 @@ struct Grid2D {
 
     }
 
-    void set(uint32_t x, uint32_t y, uint32_t value) {
+    void set(uint32_t index, T value) {
         #if DEBUG
-        if(x >= width || y >= height)
-            return;
+            if(index > width * height)
+                return;
         #endif
-        buffer[x + y * width] = value;
+            buffer[index] = value;
     }
 
-    int32_t get(uint32_t x, uint32_t y) {
+    void set(uint32_t x, uint32_t y, T value) {
+        #if DEBUG
+            if(x >= width || y >= height)
+                return;
+        #endif
+            buffer[x + y * width] = value;
+    }
+
+    const T get(uint32_t index) const {
+        if(index > width * height)
+            return T();
+        else
+            return buffer[index];
+    }
+
+    const T get(uint32_t x, uint32_t y) const {
         if(x >= width || y >= height)
-            return -1;
+            return T();
         else
             return buffer[x + y * width];
     }

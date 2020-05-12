@@ -12,8 +12,8 @@
 
 class SpriteEditor : public ViewportEditor {
     public:
-        Grid* grid;
-        Grid tempGrid;
+        SceneSprite* sprite;
+        SceneSprite tempSprite;
 
         Scene* scene;
         ViewportInfo* viewport;
@@ -21,9 +21,15 @@ class SpriteEditor : public ViewportEditor {
         DrawMode drawMode;
         BrushMode brushMode;
         ShapeMode shapeMode;
+        SelectMode selectMode;
 
-        bool isDrawing;
+        Selection selection;
+        Shape shape;
+        glm::vec3 shapeEndTemp;
+
         bool requireUpdate;
+        bool isDrawing;
+        uint32_t brushColor;
 
         void assign(const SceneObject* sceneObject, Scene* scene, ViewportInfo* viewport) override;
 
@@ -34,6 +40,7 @@ class SpriteEditor : public ViewportEditor {
         void refresh_callback();
         void resize_callback();
 
+        void draw_sprite(RenderInfo renderInfo, const SceneSprite* sprite);
+
         void solve_painting();
-        void update_grid(const Grid* grid);
 };
