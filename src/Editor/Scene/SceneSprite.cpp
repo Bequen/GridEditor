@@ -2,7 +2,7 @@
 
 #include "Rendering/TextureLib.h"
 
-
+#include <cstring>
 
 SceneSprite::SceneSprite() :
 grid(), sprite({0}) {
@@ -16,7 +16,7 @@ grid(size), sprite(Sprite(size)) {
 
 SceneSprite::SceneSprite(uint32_t width, uint32_t height) :
 grid(width, height), sprite(Sprite(width, height)) {
-    
+    memset(grid.buffer, 0, width * height);
 }
 
 void SceneSprite::set(uint32_t index, uint32_t value) {

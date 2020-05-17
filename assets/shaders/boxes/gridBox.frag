@@ -16,6 +16,6 @@ void main() {
 
     vec3 border = abs((fract(coords - 0.5) - 0.5)) / fwidth(coords);
     float borderLine = min(min(border.x, border.y), border.z);
-    // Just visualize the grid lines directly
+
     color = vec4(vec3(0.5) - (1.0 - min(borderLine, 1.0)), 1.0 - min(line, 1.0));
 }

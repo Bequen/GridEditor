@@ -18,7 +18,8 @@ void CameraController::init() {
     offset = 20.0f;
     mode = CAMERA_MODE_PERSPECTIVE;
 
-    
+    flags = 0;
+    flags = CAMERA_ALLOW_PANNING | CAMERA_ALLOW_ZOOMING | CAMERA_ALLOW_ROTATION;
 
     cameraBuffer = RenderLib::create_buffer_stream(GL_UNIFORM_BUFFER, sizeof(Camera), nullptr);
     camera = (Camera*)RenderLib::map_buffer_range(cameraBuffer, GL_UNIFORM_BUFFER, 0, sizeof(Camera));
@@ -31,16 +32,16 @@ void CameraController::init() {
 void CameraController::update() {
     aspect = Input.windowWidth / Input.windowHeight;
     // Camera Panning
-    if(Input.get(GLFW_MOUSE_BUTTON_3) && Input.get(GLFW_KEY_LEFT_SHIFT)) {
+    if((flags & CAMERA_ALLOW_PANNING) && Input.get(GLFW_MOUSE_BUTTON_3) == KEY_STATE_HELD && Input.get(GLFW_KEY_LEFT_SHIFT) == KEY_STATE_HELD) {
         origin += (float)Input.mouseDeltaY * panSpeed * glm::normalize(glm::vec3(camera->view[0][1], camera->view[1][1], camera->view[2][1]));
         origin += (float)Input.mouseDeltaX * panSpeed * glm::normalize(glm::vec3(camera->view[0][0], camera->view[1][0], camera->view[2][0]));
     } 
     // Camera Zooming
-    else if(Input.get(GLFW_MOUSE_BUTTON_3) && Input.get(GLFW_KEY_LEFT_CONTROL)) {
+    else if(flags & CAMERA_ALLOW_ZOOMING && Input.get(GLFW_MOUSE_BUTTON_3) && Input.get(GLFW_KEY_LEFT_CONTROL)) {
         offset += Input.mouseDeltaY * 10.0f;
     } 
     // Camera Rotation
-    else if(Input.get(GLFW_MOUSE_BUTTON_3)) {
+    else if(flags & CAMERA_ALLOW_ROTATION && Input.get(GLFW_MOUSE_BUTTON_3)) {
         direction = glm::rotate(direction, (float)Input.mouseDeltaX * rotationSpeed * (float)Input.deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
         direction = glm::rotate(direction, (float)Input.mouseDeltaY * rotationSpeed * (float)Input.deltaTime, -glm::normalize(glm::vec3(camera->view[0][0], camera->view[1][0], camera->view[2][0])));
         if(mode == CAMERA_MODE_ORTHOGRAPHIC)
@@ -50,7 +51,7 @@ void CameraController::update() {
     camera->view = glm::lookAt(origin + (-direction * offset), origin, glm::vec3(0.0f, 0.0f, 1.0f));
     if(mode == CAMERA_MODE_ORTHOGRAPHIC) {
         camera->projection = glm::ortho(-offset / 2.0f * aspect, offset / 2.0f * aspect, -offset / 2.0f, offset / 2.0f, 0.1f, 1000.0f);
-    }/*  camera->position = glm::vec4(origin + (-direction * offset), 1.0f); */
+    } /* camera->position = glm::vec4(origin + (-direction * offset), 1.0f); */
 }
 
 void CameraController::terminate() {

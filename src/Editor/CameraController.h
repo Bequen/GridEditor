@@ -7,8 +7,14 @@
 #define CAMERA_MODE_PERSPECTIVE     0x0000
 #define CAMERA_MODE_ORTHOGRAPHIC    0x0001
 
+#define CAMERA_ALLOW_PANNING        1 << 1
+#define CAMERA_ALLOW_ROTATION       1 << 2
+#define CAMERA_ALLOW_ZOOMING        1 << 3
+
 class CameraController {
     public:
+        uint32_t flags;
+
         float panSpeed;
         float rotationSpeed;
 

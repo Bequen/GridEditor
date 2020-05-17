@@ -156,7 +156,6 @@ void VoxelGridEditor::solve_voxel_drawing() {
             if(isDrawing) {
                 if(brushMode == BRUSH_MODE_PAINT) {
                     if(tempGrid.get(index) > 0) {
-                        
                         //tempCache.buffer[tempCache.count++] = {index, selectedGrid->get(index), scene->colorSelected};
                         tempGrid.set(index, scene->colorSelected);
                     }

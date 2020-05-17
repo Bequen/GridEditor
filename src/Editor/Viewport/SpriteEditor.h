@@ -43,4 +43,5 @@ class SpriteEditor : public ViewportEditor {
         void draw_sprite(RenderInfo renderInfo, const SceneSprite* sprite);
 
         void solve_painting();
+        void solve_shape(SceneSprite* sprite, glm::vec3 start, glm::vec3 end);
 };

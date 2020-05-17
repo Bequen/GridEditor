@@ -22,6 +22,10 @@ void SpriteEditor::init() {
     brushMode = BRUSH_MODE_ADD;
     isDrawing = false;
     requireUpdate = false;
+
+    viewport->camera.set_mode(CAMERA_MODE_ORTHOGRAPHIC);
+    viewport->camera.direction = glm::vec3(0.0f, 1.0f, 0.0f);
+    viewport->camera.flags &= ~(CAMERA_ALLOW_ROTATION);
 }
 
 void SpriteEditor::update(RenderInfo renderInfo) {
@@ -55,6 +59,8 @@ void SpriteEditor::solve_painting() {
     else
         drawMode = DRAW_MODE_BRUSH;
 
+    shape.end = glm::vec3(ray.origin.x, 0.0f, ray.origin.z);
+
     if(drawMode == DRAW_MODE_BRUSH) {
         if(Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_HELD) {
             if(isDrawing) {
@@ -70,6 +76,45 @@ void SpriteEditor::solve_painting() {
                 isDrawing = false;
                 memcpy(sprite->grid.buffer, tempSprite.grid.buffer, tempSprite.width() * tempSprite.height());
             }
+        }
+    } else if(drawMode == DRAW_MODE_SHAPE) {
+        if(Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_HELD) {
+            if(isDrawing) {
+                memcpy(tempSprite.grid.buffer, sprite->grid.buffer, tempSprite.width() * tempSprite.height());
+
+                solve_shape(&tempSprite, shape.start, shape.end);
+
+                tempSprite.update_texture();
+            } else {
+                isDrawing = true;
+                shape.start = shape.end;
+            }
+        } else {
+            if(isDrawing) {
+                isDrawing = false;
+
+                solve_shape(&tempSprite, shape.start, shape.end);
+                memcpy(sprite->grid.buffer, tempSprite.grid.buffer, tempSprite.width() * tempSprite.height());
+                sprite->update_texture();
+            }
+        }
+    }
+}
+
+void SpriteEditor::solve_shape(SceneSprite* sprite, glm::vec3 start, glm::vec3 end) {
+    switch(shapeMode) {
+        case SHAPE_CUBE: {
+            if(start.x > end.x)
+                std::swap(start.x, end.x);
+            if(start.z > end.z)
+                std::swap(start.z, end.z);
+
+            for(uint32_t x = (uint32_t)std::floor(start.x); x <= (uint32_t)std::floor(end.x); x++) {
+                for(uint32_t y = (uint32_t)std::floor(start.z); y <= (uint32_t)std::floor(end.z); y++) {
+                    sprite->grid.set(x, y, scene->colorSelected);
+                }
+            }
+            break;
         }
     }
 }
