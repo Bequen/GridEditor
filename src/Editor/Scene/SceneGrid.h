@@ -10,7 +10,11 @@
 struct SceneGrid {
     VoxelGrid voxelGrid;
     Grid3D<int8_t> grid;
+
     GridCache* cache;
+    uint32_t cacheDepth;
+    uint32_t cacheSize;
+    uint32_t cacheIndex;
 
     SceneGrid();
     SceneGrid(uint32_t size);
@@ -37,4 +41,8 @@ struct SceneGrid {
     void update_texture();
 
     bool intersects(glm::vec3 position);
+
+
+    void undo();
+    void redo();
 };

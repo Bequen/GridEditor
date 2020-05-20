@@ -6,9 +6,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/intersect.hpp>
-#include "ImGui/imgui.h"
-#include <chrono>
 #include <avg/Debug.h>
+#include <chrono>
+#include "ImGui/imgui.h"
 #include "Rendering/TextureLib.h"
 #include "Editor/Viewport/SpriteEditor.h"
 typedef std::chrono::high_resolution_clock Clock;
@@ -20,6 +20,7 @@ typedef std::chrono::high_resolution_clock Clock;
 void Viewport::init() {
     // Initializes few things
     info.camera.init();
+    info.viewport = this;
 
     // Set some default values
     snapping = false;
@@ -132,10 +133,10 @@ void Viewport::draw(WindowTileInfo tileInfo) {
     if(isEditMode) {
         assert_msg(viewportEditor != nullptr, "You are trying to access edit mode, but no viewport editor is initialized");
         viewportEditor->update(renderInfo);
+    } else {
+        RenderLib::draw_sky(renderInfo, info.camera.mode);
+        draw_scene_object(&scene->sceneGraph);
     }
-
-    // Draw the scene graph
-    draw_scene_object(&scene->sceneGraph);
 
     RenderLib::bind_framebuffer(0);
     RenderLib::update();
@@ -236,7 +237,24 @@ void Viewport::draw(WindowTileInfo tileInfo) {
 }
 
 void Viewport::draw_scene_object(const SceneObject* sceneObject) {
+    RenderLib::bind_vertex_array(renderInfo.voxelVAO);
 
+    glm::vec3 size = glm::vec3(0.0f);
+    switch(sceneObject->type) {
+        case OBJECT_TYPE_GRID: {
+            size = glm::vec3(((SceneGrid*)sceneObject->data)->width(), ((SceneGrid*)sceneObject->data)->depth(), ((SceneGrid*)sceneObject->data)->height());
+            break;
+        } case OBJECT_TYPE_SPRITE: {
+            size = glm::vec3(((SceneSprite*)sceneObject->data)->width(), 1.0f, ((SceneSprite*)sceneObject->data)->height());
+            break;
+        }
+    }
+
+    RenderLib::draw_voxel(renderInfo.boxProgram, scene->selected->transform.transform, size);
+
+    for(uint32_t i = 0; i < sceneObject->childrenCount; i++) {
+        draw_scene_object(&sceneObject->children[i]);
+    }
 }
 
 void Viewport::draw_ui() {
@@ -528,6 +546,12 @@ void Viewport::solve_input() {
         }
     }
 
+    if(Input.get(GLFW_KEY_LEFT_CONTROL) == KEY_STATE_HELD && Input.get(GLFW_KEY_Z) == KEY_STATE_PRESS && Input.get(GLFW_KEY_LEFT_SHIFT) == KEY_STATE_HELD) {
+        redo();
+    } else if(Input.get(GLFW_KEY_LEFT_CONTROL) == KEY_STATE_HELD && Input.get(GLFW_KEY_Z) == KEY_STATE_PRESS) {
+        undo();
+    }
+
     #pragma region ORTHOGRAPHIC VIEWS
     if(Input.get(GLFW_KEY_5) == KEY_STATE_PRESS) {
         MESSAGE("Changing mode");
@@ -621,7 +645,7 @@ void Viewport::update_cache() {
 }
 
 void Viewport::undo() {
-    if(cacheDepth > cacheIndex) {
+    /* if(cacheDepth > cacheIndex) {
         MESSAGE("Undo " << cacheIndex << " for " << cache[cacheIndex].count);
         cacheIndex++;
         for(uint32_t i = 0; i < cache[cacheDepth - cacheIndex].count; i++) {
@@ -630,11 +654,12 @@ void Viewport::undo() {
 
         memcpy(selectedGrid->buffer, tempGrid.buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
         update_grid(*selectedGrid);
-    }
+    } */
+    viewportEditor->undo();
 }
 
 void Viewport::redo() {
-    if(cacheIndex > 0) {
+    /* if(cacheIndex > 0) {
         MESSAGE("Redo " << cacheIndex);
         for(uint32_t i = 0; i < cache[cacheDepth - cacheIndex].count; i++) {
             tempGrid.set(cache[cacheDepth - cacheIndex].buffer[i].index, cache[cacheDepth - cacheIndex].buffer[i].newColor);
@@ -643,7 +668,8 @@ void Viewport::redo() {
 
         memcpy(selectedGrid->buffer, tempGrid.buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
         update_grid(*selectedGrid);
-    }
+    } */
+    viewportEditor->redo();
 }
 
 

@@ -10,12 +10,11 @@ struct GridCacheCell {
 
 struct GridCache {
     GridCacheCell* buffer;
+
     uint32_t count;
-    uint32_t size;
 
     void init(uint32_t size) {
         buffer = new GridCacheCell[size];
-        this->size = size;
         count = 0;
     }
 };

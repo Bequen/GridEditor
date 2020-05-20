@@ -176,6 +176,14 @@ void SpriteEditor::resize_callback() {
 
 }
 
+void SpriteEditor::undo() {
+    
+}
+
+void SpriteEditor::redo() {
+
+}
+
 void SpriteEditor::refresh_callback() {
 
 }

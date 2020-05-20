@@ -135,5 +135,7 @@ class Viewport : public WindowEditor {
         void select_grid(uint32_t index);
         void select_grid(Grid* grid);
 
+        void draw_scene_object(const SceneObject* sceneObject, uint32_t ahoj);
+
         uint32_t get_index(glm::vec3 pos);
 };

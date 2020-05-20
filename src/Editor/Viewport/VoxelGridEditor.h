@@ -39,6 +39,8 @@ class VoxelGridEditor : public ViewportEditor {
         void refresh_callback();
         void resize_callback();
 
+        void undo() override;
+        void redo() override;
 
         #pragma region VOXEL EDITOR
         void update_camera();
@@ -55,5 +57,7 @@ class VoxelGridEditor : public ViewportEditor {
 
         void draw_grid(RenderInfo renderInfo, const SceneGrid* grid);
         glm::vec3 floor_vec(glm::vec3 vec);
+
+        void update_cache();
         #pragma endregion
 };

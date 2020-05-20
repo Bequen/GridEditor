@@ -15,7 +15,8 @@ void VoxelGridEditor::assign(const SceneObject* sceneObject, Scene* scene, Viewp
 
     this->tempGrid = *this->grid;
     this->tempGrid.grid.buffer = new int8_t[tempGrid.grid.width * tempGrid.grid.depth * tempGrid.grid.height];
-    memset(this->tempGrid.grid.buffer, 0, tempGrid.grid.width * tempGrid.grid.depth * tempGrid.grid.height);
+    //memset(this->tempGrid.grid.buffer, 0, tempGrid.grid.width * tempGrid.grid.depth * tempGrid.grid.height);
+    memcpy(this->tempGrid.grid.buffer, grid->grid.buffer, grid->width() * grid->height() * grid->depth());
 }
 
 void VoxelGridEditor::init() {
@@ -23,6 +24,8 @@ void VoxelGridEditor::init() {
     brushMode = BRUSH_MODE_ADD;
     isDrawing = false;
     requireUpdate = false;
+
+    update_cache();
 }
 
 void VoxelGridEditor::update(RenderInfo renderInfo) {
@@ -103,6 +106,21 @@ void VoxelGridEditor::refresh_callback() {
 
 }
 
+
+void VoxelGridEditor::undo() {
+    tempGrid.undo();
+
+    memcpy(grid->grid.buffer, tempGrid.grid.buffer, tempGrid.width() * tempGrid.height() * tempGrid.depth());
+    grid->update_texture();
+}
+
+void VoxelGridEditor::redo() {
+    tempGrid.redo();
+
+    memcpy(grid->grid.buffer, tempGrid.grid.buffer, tempGrid.width() * tempGrid.height() * tempGrid.depth());
+    grid->update_texture();
+}
+
 void VoxelGridEditor::solve_voxel_drawing() {
     #pragma region Value preparation
     if(Input.get(GLFW_KEY_B) == KEY_STATE_PRESS) {
@@ -171,8 +189,8 @@ void VoxelGridEditor::solve_voxel_drawing() {
             }
         } else {
             if(isDrawing) {
+                update_cache();
                 isDrawing = false;
-                //update_cache();
                 memcpy(grid->grid.buffer, tempGrid.grid.buffer, tempGrid.grid.width * tempGrid.grid.depth * tempGrid.grid.height);
                 /* update_grid(_grid); */
                 grid->update_texture();
@@ -196,6 +214,7 @@ void VoxelGridEditor::solve_voxel_drawing() {
                 isDrawing = false;
 
                 solve_shape(&tempGrid, shape.start, shape.end);
+                update_cache();
                 memcpy(grid->grid.buffer, tempGrid.grid.buffer, tempGrid.grid.width * tempGrid.grid.depth * tempGrid.grid.height);
                 //update_grid(grid);
                 grid->update_texture();
@@ -260,6 +279,7 @@ void VoxelGridEditor::solve_voxel_drawing() {
                 }
             } else {
                 if(isDrawing) {
+                    update_cache();
                     drawMode = DRAW_MODE_BRUSH;
                     brushMode = BRUSH_MODE_ADD;
                     isDrawing = false;
@@ -424,4 +444,14 @@ void VoxelGridEditor::flood_fill(glm::vec3 position, glm::vec3 normal) {
 
 glm::vec3 VoxelGridEditor::floor_vec(glm::vec3 vec) {
     return glm::vec3(std::floor(vec.x), std::floor(vec.y), std::floor(vec.z));
+}
+
+void VoxelGridEditor::update_cache() {
+    if(tempGrid.cacheIndex > 0) {
+        tempGrid.cacheDepth = -1;
+        tempGrid.cacheIndex = 0;
+    }
+
+    tempGrid.cache[++tempGrid.cacheDepth].count = 0;
+    WARNING("Updating cache " << tempGrid.cacheDepth);
 }

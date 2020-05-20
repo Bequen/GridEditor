@@ -37,4 +37,7 @@ class ViewportEditor {
 
         virtual void refresh_callback() = 0;
         virtual void resize_callback() = 0;
+
+        virtual void undo() = 0;
+        virtual void redo() = 0;
 };

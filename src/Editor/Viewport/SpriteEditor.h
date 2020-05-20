@@ -40,6 +40,9 @@ class SpriteEditor : public ViewportEditor {
         void refresh_callback();
         void resize_callback();
 
+        void undo() override;
+        void redo() override;
+
         void draw_sprite(RenderInfo renderInfo, const SceneSprite* sprite);
 
         void solve_painting();
