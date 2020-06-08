@@ -192,15 +192,12 @@ void VoxelGridEditor::solve_voxel_drawing() {
             if(isDrawing) {
                 if(brushMode == BRUSH_MODE_PAINT) {
                     if(tempGrid.get(index) > 0) {
-                        //tempCache.buffer[tempCache.count++] = {index, selectedGrid->get(index), scene->colorSelected};
                         tempGrid.set(index, brushColor);
                     }
                 } else {
-                    //tempCache.buffer[tempCache.count++] = {index, selectedGrid->get(index), 0};
                     tempGrid.set(index, brushColor);
                 }
                 requireUpdate = true;
-                //update_grid(&_tempGrid);
                 tempGrid.update_texture();
             } else {
                 isDrawing = true;
@@ -210,7 +207,6 @@ void VoxelGridEditor::solve_voxel_drawing() {
                 update_cache();
                 isDrawing = false;
                 memcpy(grid->grid.buffer, tempGrid.grid.buffer, tempGrid.grid.width * tempGrid.grid.depth * tempGrid.grid.height);
-                /* update_grid(_grid); */
                 grid->update_texture();
                 requireUpdate = false;
             }

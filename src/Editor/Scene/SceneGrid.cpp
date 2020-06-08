@@ -58,8 +58,10 @@ void SceneGrid::set(uint32_t index, uint32_t value) {
     if(index > grid.width * grid.height * grid.depth)
         return;
     else {
-            WARNING("Set on " << index << " the " << value);
         if(get(index) != value) {
+            if(cache[cacheOffset % cacheSize].count >= cache[cacheOffset % cacheSize].size) {
+                cache[cacheOffset % cacheSize].resize(cache[cacheOffset % cacheSize].size + 256);
+            }
             cache[cacheOffset % cacheSize].buffer[cache[cacheOffset % cacheSize].count++] = {index, grid.buffer[index], value};
             grid.buffer[index] = value;
         }
@@ -71,8 +73,10 @@ void SceneGrid::set(glm::vec3 position, uint32_t value) {
     if(index > grid.width * grid.height * grid.depth)
         return;
     else {
-            WARNING("Set on " << index << " the " << value);
         if(get(index) != value) {
+            if(cache[cacheOffset % cacheSize].count >= cache[cacheOffset % cacheSize].size) {
+                cache[cacheOffset % cacheSize].resize(cache[cacheOffset % cacheSize].size + 256);
+            }
             cache[cacheOffset % cacheSize].buffer[cache[cacheOffset % cacheSize].count++] = {index, grid.buffer[index], value};
             grid.buffer[index] = value;
         }
@@ -85,8 +89,10 @@ void SceneGrid::set(uint32_t x, uint32_t y, uint32_t z, uint32_t value) {
     if(index > grid.width * grid.height * grid.depth)
         return;
     else {
-            WARNING("Set on " << index << " the " << value);
         if(get(index) != value) {
+            if(cache[cacheOffset % cacheSize].count >= cache[cacheOffset % cacheSize].size) {
+                cache[cacheOffset % cacheSize].resize(cache[cacheOffset % cacheSize].size + 256);
+            }
             cache[cacheOffset % cacheSize].buffer[cache[cacheOffset % cacheSize].count++] = {index, grid.buffer[index], value};
             grid.buffer[index] = value;
         }
