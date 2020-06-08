@@ -27,8 +27,6 @@ void PaletteTile::draw(WindowTileInfo tileInfo) {
     assert_msg(scene->palette != nullptr, "Cannot draw palette, palette was not initialized");
     ImGui::BeginChild("PickerWindow", ImVec2(200.0f, 200.0f), true);
 
-    /* if(ImGui::ColorPicker3("picker", &scene->palette[scene->colorSelected].r))
-        update_palette(); */
     if(ImGui::ColorPicker3("picker", &scene->materials[scene->colorSelected].albedo.r))
         update_palette(); 
     if(ImGui::SliderFloat("Metalness", &scene->materials[scene->colorSelected].brdf.r, 0.0f, 1.0f))
@@ -69,8 +67,8 @@ void PaletteTile::update_palette() {
     glBindTexture(GL_TEXTURE_1D, scene->paletteTexture);
 
     MESSAGE("Updating materials");
-    void* pointer = RenderLib::map_buffer_range(scene->materialsBuffer, GL_UNIFORM_BUFFER, 0, sizeof(Light) * MAX_LIGHT_COUNT);
-    memcpy(pointer, scene->materials, sizeof(Light) * MAX_LIGHT_COUNT);
+    void* pointer = RenderLib::map_buffer_range(scene->materialsBuffer, GL_UNIFORM_BUFFER, 0, sizeof(Material) * 256);
+    memcpy(pointer, scene->materials, sizeof(Material) * 256);
 
     RenderLib::unmap_buffer(GL_UNIFORM_BUFFER); 
 }

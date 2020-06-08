@@ -40,4 +40,8 @@ class ViewportEditor {
 
         virtual void undo() = 0;
         virtual void redo() = 0;
+
+        virtual void tool_bar() = 0;
+        virtual void menu_bar() = 0;
+        virtual void side_bar() = 0;
 };

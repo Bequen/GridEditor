@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <avg/Debug.h>
+#include <ImGui/imgui.h>
 
 #include "Rendering/TextureLib.h"
 #include "Rendering/RenderLib.h"
@@ -64,9 +65,7 @@ void SpriteEditor::solve_painting() {
     if(drawMode == DRAW_MODE_BRUSH) {
         if(Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_HELD) {
             if(isDrawing) {
-                ERROR("Setting on " << ray.origin.x << ":" << ray.origin.z << " the " << (int)scene->colorSelected);
                 tempSprite.set(glm::vec2(ray.origin.x, ray.origin.z), scene->colorSelected);
-
                 tempSprite.update_texture();
             } else {
                 isDrawing = true;
@@ -182,6 +181,20 @@ void SpriteEditor::undo() {
 
 void SpriteEditor::redo() {
 
+}
+
+void SpriteEditor::side_bar() {
+
+}
+
+void SpriteEditor::menu_bar() {
+
+}
+
+void SpriteEditor::tool_bar() {
+    ImGui::Button("Add", ImVec2(24, 24));
+    ImGui::Button("Erase", ImVec2(24, 24));
+    ImGui::Button("Paint", ImVec2(24, 24));
 }
 
 void SpriteEditor::refresh_callback() {

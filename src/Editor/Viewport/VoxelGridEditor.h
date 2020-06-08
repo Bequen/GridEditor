@@ -42,6 +42,10 @@ class VoxelGridEditor : public ViewportEditor {
         void undo() override;
         void redo() override;
 
+        void side_bar() override;
+        void menu_bar() override;
+        void tool_bar() override;
+
         #pragma region VOXEL EDITOR
         void update_camera();
         void solve_voxel_drawing();

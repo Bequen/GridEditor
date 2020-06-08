@@ -6,8 +6,9 @@
 
 #include <avg/Debug.h>
 
-SceneGrid::SceneGrid() {
-    voxelGrid = VoxelGrid(32);
+SceneGrid::SceneGrid() :
+width(32), depth(32), height(32) {
+    voxelGrid = VoxelGrid(texture_size(32, 32, 32));
     grid = Grid3D<int8_t>(32);
     cache = new GridCache[CACHE_DEPTH];
     for(uint32_t i = 0; i < CACHE_DEPTH; i++) {
@@ -17,10 +18,12 @@ SceneGrid::SceneGrid() {
     cacheDepth = 0;
     cacheSize = CACHE_DEPTH;
     cacheIndex = 0;
+    cacheOffset = 0;
 }
 
-SceneGrid::SceneGrid(uint32_t size) {
-    voxelGrid = VoxelGrid(size, size, size);
+SceneGrid::SceneGrid(uint32_t size) :
+width(size), depth(size), height(size) {
+    voxelGrid = VoxelGrid(texture_size(size, size, size));
     grid = Grid3D<int8_t>(size);
 
     cache = new GridCache[CACHE_DEPTH];
@@ -31,10 +34,12 @@ SceneGrid::SceneGrid(uint32_t size) {
     cacheDepth = 0;
     cacheSize = CACHE_DEPTH;
     cacheIndex = 0;
+    cacheOffset = 0;
 }
 
-SceneGrid::SceneGrid(uint32_t width, uint32_t depth, uint32_t height) {
-    voxelGrid = VoxelGrid(width, height, depth);
+SceneGrid::SceneGrid(uint32_t width, uint32_t depth, uint32_t height) :
+width(width), depth(depth), height(height) {
+    voxelGrid = VoxelGrid(texture_size(width, depth, height));
     grid = Grid3D<int8_t>(width, height, depth);
 
     cache = new GridCache[CACHE_DEPTH];
@@ -45,6 +50,7 @@ SceneGrid::SceneGrid(uint32_t width, uint32_t depth, uint32_t height) {
     cacheDepth = 0;
     cacheSize = CACHE_DEPTH;
     cacheIndex = 0;
+    cacheOffset = 0;
 }
 
 
@@ -52,12 +58,10 @@ void SceneGrid::set(uint32_t index, uint32_t value) {
     if(index > grid.width * grid.height * grid.depth)
         return;
     else {
+            WARNING("Set on " << index << " the " << value);
         if(get(index) != value) {
-            SUCCESS("Yaayy");
-            cache[cacheDepth].buffer[cache[cacheDepth].count++] = {index, grid.buffer[index], value};
+            cache[cacheOffset % cacheSize].buffer[cache[cacheOffset % cacheSize].count++] = {index, grid.buffer[index], value};
             grid.buffer[index] = value;
-        } else {
-            ERROR("Fuck " << value);
         }
     }
 }
@@ -67,12 +71,10 @@ void SceneGrid::set(glm::vec3 position, uint32_t value) {
     if(index > grid.width * grid.height * grid.depth)
         return;
     else {
+            WARNING("Set on " << index << " the " << value);
         if(get(index) != value) {
-            SUCCESS("Yaayy");
-            cache[cacheDepth].buffer[cache[cacheDepth].count++] = {index, grid.buffer[index], value};
+            cache[cacheOffset % cacheSize].buffer[cache[cacheOffset % cacheSize].count++] = {index, grid.buffer[index], value};
             grid.buffer[index] = value;
-        } else {
-            ERROR("Fuck " << value);
         }
     }
 
@@ -83,19 +85,17 @@ void SceneGrid::set(uint32_t x, uint32_t y, uint32_t z, uint32_t value) {
     if(index > grid.width * grid.height * grid.depth)
         return;
     else {
+            WARNING("Set on " << index << " the " << value);
         if(get(index) != value) {
-            SUCCESS("Yaayy");
-            cache[cacheDepth].buffer[cache[cacheDepth].count++] = {index, grid.buffer[index], value};
+            cache[cacheOffset % cacheSize].buffer[cache[cacheOffset % cacheSize].count++] = {index, grid.buffer[index], value};
             grid.buffer[index] = value;
-        } else {
-            ERROR("Fuck " << value);
         }
     }
 }
 
 
 const int32_t SceneGrid::get(uint32_t index) const {
-    if(index > grid.width * grid.height * grid.depth)
+    if(index > width * height * depth)
         return -1;
     else
         return grid.buffer[index];
@@ -134,8 +134,8 @@ void SceneGrid::undo() {
     if(cacheDepth > cacheIndex) {
         MESSAGE("Undo " << cacheIndex << " for " << cache[cacheIndex].count);
         cacheIndex++;
-        for(uint32_t i = 0; i < cache[cacheDepth - cacheIndex].count; i++) {
-            set(cache[cacheDepth - cacheIndex].buffer[i].index, cache[cacheDepth - cacheIndex].buffer[i].color);
+        for(uint32_t i = 0; i < cache[(cacheOffset - cacheIndex) % cacheSize].count; i++) {
+            set(cache[(cacheOffset - cacheIndex) % cacheSize].buffer[i].index, cache[(cacheOffset - cacheIndex) % cacheSize].buffer[i].color);
         }
     }
 }
@@ -148,4 +148,48 @@ void SceneGrid::redo() {
         }
         cacheIndex--;
     }
+}
+
+void SceneGrid::update_cache() {
+    MESSAGE("Updating cache");
+
+    // If user did undo, and then edit the buffer, we need to reset the cache
+    if(cacheIndex > 0) {
+        cacheDepth = -1;
+        cacheIndex = 0;
+    }
+
+    cacheOffset++;
+
+    // Do not extend the cache size
+    cacheDepth = cacheDepth < cacheSize ? cacheDepth++ : cacheDepth;
+    cache[cacheDepth % cacheSize].count = 0;
+}
+
+void SceneGrid::resize(uint32_t width, uint32_t depth, uint32_t height) {
+    // If the new size is smaller, we don't need to make new texture or compute anything
+    if(this->width > width && this->depth > depth && this->height > height) {
+
+    } else {
+        if(voxelGrid.size > width && voxelGrid.size > depth && voxelGrid.size > height) {
+
+        } else {
+            voxelGrid.remove();
+            voxelGrid = VoxelGrid(texture_size(width, depth, height));
+        }
+    }
+
+    this->width = width;
+    this->depth = depth;
+    this->height = height;
+
+    grid.resize(width, depth, height);
+}
+
+uint32_t SceneGrid::texture_size(uint32_t width, uint32_t depth, uint32_t height) {
+    uint32_t power = 2;
+    for(; power < width && power < depth && power < height; power *= 2) { }
+    
+    ERROR("texture size is " << power);
+    return power;
 }

@@ -37,7 +37,7 @@ struct Scene {
     #pragma region Palette
     uint32_t paletteTexture;
     RGB32* palette;
-    int8_t colorSelected;
+    uint32_t colorSelected;
     int8_t colorCache;
 
     uint32_t materialsBuffer;

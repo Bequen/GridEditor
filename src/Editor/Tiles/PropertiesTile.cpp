@@ -33,14 +33,13 @@ void PropertiesTile::draw(WindowTileInfo tileInfo) {
                     break;
                 }
                 ImGui::Text("Grid");
-                Grid grid;
-                memcpy(&grid, scene->selected->data, sizeof(Grid));
+                SceneGrid* grid = (SceneGrid*)scene->selected->data;
 
-                float size[] = {grid.width, grid.depth, grid.height};
+                float size[] = {grid->width, grid->depth, grid->height};
                 char* text = new char[256];
                 memset(text, 0, 256);
 
-                sprintf(text, "%i %i %i", grid.width, grid.depth, grid.height);
+                sprintf(text, "%i %i %i", grid->width, grid->depth, grid->height);
 
                 if(ImGui::InputText("size", text, 256, ImGuiInputTextFlags_EnterReturnsTrue)) {
                     uint32_t splitCount = 0;
@@ -49,9 +48,11 @@ void PropertiesTile::draw(WindowTileInfo tileInfo) {
                     if(splitCount == 0)
                         break;
                     else if(splitCount == 1) {
-                        ((Grid*)scene->selected->data)->resize(std::atoi(splits[0]), std::atoi(splits[0]), std::atoi(splits[0]));
+                        //((Grid*)scene->selected->data)->resize(std::atoi(splits[0]), std::atoi(splits[0]), std::atoi(splits[0]));
+                        grid->resize(std::atoi(splits[0]), std::atoi(splits[0]), std::atoi(splits[0]));
                     } else if(splitCount == 3) {
-                        ((Grid*)scene->selected->data)->resize(std::atoi(splits[0]), std::atoi(splits[1]), std::atoi(splits[2]));
+                        //((Grid*)scene->selected->data)->resize(std::atoi(splits[0]), std::atoi(splits[1]), std::atoi(splits[2]));
+                        grid->resize(std::atoi(splits[0]), std::atoi(splits[1]), std::atoi(splits[2]));
                     }
                 }
                 ImGui::IsItemFocused();

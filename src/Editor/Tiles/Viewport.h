@@ -30,9 +30,6 @@ typedef uint32_t BrushMode;
 #define DRAW_MODE_SHAPE             0x0001
 #define DRAW_MODE_EXTRUDE           0x0002
 
-#define BRUSH_MODE_ADD              0x0000
-#define BRUSH_MODE_SUBSTRACT        0x0001
-#define BRUSH_MODE_PAINT            0x0002
 
 #define MAX_LIGHT_COUNT             32
 

@@ -6,9 +6,10 @@
 
 struct VoxelGrid {
     uint32_t texture;
-    uint32_t width, height, depth;
+    uint32_t size;
 
     VoxelGrid();
     VoxelGrid(uint32_t size);
-    VoxelGrid(uint32_t width, uint32_t height, uint32_t depth);
+
+    void remove();
 };

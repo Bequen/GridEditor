@@ -43,6 +43,10 @@ class SpriteEditor : public ViewportEditor {
         void undo() override;
         void redo() override;
 
+        void side_bar() override;
+        void menu_bar() override;
+        void tool_bar() override;
+
         void draw_sprite(RenderInfo renderInfo, const SceneSprite* sprite);
 
         void solve_painting();

@@ -48,9 +48,6 @@ void Viewport::init() {
 
     init_framebuffer();
 
-
-/*     ShaderLib::uniform_int32(renderInfo.voxelProgram, "palette", 1);
-    ShaderLib::uniform_int32(renderInfo.spriteProgram, "palette", 1); */
     selection.selectedCount = 0;
     selection.selection = nullptr;
 
@@ -148,7 +145,12 @@ void Viewport::draw(WindowTileInfo tileInfo) {
                                         (tileInfo.y + tileInfo.height) * Input.windowHeight), 
                                         ImVec2(0, 1), ImVec2(1, 0));
 
-    draw_ui();
+    viewportEditor->menu_bar();
+    ImGui::BeginChild("tool_bar", ImVec2(500, tileInfo.height));
+    if(viewportEditor)
+        viewportEditor->tool_bar();
+
+    ImGui::EndChild();
 
     #if DEPRECATED
     solve_input();
@@ -242,7 +244,7 @@ void Viewport::draw_scene_object(const SceneObject* sceneObject) {
     glm::vec3 size = glm::vec3(0.0f);
     switch(sceneObject->type) {
         case OBJECT_TYPE_GRID: {
-            size = glm::vec3(((SceneGrid*)sceneObject->data)->width(), ((SceneGrid*)sceneObject->data)->depth(), ((SceneGrid*)sceneObject->data)->height());
+            size = glm::vec3(((SceneGrid*)sceneObject->data)->width, ((SceneGrid*)sceneObject->data)->depth, ((SceneGrid*)sceneObject->data)->height);
             break;
         } case OBJECT_TYPE_SPRITE: {
             size = glm::vec3(((SceneSprite*)sceneObject->data)->width(), 1.0f, ((SceneSprite*)sceneObject->data)->height());
@@ -645,30 +647,10 @@ void Viewport::update_cache() {
 }
 
 void Viewport::undo() {
-    /* if(cacheDepth > cacheIndex) {
-        MESSAGE("Undo " << cacheIndex << " for " << cache[cacheIndex].count);
-        cacheIndex++;
-        for(uint32_t i = 0; i < cache[cacheDepth - cacheIndex].count; i++) {
-            tempGrid.set(cache[cacheDepth - cacheIndex].buffer[i].index, cache[cacheDepth - cacheIndex].buffer[i].color);
-        }
-
-        memcpy(selectedGrid->buffer, tempGrid.buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
-        update_grid(*selectedGrid);
-    } */
     viewportEditor->undo();
 }
 
 void Viewport::redo() {
-    /* if(cacheIndex > 0) {
-        MESSAGE("Redo " << cacheIndex);
-        for(uint32_t i = 0; i < cache[cacheDepth - cacheIndex].count; i++) {
-            tempGrid.set(cache[cacheDepth - cacheIndex].buffer[i].index, cache[cacheDepth - cacheIndex].buffer[i].newColor);
-        }
-        cacheIndex--;
-
-        memcpy(selectedGrid->buffer, tempGrid.buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
-        update_grid(*selectedGrid);
-    } */
     viewportEditor->redo();
 }
 

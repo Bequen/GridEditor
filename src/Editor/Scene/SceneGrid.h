@@ -13,8 +13,12 @@ struct SceneGrid {
 
     GridCache* cache;
     uint32_t cacheDepth;
+    uint32_t cacheOffset;
     uint32_t cacheSize;
     uint32_t cacheIndex;
+
+    // The user defined size, mostly differs from the actual grid size
+    uint32_t width, depth, height;
 
     SceneGrid();
     SceneGrid(uint32_t size);
@@ -28,20 +32,15 @@ struct SceneGrid {
     const int32_t get(glm::vec3 position) const;
     const int32_t get(uint32_t x, uint32_t y, uint32_t z) const;
 
-    const int32_t width() const {
-        return grid.width;
-    }
-    const int32_t height() const {
-        return grid.height;
-    }
-    const int32_t depth() const {
-        return grid.depth;
-    }
-
     void update_texture();
 
     bool intersects(glm::vec3 position);
 
+    uint32_t texture_size(uint32_t width, uint32_t depth, uint32_t height);
+
+    void resize(uint32_t width, uint32_t depth, uint32_t height);
+
+    void update_cache();
 
     void undo();
     void redo();

@@ -39,7 +39,7 @@ void Scene::init(uint32_t gridCount) {
     paletteTexture = paletteTexture;
 
     materials = new Material[256];
-    materialsBuffer = RenderLib::create_buffer_dynamic(UNIFORM_BUFFER, sizeof(Light) * lightBufferSize + sizeof(glm::vec4), lights);
+    materialsBuffer = RenderLib::create_buffer_dynamic(UNIFORM_BUFFER, sizeof(Material) * 256, materials);
     RenderLib::buffer_binding_range(materialsBuffer, 3, 0, sizeof(Material) * 256);
     #pragma endregion
 
