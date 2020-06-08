@@ -153,6 +153,14 @@ void VoxelGridEditor::solve_voxel_drawing() {
             drawMode = DRAW_MODE_EXTRUDE;
         else
             drawMode = DRAW_MODE_BRUSH;
+
+        if(brushMode != BRUSH_MODE_PAINT) {
+            if(Input.get(GLFW_KEY_LEFT_CONTROL) == KEY_STATE_PRESS) {
+                brushMode = 1 - brushMode;
+            } else if(Input.get(GLFW_KEY_LEFT_CONTROL) == KEY_STATE_RELEASE) {
+                brushMode = 1 - brushMode;
+            }
+        }
     }
 
     double cursorX, cursorY;

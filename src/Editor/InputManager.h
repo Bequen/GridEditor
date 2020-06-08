@@ -5,9 +5,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#define KEY_STATE_NONE 0x0000
-#define KEY_STATE_PRESS 0x0001
-#define KEY_STATE_HELD 0x0002
+#define KEY_STATE_NONE      0x0000
+#define KEY_STATE_PRESS     0x0001
+#define KEY_STATE_HELD      0x0002
+#define KEY_STATE_RELEASE   0x0003
 
 #include "System/Window.h"
 #include "Editor/Tiles/WindowTileInfo.h"
@@ -18,6 +19,7 @@ struct InputKey {
 };
 
 // TODO Probably some sort of hashing would be cool
+// TODO Also, making it anonymous class would be better
 class InputManager {
     private:
         Window window;

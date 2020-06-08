@@ -55,7 +55,10 @@ void InputManager::update()  {
             else if(keys[i].state == KEY_STATE_NONE)
                 keys[i].state = KEY_STATE_PRESS;  
         } else {
-            keys[i].state = KEY_STATE_NONE;
+            if(keys[i].state == KEY_STATE_HELD)
+                keys[i].state = KEY_STATE_RELEASE;
+            else
+                keys[i].state = KEY_STATE_NONE;
         }
     } for(uint32_t i = 0; i < mouseKeyCount; i++) {
         if(window.is_mouse_button_down(mouseKeys[i].key) == GLFW_PRESS) {
@@ -64,7 +67,10 @@ void InputManager::update()  {
             else if(mouseKeys[i].state == KEY_STATE_NONE)
                 mouseKeys[i].state = KEY_STATE_PRESS;  
         } else {
-            mouseKeys[i].state = KEY_STATE_NONE;
+            if(mouseKeys[i].state == KEY_STATE_HELD)
+                mouseKeys[i].state = KEY_STATE_RELEASE;
+            else
+                mouseKeys[i].state = KEY_STATE_NONE;
         }
     }
 }
