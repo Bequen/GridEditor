@@ -33,10 +33,11 @@ void VoxelGridEditor::init() {
 }
 
 void VoxelGridEditor::update(RenderInfo renderInfo) {
-
     viewport->camera.update();
     solve_voxel_drawing();
+}
 
+void VoxelGridEditor::draw(RenderInfo renderInfo, WindowTileInfo tileInfo) {
     RenderLib::draw_sky(renderInfo, viewport->camera.mode);
 
     RenderLib::front_face(GL_CW);
@@ -48,7 +49,6 @@ void VoxelGridEditor::update(RenderInfo renderInfo) {
     glm::vec3 camPos = viewport->camera.origin + viewport->camera.direction * -viewport->camera.offset;
     ShaderLib::uniform_vec3(renderInfo.voxelProgram, "cameraPos", &camPos.x);
 
-    //RenderLib::draw_grid(renderInfo, _tempGrid, scene->selected->transform);
     draw_grid(renderInfo, &tempGrid);
 }
 
@@ -70,6 +70,7 @@ void VoxelGridEditor::draw_grid(RenderInfo renderInfo, const SceneGrid* grid) {
     uint32_t positionUniform = glGetUniformLocation(renderInfo.voxelSelectedProgram, "index");
 
     glUniform3ui(glGetUniformLocation(renderInfo.voxelSelectedProgram, "size"), grid->grid.width, grid->grid.depth, grid->grid.height);
+    glUniform1i(glGetUniformLocation(renderInfo.voxelSelectedProgram, "lightCount"), scene->lightCount);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, grid->voxelGrid.texture);
@@ -83,8 +84,8 @@ void VoxelGridEditor::draw_grid(RenderInfo renderInfo, const SceneGrid* grid) {
 
     glUseProgram(renderInfo.voxelProgram);
     positionUniform = glGetUniformLocation(renderInfo.voxelProgram, "index");
+    glUniform1i(glGetUniformLocation(renderInfo.voxelProgram, "lightCount"), scene->lightCount);
 
-    ERROR("Drawing " << grid->width << " " << grid->height << " " << grid->depth);
     for(uint32_t i = 0; i < grid->grid.width * grid->grid.depth * grid->grid.height; i++) {
         if(grid->get(i) > 0) {
             streak++;

@@ -37,6 +37,8 @@ class SpriteEditor : public ViewportEditor {
         void update(RenderInfo renderInfo) override;
         void terminate() override;
 
+        void draw(RenderInfo renderInfo, WindowTileInfo tileInfo) override;
+
         void refresh_callback();
         void resize_callback();
 

@@ -1,6 +1,7 @@
 #include "VoxelGrid.h"
 
 #include <glad/glad.h>
+#include <avg/Debug.h>
 
 #include "Rendering/TextureLib.h"
 

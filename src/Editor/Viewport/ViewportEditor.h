@@ -35,6 +35,8 @@ class ViewportEditor {
         virtual void update(RenderInfo renderInfo) = 0;
         virtual void terminate() = 0;
 
+        virtual void draw(RenderInfo renderInfo, WindowTileInfo tileInfo) = 0;
+
         virtual void refresh_callback() = 0;
         virtual void resize_callback() = 0;
 

@@ -47,6 +47,10 @@ void SpriteEditor::update(RenderInfo renderInfo) {
     draw_sprite(renderInfo, &tempSprite);
 }
 
+void SpriteEditor::draw(RenderInfo renderInfo, WindowTileInfo tileInfo) {
+
+}
+
 void SpriteEditor::solve_painting() {
     double cursorX, cursorY;
     Input.get_mapped_cursor(viewport->tileInfo, &cursorX, &cursorY);

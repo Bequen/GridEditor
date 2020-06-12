@@ -95,7 +95,7 @@ void main() {
     vec3 viewDir = normalize(camPos - fragPos);
     vec3 f0 = vec3(0.04);
     f0 = mix(f0, color, metalness);
-    for(int i = 0; i < 1; i++) {
+    for(int i = 0; i < lightCount; i++) {
         vec3 lightDir = vec3(0.0);
 
         float d = length(lights[i].position.xyz - fragPos);

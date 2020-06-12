@@ -127,9 +127,17 @@ void Viewport::draw(WindowTileInfo tileInfo) {
     RenderLib::bind_framebuffer(framebuffer.framebuffer);
     RenderLib::update();
 
+    double cursorX, cursorY;
+    Input.get_mapped_cursor(tileInfo, &cursorX, &cursorY);
+
     if(isEditMode) {
         assert_msg(viewportEditor != nullptr, "You are trying to access edit mode, but no viewport editor is initialized");
-        viewportEditor->update(renderInfo);
+        viewportEditor->draw(renderInfo, tileInfo);
+
+        if(cursorX > -1.0 && cursorX < 1.0 &&
+        cursorY > -1.0 && cursorY < 1.0) {
+            viewportEditor->update(renderInfo);
+        }
     } else {
         RenderLib::draw_sky(renderInfo, info.camera.mode);
         draw_scene_object(&scene->sceneGraph);
