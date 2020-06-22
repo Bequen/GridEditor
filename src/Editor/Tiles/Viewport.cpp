@@ -11,6 +11,8 @@
 #include "ImGui/imgui.h"
 #include "Rendering/TextureLib.h"
 #include "Editor/Viewport/SpriteEditor.h"
+#include "System/Math.h"
+
 typedef std::chrono::high_resolution_clock Clock;
 
 
@@ -25,36 +27,11 @@ void Viewport::init() {
     // Set some default values
     snapping = false;
     snappingSwitch = 0;
-    isDrawing = false;
-    drawMode = DRAW_MODE_BRUSH;
-    brushMode = BRUSH_MODE_ADD;
-    brushModeCache = BRUSH_MODE_ADD;
-    shapeMode = SHAPE_CUBE;
     transformMode = TRANSFORM_MODE_NONE;
-    tempGrid.buffer = nullptr;
-
-    if(scene->selected != nullptr) {
-        select_grid((Grid*)scene->selected->data);
-        isEditMode = true;
-        enter_edit_mode();
-    } else {
-        select_grid(nullptr);
-        isEditMode = false;
-    }
-
-    // Updates all that is needed
-    update_grid(scene->grids[0]);
-    scene->colorSelected = 2;
+    viewportEditor = nullptr;
+    isEditMode = 0;
 
     init_framebuffer();
-
-    selection.selectedCount = 0;
-    selection.selection = nullptr;
-
-    cacheSize = 32;
-    cache = new GridCache[cacheSize];
-    cacheDepth = 0;
-    cacheIndex = 0;
 }
 
 void Viewport::init_framebuffer() {
@@ -82,7 +59,6 @@ void Viewport::init_framebuffer() {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_3D, ((Grid*)scene->selected->data)->gridTexture);
     }
-    WARNING("Test");
 }
 
 
@@ -134,6 +110,7 @@ void Viewport::draw(WindowTileInfo tileInfo) {
         assert_msg(viewportEditor != nullptr, "You are trying to access edit mode, but no viewport editor is initialized");
         viewportEditor->draw(renderInfo, tileInfo);
 
+        // Only update when user hovers the viewport
         if(cursorX > -1.0 && cursorX < 1.0 &&
         cursorY > -1.0 && cursorY < 1.0) {
             viewportEditor->update(renderInfo);
@@ -141,6 +118,11 @@ void Viewport::draw(WindowTileInfo tileInfo) {
     } else {
         RenderLib::draw_sky(renderInfo, info.camera.mode);
         draw_scene_object(&scene->sceneGraph);
+
+        if(Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_PRESS) {
+            WARNING("Selecting");
+            select_scene_object(&scene->sceneGraph);
+        }
     }
 
     RenderLib::bind_framebuffer(0);
@@ -152,11 +134,11 @@ void Viewport::draw(WindowTileInfo tileInfo) {
                                         ImVec2((tileInfo.x + tileInfo.width) * Input.windowWidth,
                                         (tileInfo.y + tileInfo.height) * Input.windowHeight), 
                                         ImVec2(0, 1), ImVec2(1, 0));
-
-    viewportEditor->menu_bar();
+                                        
     ImGui::BeginChild("tool_bar", ImVec2(500, tileInfo.height));
-    if(viewportEditor)
+    if(viewportEditor) {
         viewportEditor->tool_bar();
+    }
 
     ImGui::EndChild();
 
@@ -246,6 +228,59 @@ void Viewport::draw(WindowTileInfo tileInfo) {
     #endif
 }
 
+bool Viewport::select_scene_object(SceneObject* sceneObject) {
+    WARNING(sceneObject->name << " " << sceneObject->childrenCount << " " << sceneObject->type);
+    switch(sceneObject->type) {
+        case OBJECT_TYPE_GRID: {
+            ERROR("Selecting grid");
+            double cursorX, cursorY;
+            Input.get_mapped_cursor(info.tileInfo, &cursorX, &cursorY);
+
+            Ray ray = info.camera.create_ray(glm::vec3(cursorX, cursorY, 0.0f));
+            if(Math::ray_box_intersection(&ray, glm::vec3(0.0f), glm::vec3(32.0f, 32.0f, 32.0f))) {
+                if(sceneObject != scene->selected) {
+                    MESSAGE("Selected " << sceneObject->name);
+                    scene->selected = sceneObject;
+                    return true;
+                } else {
+                    ERROR("Already selected " << sceneObject->name);
+                }
+            } else {
+                ERROR("Nope");
+            }
+
+            break;
+        } case OBJECT_TYPE_SPRITE: {
+            ERROR("Selecting sprite");
+            double cursorX, cursorY;
+            Input.get_mapped_cursor(info.tileInfo, &cursorX, &cursorY);
+
+            Ray ray = info.camera.create_ray(glm::vec3(cursorX, cursorY, 0.0f));
+            if(Math::ray_box_intersection(&ray, glm::vec3(0.0f), glm::vec3(32.0f, 1.0f, 32.0f))) {
+                if(sceneObject != scene->selected) {
+                    MESSAGE("Selected " << sceneObject->name);
+                    scene->selected = sceneObject;
+                    return true;
+                } else {
+                    ERROR("Already selected " << sceneObject->name);
+                }
+            } else {
+                ERROR("Nope");
+            }
+            break;
+        } default: {
+            ERROR("Not a grid od sprite!");
+            break;
+        }
+    }
+
+    for(uint32_t i = 0; i < sceneObject->childrenCount; i++) {
+        if(select_scene_object(sceneObject->children + i)) {
+            return true;
+        }
+    }
+}
+
 void Viewport::draw_scene_object(const SceneObject* sceneObject) {
     RenderLib::bind_vertex_array(renderInfo.voxelVAO);
 
@@ -282,175 +317,6 @@ void Viewport::draw_ui() {
         brushModeCache = brushMode;
     }
     ImGui::EndChild();
-}
-
-void Viewport::solve_voxel_placing() {
-    // Initialize a new ray 
-    double cursorX, cursorY;
-
-    Input.get_mapped_cursor(info.tileInfo, &cursorX, &cursorY);
-
-    Ray ray = info.camera.create_ray(glm::vec3(cursorX, cursorY, 0.0f));
-    RayHit hit = ray_cast(ray);
-
-    // If user want to draw a shape
-    if(Input.get(GLFW_KEY_LEFT_SHIFT))
-        drawMode = DRAW_MODE_SHAPE;
-    else if(Input.get(GLFW_KEY_LEFT_ALT))
-        drawMode = DRAW_MODE_EXTRUDE;
-    else
-        drawMode = DRAW_MODE_BRUSH;
-
-
-    #pragma region SHAPE
-    // If the shape is being drawn
-    if(drawMode == DRAW_MODE_SHAPE) {
-        if(!isDrawing && Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_PRESS) {
-            isDrawing = true;
-            shapeStart = hit.point + hit.normal;
-        } if(isDrawing && Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_NONE) {
-            isDrawing = false;
-
-            
-            shapeEnd = brushMode == BRUSH_MODE_ADD ? hit.point + hit.normal : hit.point;
-            memcpy(tempGrid.buffer, selectedGrid->buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
-            solve_rectangle(&tempGrid, shapeStart, shapeEnd);
-            memcpy(selectedGrid->buffer, tempGrid.buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
-            update_grid(*selectedGrid);
-
-            shapeEnd = glm::vec3(0.0f);
-            shapeStart = glm::vec3(0.0f);
-
-            if(isEditMode)
-                update_cache();
-        } else if(isDrawing && Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_HELD) {
-            glm::vec3 shapeEndTemp = brushMode == BRUSH_MODE_ADD ? hit.point + hit.normal : hit.point;
-            if(std::floor(shapeEnd[0]) != std::floor(shapeEndTemp[0]) ||
-                std::floor(shapeEnd[1]) != std::floor(shapeEndTemp[1]) ||
-                std::floor(shapeEnd[2]) != std::floor(shapeEndTemp[2])) {
-
-                memcpy(tempGrid.buffer, selectedGrid->buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
-
-                shapeEnd = shapeEndTemp;
-                solve_rectangle(&tempGrid, shapeStart, shapeEnd);
-                update_grid(tempGrid);
-            }
-        }
-    } 
-    #pragma endregion
-
-    #pragma region BRUSH
-    else if(drawMode == DRAW_MODE_BRUSH) {
-        if(!Input.get(GLFW_KEY_LEFT_ALT) && Input.get(GLFW_MOUSE_BUTTON_1)) {
-            glm::vec3 shapeEndTemp = brushMode == BRUSH_MODE_ADD ? hit.point + hit.normal : hit.point;
-
-            if(std::floor(shapeEnd[0]) != std::floor(shapeEndTemp[0]) ||
-                std::floor(shapeEnd[1]) != std::floor(shapeEndTemp[1]) ||
-                std::floor(shapeEnd[2]) != std::floor(shapeEndTemp[2])) {
-
-                shapeEnd = shapeEndTemp;
-
-                uint32_t index = get_index(shapeEnd);
-                if(selectedGrid->intersects(shapeEnd)) {
-                    if(brushMode == BRUSH_MODE_ADD) {
-                        tempCache.buffer[tempCache.count++] = {index, selectedGrid->get(index), scene->colorSelected};
-                        tempGrid.set(index, scene->colorSelected);
-                    } else if(brushMode == BRUSH_MODE_PAINT) {
-                        if(tempGrid.get(index) > 0) {
-                            tempCache.buffer[tempCache.count++] = {index, selectedGrid->get(index), scene->colorSelected};
-                            tempGrid.set(index, scene->colorSelected);
-                        }
-                    } else if(brushMode == BRUSH_MODE_SUBSTRACT) {
-                        tempCache.buffer[tempCache.count++] = {index, selectedGrid->get(index), 0};
-                        tempGrid.set(index, 0);
-                    }
-                    update_grid(tempGrid);
-                    requireUpdate = true;
-                }
-            }
-        } else {
-            if(!Input.get(GLFW_KEY_LEFT_ALT) && requireUpdate) {
-                update_cache();
-                memcpy(selectedGrid->buffer, tempGrid.buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
-                update_grid(*selectedGrid);
-                requireUpdate = false;
-            }
-        }
-    }
-    #pragma endregion
-
-    #pragma region EXTRUSION
-    if(drawMode == DRAW_MODE_EXTRUDE && Input.get(GLFW_MOUSE_BUTTON_1) && !isDrawing) {
-        float distance = 0.0f;
-        float step = 0.05f;
-
-
-        while(distance < 240.0f) {
-            distance += step;
-            if(selectedGrid->get((ray.origin) + ray.direction * distance) > 0) {
-                glm::vec3 position = ((ray.origin)) + ray.direction * distance;
-                position.x = std::floor(position.x);
-                position.y = std::floor(position.y);
-                position.z = std::floor(position.z);
-
-                glm::vec3 normal = ((ray.origin)) + (ray.direction * (distance - step));
-                normal.x = std::floor(normal.x);
-                normal.y = std::floor(normal.y);
-                normal.z = std::floor(normal.z);
-
-                // Realloc the selection
-                // TODO No need to remove and then recreate
-                if(selection.selection != nullptr)
-                    delete [] selection.selection;
-                selection.selection = new uint32_t[tempGrid.width * tempGrid.depth * tempGrid.height];
-                memset(selection.selection, 0, sizeof(uint32_t) * (tempGrid.width * tempGrid.depth));
-                
-                normal = normal - position;
-                normal = glm::normalize(normal);
-
-                selection.selectedCount = 0;
-                flood_fill(position, normal, scene->colorSelected);
-
-                // Set some properties relating the shape
-                shapeStart = position;
-                shapeEnd = shapeStart;
-                shapeNormal = normal;
-
-                glm::vec3 n = shapeNormal * glm::vec3(1.0, tempGrid.width, tempGrid.width * tempGrid.depth);
-                shapeNormalOffset = n.x + n.y + n.z;
-                
-                // Says that user started drawing
-                isDrawing = true;
-
-                update_grid(tempGrid);
-                break;
-            }
-        }
-    } else if(drawMode == DRAW_MODE_EXTRUDE && Input.get(GLFW_MOUSE_BUTTON_1) && isDrawing) {
-        float result = 0.0f;
-
-        glm::vec3 planeNormal = ray.origin - shapeStart;
-        planeNormal = planeNormal * (glm::vec3(1.0f, 1.0f, 1.0f) - shapeNormal);
-        glm::intersectRayPlane(ray.origin, ray.direction, shapeStart, planeNormal, result);
-        glm::vec3 r = (ray.origin + ray.direction * result);
-
-        shapeEnd = shapeStart + shapeNormal * result;
-
-        memcpy(tempGrid.buffer, selectedGrid->buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
-        float height = glm::length(r - shapeStart);
-        if(glm::dot(shapeNormal, (r - shapeStart)) < 0.0f)
-            height *= -1.0f;
-
-        extrude(height);
-
-        update_grid(tempGrid);
-    } else if(drawMode == DRAW_MODE_EXTRUDE && Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_NONE && isDrawing) {
-        isDrawing = false;
-        memcpy(selectedGrid->buffer, tempGrid.buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
-        update_grid(*selectedGrid);
-        selection.selectedCount = 0;
-    }
-    #pragma endregion
 }
 
 void Viewport::extrude(int32_t height) {
@@ -662,61 +528,6 @@ void Viewport::redo() {
     viewportEditor->redo();
 }
 
-
-void Viewport::select_grid(uint32_t index) {
-    if(index > scene->gridCount)
-        return;
-
-    MESSAGE("Changing grid to " << selectedGrid);
-    // If the index says to unselect
-    if(index == -1) {
-        selectedGrid = nullptr;
-        return;
-    }
-
-    selectIndex = index;
-
-    // If there is something in cache
-    // TODO might be cool to save it for future undo/redo :)
-    if(tempGrid.buffer)
-        delete [] tempGrid.buffer;
-
-    tempGrid = scene->grids[index];
-    selectedGrid = scene->grids + index;
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_3D, tempGrid.gridTexture);
-
-    tempGrid.buffer = new int8_t[tempGrid.width * tempGrid.depth * tempGrid.height];
-    memcpy(tempGrid.buffer, selectedGrid->buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
-} void Viewport::select_grid(Grid* grid) {
-    if(grid == nullptr) {
-        MESSAGE("Deselecting");
-        selectedGrid = nullptr;
-
-        return;
-    }
-
-    // If there is something in cache
-    // TODO might be cool to save it for future undo/redo :)
-    if(tempGrid.buffer)
-        delete [] tempGrid.buffer;
-
-    tempGrid = *grid;
-    selectedGrid = grid;
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_3D, tempGrid.gridTexture);
-
-    tempGrid.buffer = new int8_t[tempGrid.width * tempGrid.depth * tempGrid.height];
-    memcpy(tempGrid.buffer, selectedGrid->buffer, tempGrid.width * tempGrid.depth * tempGrid.height);
-
- /*    if(tempCache.buffer != nullptr)
-        delete [] tempCache.buffer; */
-    tempCache.init(tempGrid.width * tempGrid.depth * tempGrid.height);
-}
-
-
 void Viewport::resize_callback(uint32_t width, uint32_t height) {
     MESSAGE("Resizing Viewport");
     float aspect = (float)(Input.windowWidth * info.tileInfo.width) / (float)(Input.windowHeight * info.tileInfo.height);
@@ -741,19 +552,5 @@ void Viewport::resize_callback(uint32_t width, uint32_t height) {
 
 
 void Viewport::refresh() {
-    MESSAGE("Refreshing the viewport");
-    if(scene->selected != nullptr) {
-        select_grid((Grid*)scene->selected->data);
 
-        update_grid(*selectedGrid);
-        update_cache();
-    } else {
-        isEditMode = false;
-        selectedGrid = nullptr;
-    }
-}
-
-uint32_t Viewport::get_index(glm::vec3 pos) {
-    ERROR("Index on :" << pos.x << "," << pos.y << "," << pos.z);
-    return std::floor(pos.x) + std::floor(pos.y) * tempGrid.width + std::floor(pos.z) * (tempGrid.depth * tempGrid.width);
 }

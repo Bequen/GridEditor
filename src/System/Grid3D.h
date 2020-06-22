@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <cmath>
 #include <cstdlib>
+#include <cstring>
+#include <memory>
 
 template<typename T>
 struct Grid3D {
@@ -41,16 +43,20 @@ struct Grid3D {
 
     void resize(uint32_t width, uint32_t depth, uint32_t height) {
         T* newBuffer = new T[width * depth * height];
+        memset(newBuffer, 0, width * depth * height);
 
         uint32_t index = 0;
         uint32_t newIndex = 0;
         for(uint32_t z = 0; z < std::min(height, this->height); z++) {
             for(uint32_t y = 0; y < std::min(depth, this->depth); y++) {
                 for(uint32_t x = 0; x < std::min(width, this->width); x++) {
-                    newBuffer[newIndex++] = buffer[index++];
-                } index += std::max(width, this->width) - std::min(width, this->width);
-            } index += std::max(depth, this->depth) - std::min(depth, this->depth);
-        } index += std::max(height, this->height) - std::min(height, this->height);
+                    newBuffer[x + y * width + z * (width * depth)] = buffer[x + y * this->width + z * (this->width * this->depth)];
+                } 
+                //index += std::max(width, this->width) - std::min(width, this->width);
+            } 
+            //index += std::max(depth, this->depth) - std::min(depth, this->depth);
+        } 
+        //index += std::max(height, this->height) - std::min(height, this->height);
 
         delete [] buffer;
 

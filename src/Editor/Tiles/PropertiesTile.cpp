@@ -26,6 +26,10 @@ void PropertiesTile::draw(WindowTileInfo tileInfo) {
     assert_msg(scene->palette != nullptr, "Cannot draw palette, palette was not initialized");
 
     if(scene->selected != nullptr) {
+        if(ImGui::InputText("Name", scene->selected->name, 256, ImGuiInputTextFlags_EnterReturnsTrue)) {
+
+        }
+
         switch(scene->selected->type) {
             case OBJECT_TYPE_GRID: {
                 if(scene->selected->data == nullptr) {
@@ -33,6 +37,7 @@ void PropertiesTile::draw(WindowTileInfo tileInfo) {
                     break;
                 }
                 ImGui::Text("Grid");
+                
                 SceneGrid* grid = (SceneGrid*)scene->selected->data;
 
                 float size[] = {grid->width, grid->depth, grid->height};

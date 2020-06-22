@@ -14,59 +14,61 @@
 #define INITIAL_LIGHT_COUNT 32
 #define MAX_LIGHT_COUNT 32
 
+// TODO change into editor scene
 struct Scene {
-    #pragma region Grids
-    Grid* grids;
-    uint32_t gridCount;
-    uint32_t gridBufferSize;
+    #pragma region Scene Objects 
+        #pragma region Grids
+            SceneGrid* _grids;
+            uint32_t _gridCount;
+            uint32_t _gridBufferSize;
+        #pragma endregion
 
-    SceneGrid* _grids;
-    uint32_t _gridCount;
-    uint32_t _gridBufferSize;
-    #pragma endregion
+        // TODO Move into separate structure
+        #pragma region Lights
+            Light* lights;
+            uint32_t lightBuffer;
+            uint32_t lightCount;
+            uint32_t lightBufferSize;
+            glm::vec4 skyColor;
+        #pragma endregion
 
-    // TODO Move into separate structure
-    #pragma region Lights
-    Light* lights;
-    uint32_t lightBuffer;
-    uint32_t lightCount;
-    uint32_t lightBufferSize;
-    glm::vec4 skyColor;
-    #pragma endregion
+        #pragma region Palette
+            uint32_t paletteTexture;
+            RGB32* palette;
+            uint32_t colorSelected;
+            int8_t colorCache;
 
-    #pragma region Palette
-    uint32_t paletteTexture;
-    RGB32* palette;
-    uint32_t colorSelected;
-    int8_t colorCache;
+            uint32_t materialsBuffer;
+            Material* materials;
+        #pragma endregion
 
-    uint32_t materialsBuffer;
-    Material* materials;
-    #pragma endregion
+        #pragma region Scene objects
+            SceneObject sceneGraph;
+            SceneObject* selected;
+            bool isEditMode;
+        #pragma endregion
 
-    #pragma region Scene objects
-    SceneObject sceneGraph;
-    SceneObject* selected;
-    bool isEditMode;
-    #pragma endregion
-
-    #pragma region Sprites
-    SceneSprite* sprites;
-    uint32_t spriteCount;
-    uint32_t spriteBufferSize;
+        #pragma region Sprites
+            SceneSprite* sprites;
+            uint32_t spriteCount;
+            uint32_t spriteBufferSize;
+        #pragma endregion
     #pragma endregion
 
     void init(uint32_t gridCount);
 
-    Grid* add_grid(Grid grid);
     SceneGrid* add_grid(SceneGrid grid);
-
-    Light* add_light(Light light);
     SceneSprite* add_sprite(SceneSprite sprite);
+    // TODO change into scene light
+    Light* add_light(Light light);
 
+    /**
+     * @brief  Sends the new lighting data to the GPU for rendering
+     * @note   To modify data, simply modify the scene lights directly
+     * @retval None
+     */
     void update_lights();
 
     void assign_grid(SceneObject* sceneObject, uint32_t gridID);
     void assign_light(SceneObject* SceneObject, uint32_t lightID);
-
 };

@@ -17,6 +17,8 @@ void CameraController::init() {
     origin = glm::vec3(16.0f, 16.0f, 0.0f);
     offset = 20.0f;
     mode = CAMERA_MODE_PERSPECTIVE;
+    width = 720;
+    height = 480;
 
     flags = 0;
     flags = CAMERA_ALLOW_PANNING | CAMERA_ALLOW_ZOOMING | CAMERA_ALLOW_ROTATION;
@@ -30,7 +32,7 @@ void CameraController::init() {
 }
 
 void CameraController::update() {
-    aspect = Input.windowWidth / Input.windowHeight;
+    //aspect = Input.windowWidth / Input.windowHeight;
     // Camera Panning
     if((flags & CAMERA_ALLOW_PANNING) && Input.get(GLFW_MOUSE_BUTTON_3) == KEY_STATE_HELD && Input.get(GLFW_KEY_LEFT_SHIFT) == KEY_STATE_HELD) {
         origin += (float)Input.mouseDeltaY * panSpeed * glm::normalize(glm::vec3(camera->view[0][1], camera->view[1][1], camera->view[2][1]));
@@ -50,6 +52,7 @@ void CameraController::update() {
 
     camera->view = glm::lookAt(origin + (-direction * offset), origin, glm::vec3(0.0f, 0.0f, 1.0f));
     if(mode == CAMERA_MODE_ORTHOGRAPHIC) {
+        //aspect = width / height;
         camera->projection = glm::ortho(-offset / 2.0f * aspect, offset / 2.0f * aspect, -offset / 2.0f, offset / 2.0f, 0.1f, 1000.0f);
     } /* camera->position = glm::vec4(origin + (-direction * offset), 1.0f); */
 }
@@ -59,11 +62,17 @@ void CameraController::terminate() {
 }
 
 void CameraController::resize_callback(uint32_t width, uint32_t height) {
+    this->width = width;
+    this->height = height;
+    MESSAGE("Resizing camera");
     aspect = (float)width / (float)height;
     if(mode == CAMERA_MODE_PERSPECTIVE)
         camera->projection = glm::perspective(glm::radians(65.0f), aspect, 0.1f, 1000.0f);
-    else
-        camera->projection = glm::ortho(-offset / 2.0f * aspect, offset / 2.0f * aspect, -offset / 2.0f, offset / 2.0f, 0.1f, 1000.0f);
+    else {
+        ERROR("Orthographics");
+        //camera->projection = glm::ortho(-width * , width, -height, height);
+        //camera->projection = glm::perspective(glm::radians(65.0f), aspect, 0.1f, 1000.0f);
+    }
 }
 
 Ray CameraController::create_ray(glm::vec3 cursor) {

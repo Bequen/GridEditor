@@ -26,6 +26,8 @@ class CameraController {
 
         uint32_t mode;
 
+        int width, height;
+
         uint32_t cameraBuffer;
         Camera* camera;
 

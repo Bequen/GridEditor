@@ -9,7 +9,7 @@
 
 struct SceneGrid {
     VoxelGrid voxelGrid;
-    Grid3D<int8_t> grid;
+    Grid3D<uint8_t> grid;
 
     GridCache* cache;
     uint32_t cacheDepth;

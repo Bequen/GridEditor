@@ -13,6 +13,8 @@ SceneObject::SceneObject() :
 type(OBJECT_TYPE_EMPTY), data(nullptr), transform(Transform()) {
     this->id = SceneObject::ID++;
 
+    name = new char[256];
+
     children = nullptr;
     childrenCount = 0;
     childrenBufferSize = 0;
@@ -23,22 +25,23 @@ type(type), data(data), transform(Transform()), children(nullptr) {
     this->id = SceneObject::ID++;
     childrenCount = 0;
     childrenBufferSize = 0;
+    name = new char[256];
 
     switch(type) {
         case OBJECT_TYPE_GRID:
-            name = "New Grid";
+            set_name("New Grid");
             break;
         case OBJECT_TYPE_LIGHT:
-            name = "New Light";
+            set_name("New Light");
             break;
         case OBJECT_TYPE_EMPTY:
-            name = "New Empty";
+            set_name("New Empty");
             break;
         case OBJECT_TYPE_SPRITE:
-            name = "New Sprite";
+            set_name("New Sprite");
             break;
         default:
-            name = "New Unknown";
+            set_name("New Unknown");
             break;
     }
 }
@@ -75,4 +78,15 @@ void SceneObject::add_child(SceneObject object) {
 void SceneObject::assign(ObjectType type, void* data) {
     this->type = type;
     this->data = data;
+}
+
+void SceneObject::set_name(char* name) {
+    uint32_t length = strlen(name);
+    if(length > 256)
+        length = 256;
+    memcpy(this->name, name, length);
+}
+
+const char* SceneObject::get_name() {
+    return name;
 }

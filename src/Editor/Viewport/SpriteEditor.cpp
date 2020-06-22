@@ -32,7 +32,9 @@ void SpriteEditor::init() {
 void SpriteEditor::update(RenderInfo renderInfo) {
     viewport->camera.update();
     solve_painting();
+}
 
+void SpriteEditor::draw(RenderInfo renderInfo, WindowTileInfo tileInfo) {
     RenderLib::draw_sky(renderInfo, viewport->camera.mode);
 
     RenderLib::front_face(GL_CW);
@@ -45,10 +47,6 @@ void SpriteEditor::update(RenderInfo renderInfo) {
     ShaderLib::uniform_vec3(renderInfo.voxelProgram, "cameraPos", &camPos.x);
 
     draw_sprite(renderInfo, &tempSprite);
-}
-
-void SpriteEditor::draw(RenderInfo renderInfo, WindowTileInfo tileInfo) {
-
 }
 
 void SpriteEditor::solve_painting() {

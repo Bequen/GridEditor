@@ -9,7 +9,7 @@
 SceneGrid::SceneGrid() :
 width(32), depth(32), height(32) {
     voxelGrid = VoxelGrid(texture_size(32, 32, 32));
-    grid = Grid3D<int8_t>(32);
+    grid = Grid3D<uint8_t>(32);
     cache = new GridCache[CACHE_DEPTH];
     for(uint32_t i = 0; i < CACHE_DEPTH; i++) {
         cache[i].init(512);
@@ -24,7 +24,7 @@ width(32), depth(32), height(32) {
 SceneGrid::SceneGrid(uint32_t size) :
 width(size), depth(size), height(size) {
     voxelGrid = VoxelGrid(texture_size(size, size, size));
-    grid = Grid3D<int8_t>(size);
+    grid = Grid3D<uint8_t>(size);
 
     cache = new GridCache[CACHE_DEPTH];
     for(uint32_t i = 0; i < CACHE_DEPTH; i++) {
@@ -40,7 +40,7 @@ width(size), depth(size), height(size) {
 SceneGrid::SceneGrid(uint32_t width, uint32_t depth, uint32_t height) :
 width(width), depth(depth), height(height) {
     voxelGrid = VoxelGrid(texture_size(width, depth, height));
-    grid = Grid3D<int8_t>(width, height, depth);
+    grid = Grid3D<uint8_t>(width, height, depth);
 
     cache = new GridCache[CACHE_DEPTH];
     for(uint32_t i = 0; i < CACHE_DEPTH; i++) {
@@ -190,6 +190,7 @@ void SceneGrid::resize(uint32_t width, uint32_t depth, uint32_t height) {
     this->height = height;
 
     grid.resize(width, depth, height);
+    update_texture();
 }
 
 uint32_t SceneGrid::texture_size(uint32_t width, uint32_t depth, uint32_t height) {

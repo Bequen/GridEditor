@@ -8,10 +8,6 @@
 
 void Scene::init(uint32_t gridCount) {
     #pragma region Grids
-    gridBufferSize = 8;
-    grids = new Grid[gridBufferSize];
-    gridCount = 0;
-
     _gridBufferSize = 8;
     _grids = new SceneGrid[_gridBufferSize];
     _gridCount = 0;
@@ -49,32 +45,14 @@ void Scene::init(uint32_t gridCount) {
     selected = nullptr;
 }
 
-Grid* Scene::add_grid(Grid grid) {
-    assert_msg(grids != nullptr, "Grid array was not initialized");
-
-    // If the resize is needed
-    if(gridBufferSize == gridCount) {
-        gridBufferSize += 8;
-        Grid* tempBuffer = new Grid[gridBufferSize];
-        if(grids != nullptr) {
-            memcpy(tempBuffer, grids, gridCount * sizeof(Grid));
-            delete [] grids;
-        }
-
-        grids = tempBuffer;
-    }
-
-    grids[gridCount] = grid;
-    MESSAGE("Adding grid at " << gridCount);
-    return &grids[gridCount++];
-} SceneGrid* Scene::add_grid(SceneGrid grid) {
+SceneGrid* Scene::add_grid(SceneGrid grid) {
     assert_msg(_grids != nullptr, "Grid array was not initialized");
 
     // If the resize is needed
     if(_gridBufferSize == _gridCount) {
         _gridBufferSize += 8;
         SceneGrid* tempBuffer = new SceneGrid[_gridBufferSize];
-        if(grids != nullptr) {
+        if(_grids != nullptr) {
             memcpy(tempBuffer, _grids, _gridCount * sizeof(Grid));
             delete [] _grids;
         }
@@ -112,7 +90,7 @@ SceneSprite* Scene::add_sprite(SceneSprite sprite) {
     if(spriteBufferSize == spriteCount) {
         spriteBufferSize += 8;
         SceneSprite* tempBuffer = new SceneSprite[spriteBufferSize];
-        if(grids != nullptr) {
+        if(sprites != nullptr) {
             memcpy(tempBuffer, sprites, spriteCount * sizeof(SceneSprite));
             delete [] sprites;
         }
@@ -131,14 +109,4 @@ void Scene::update_lights() {
     memcpy(pointer, lights, sizeof(Light) * MAX_LIGHT_COUNT);
 
     RenderLib::unmap_buffer(GL_UNIFORM_BUFFER); 
-}
-
-void Scene::assign_grid(SceneObject* sceneObject, uint32_t gridID) {
-    sceneObject->data = &grids[gridID];
-    sceneObject->type = SCENE_GRID;
-}
-
-void Scene::assign_light(SceneObject* sceneObject, uint32_t lightID) {
-    sceneObject->data = &lights[lightID];
-    sceneObject->type = SCENE_LIGHT;
 }

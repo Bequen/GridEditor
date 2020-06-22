@@ -18,7 +18,7 @@ void VoxelGridEditor::assign(const SceneObject* sceneObject, Scene* scene, Viewp
     this->viewport = viewport;
 
     this->tempGrid = *this->grid;
-    this->tempGrid.grid.buffer = new int8_t[tempGrid.grid.width * tempGrid.grid.depth * tempGrid.grid.height];
+    this->tempGrid.grid.buffer = new uint8_t[tempGrid.grid.width * tempGrid.grid.depth * tempGrid.grid.height];
     //memset(this->tempGrid.grid.buffer, 0, tempGrid.grid.width * tempGrid.grid.depth * tempGrid.grid.height);
     memcpy(this->tempGrid.grid.buffer, grid->grid.buffer, grid->width * grid->height * grid->depth);
 }
@@ -33,16 +33,47 @@ void VoxelGridEditor::init() {
 }
 
 void VoxelGridEditor::update(RenderInfo renderInfo) {
+    if(grid->width != tempGrid.width ||
+        grid->height != tempGrid.height ||
+        grid->depth != tempGrid.depth) 
+    {
+        MESSAGE("Resizing temp grid");
+        delete [] tempGrid.grid.buffer;
+        tempGrid = *grid;
+
+        this->tempGrid.grid.buffer = new uint8_t[tempGrid.grid.width * tempGrid.grid.depth * tempGrid.grid.height];
+        memcpy(this->tempGrid.grid.buffer, grid->grid.buffer, grid->width * grid->height * grid->depth);
+    }
+
+    if(Input.get(GLFW_KEY_DELETE)) {
+        if(selection.selectedCount == 0) {
+            memset(grid->grid.buffer, 0, grid->width * grid->height * grid->depth);
+            memset(tempGrid.grid.buffer, 0, grid->width * grid->height * grid->depth);
+
+            tempGrid.update_texture();
+        } else {
+            for(uint32_t i = 0; i < selection.selectedCount; i++) {
+                grid->set(selection.selection[i], 0);
+            }
+        }
+    }
+
     viewport->camera.update();
     solve_voxel_drawing();
 }
 
 void VoxelGridEditor::draw(RenderInfo renderInfo, WindowTileInfo tileInfo) {
+    tempGrid.voxelGrid.texture = grid->voxelGrid.texture;
+    
+    tempGrid.grid.width = grid->grid.width;
+    tempGrid.grid.height = grid->grid.height;
+    tempGrid.grid.depth = grid->grid.depth;
+
     RenderLib::draw_sky(renderInfo, viewport->camera.mode);
 
     RenderLib::front_face(GL_CW);
     RenderLib::bind_vertex_array(renderInfo.voxelVAO);
-    RenderLib::draw_voxel(renderInfo.boxProgram, scene->selected->transform.transform, glm::vec3(tempGrid.grid.width, tempGrid.grid.depth, tempGrid.grid.height));
+    RenderLib::draw_voxel(renderInfo.boxProgram, scene->selected->transform.transform, glm::vec3(grid->grid.width, grid->grid.depth, grid->grid.height));
     RenderLib::front_face(GL_CCW);
 
     ShaderLib::program_use(renderInfo.voxelProgram);
@@ -329,8 +360,8 @@ void VoxelGridEditor::solve_shape(SceneGrid* grid, glm::vec3 start, glm::vec3 en
             if(start.y > end.y) { std::swap(start.y, end.y); }
             if(start.z > end.z) { std::swap(start.z, end.z); }
 
-            uint32_t index = 0;
-            for(float x = std::floor(start.x); x <= std::floor(end.x); x++) {
+            //uint32_t index = 0;
+            /* for(float x = std::floor(start.x); x <= std::floor(end.x); x++) {
                 for(float y = std::floor(start.y); y <= std::floor(end.y); y++) {
                     for(float z = std::floor(start.z); z <= std::floor(end.z); z++) {
                         if(brushMode == BRUSH_MODE_ADD) {
@@ -344,6 +375,19 @@ void VoxelGridEditor::solve_shape(SceneGrid* grid, glm::vec3 start, glm::vec3 en
                         requireUpdate = true;
                     }
                 }
+            } */
+
+            uint32_t index = start.x + start.y * 32 + start.z * (32 * 32);
+            for(uint32_t z = start.z; z <= end.z; z++) {
+                for(uint32_t y = start.y; y <= end.y; y++) {
+                    for(uint32_t x = start.x; x <= end.x; x++) {
+                        // memset(grid->grid.buffer + index, brushColor, (end.x - start.x));
+                        //grid->grid.buffer[index + x] = brushColor;
+                        grid->set(index + x, brushColor);
+                    }
+                    //index += grid->width - (end.x) + start.x;
+                }
+                //index += grid->depth - (end.y) + start.y;
             }
             
             break;

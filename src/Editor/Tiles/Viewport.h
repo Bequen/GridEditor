@@ -33,9 +33,6 @@ typedef uint32_t BrushMode;
 
 #define MAX_LIGHT_COUNT             32
 
-#define CAMERA_MODE_PERSPECTIVE     0x0000
-#define CAMERA_MODE_ORTHOGRAPHIC    0x0001
-
 #define TRANSFORM_MODE_NONE         0x0000
 #define TRANSFORM_MODE_TRANSLATE    0x0001
 #define TRANSFORM_MODE_ROTATE       0x0002
@@ -109,6 +106,8 @@ class Viewport : public WindowEditor {
         void draw(WindowTileInfo tileInfo);
         void draw_ui();
         void draw_scene_object(const SceneObject* sceneObject);
+
+        bool select_scene_object(SceneObject* sceneObject);
 
         void extrude(glm::vec3 position, glm::vec3 normal);
         void flood_fill(glm::vec3 position, glm::vec3 normal, int8_t brush);
