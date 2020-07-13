@@ -6,9 +6,10 @@
 
 struct Sprite {
     uint32_t texture;
-    uint32_t width, height;
+    uint32_t size;
 
     Sprite();
     Sprite(uint32_t size);
-    Sprite(uint32_t width, uint32_t height);
+
+    void delete_texture();
 };

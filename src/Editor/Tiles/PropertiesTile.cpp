@@ -31,7 +31,8 @@ void PropertiesTile::draw(WindowTileInfo tileInfo) {
         }
 
         switch(scene->selected->type) {
-            case OBJECT_TYPE_GRID: {
+            case OBJECT_TYPE_GRID: 
+            {
                 if(scene->selected->data == nullptr) {
                     ERROR("Data is nullptr");
                     break;
@@ -62,7 +63,9 @@ void PropertiesTile::draw(WindowTileInfo tileInfo) {
                 }
                 ImGui::IsItemFocused();
                 break;
-            } case OBJECT_TYPE_LIGHT: {
+            } 
+            case OBJECT_TYPE_LIGHT: 
+            {
                 ImGui::Text("Light");
                 Light* light = (Light*)scene->selected->data;
 
@@ -96,6 +99,65 @@ ImGui::SliderFloat("light_strength", &light->ambient.w, 0.0, 100.0);
                 }
 
                 scene->update_lights();
+                break;
+            }
+            case OBJECT_TYPE_SPRITE:
+            {
+                if(scene->selected->data == nullptr) {
+                    ERROR("Data is nullptr");
+                    break;
+                }
+
+                ImGui::Text("Sprite");
+
+                SceneSprite* sprite = (SceneSprite*)scene->selected->data;
+
+                char* text = new char[256];
+                memset(text, 0, 256);
+
+                sprintf(text, "%i %i", sprite->width, sprite->height);
+
+                if(ImGui::InputText("size", text, 256, ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    uint32_t splitCount = 0;
+                    char** splits = avg::StringLib::split(text, ' ', &splitCount);
+
+                    if(splitCount == 0)
+                        break;
+                    else if(splitCount == 1) {
+                        sprite->resize(std::atoi(splits[0]), std::atoi(splits[0]));
+                    } else if(splitCount == 2) {
+                        sprite->resize(std::atoi(splits[0]), std::atoi(splits[1]));
+                    }
+                }
+
+                ImGui::BeginChild("sprite_animation_list", ImVec2(0.0f, 0.0f), true);
+
+                for(uint32_t i = 0; i < sprite->animationsCount; i++) {
+                    ImGui::Text(sprite->animations[i].name);
+                }
+
+                if(ImGui::Button("Add")) {
+                    sprite->add_animation("Test");
+                }
+
+                ImGui::EndChild();
+
+                if(sprite->animations) {
+                    ImGui::BeginChild("sprite_animation_frame_list", ImVec2(0.0f, 0.0f), true);
+
+                    for(uint32_t i = 0; i < sprite->animations[sprite->currentAnimation].frameCount; i++) {
+                        char* text = new char[1024];
+                        sprintf(text, "Frame %i-%f", i, sprite->animations[sprite->currentAnimation].frames[i].frameLength);
+
+                        ImGui::Text(sprite->animations[i].name);
+                    }
+                    if(ImGui::Button("Add")) {
+                        sprite->add_animation("Test");
+                    }
+
+                    ImGui::EndChild();
+                }
+
                 break;
             }
         }

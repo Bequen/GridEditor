@@ -232,26 +232,23 @@ bool Viewport::select_scene_object(SceneObject* sceneObject) {
     WARNING(sceneObject->name << " " << sceneObject->childrenCount << " " << sceneObject->type);
     switch(sceneObject->type) {
         case OBJECT_TYPE_GRID: {
-            ERROR("Selecting grid");
+            SceneGrid* sceneGrid = (SceneGrid*)sceneObject->data;
+
             double cursorX, cursorY;
             Input.get_mapped_cursor(info.tileInfo, &cursorX, &cursorY);
 
             Ray ray = info.camera.create_ray(glm::vec3(cursorX, cursorY, 0.0f));
-            if(Math::ray_box_intersection(&ray, glm::vec3(0.0f), glm::vec3(32.0f, 32.0f, 32.0f))) {
+            if(Math::ray_box_intersection(&ray, glm::vec3(0.0f), glm::vec3(sceneGrid->width, sceneGrid->depth, sceneGrid->height))) {
                 if(sceneObject != scene->selected) {
-                    MESSAGE("Selected " << sceneObject->name);
                     scene->selected = sceneObject;
                     return true;
                 } else {
                     ERROR("Already selected " << sceneObject->name);
                 }
-            } else {
-                ERROR("Nope");
             }
 
             break;
         } case OBJECT_TYPE_SPRITE: {
-            ERROR("Selecting sprite");
             double cursorX, cursorY;
             Input.get_mapped_cursor(info.tileInfo, &cursorX, &cursorY);
 
@@ -290,7 +287,7 @@ void Viewport::draw_scene_object(const SceneObject* sceneObject) {
             size = glm::vec3(((SceneGrid*)sceneObject->data)->width, ((SceneGrid*)sceneObject->data)->depth, ((SceneGrid*)sceneObject->data)->height);
             break;
         } case OBJECT_TYPE_SPRITE: {
-            size = glm::vec3(((SceneSprite*)sceneObject->data)->width(), 1.0f, ((SceneSprite*)sceneObject->data)->height());
+            size = glm::vec3(((SceneSprite*)sceneObject->data)->width, 1.0f, ((SceneSprite*)sceneObject->data)->height);
             break;
         }
     }
@@ -303,24 +300,10 @@ void Viewport::draw_scene_object(const SceneObject* sceneObject) {
 }
 
 void Viewport::draw_ui() {
-    ImGui::BeginChild("viewport_panel", ImVec2(ImVec2((info.tileInfo.x + info.tileInfo.width) * Input.windowWidth, 100)));
-    if (ImGui::RadioButton("Add", brushMode == BRUSH_MODE_ADD)) { 
-        brushMode = BRUSH_MODE_ADD; 
-        brushModeCache = brushMode;
-    } ImGui::SameLine();
-    if (ImGui::RadioButton("Substract", brushMode == BRUSH_MODE_SUBSTRACT)) { 
-        brushMode = BRUSH_MODE_SUBSTRACT;
-        brushModeCache = brushMode;
-    } ImGui::SameLine();
-    if (ImGui::RadioButton("Paint", brushMode == BRUSH_MODE_PAINT)) { 
-        brushMode = BRUSH_MODE_PAINT; 
-        brushModeCache = brushMode;
-    }
-    ImGui::EndChild();
+
 }
 
 void Viewport::extrude(int32_t height) {
-    ERROR("Extrude " << height);
     if(height > 0) {
         for(uint32_t i = 0; i < selection.selectedCount; i++) {
             for(int32_t x = 0; x < height; x++) {
@@ -414,11 +397,17 @@ void Viewport::flood_fill(glm::vec3 position, glm::vec3 normal, int8_t brush) {
 
 void Viewport::solve_input() {
     // Switch edit mode
-    if(Input.get(GLFW_KEY_TAB) == KEY_STATE_PRESS && selectedGrid != nullptr) {
-        isEditMode = 1 - isEditMode;
+    if(Input.get(GLFW_KEY_TAB) == KEY_STATE_PRESS) {
+        if(selectedGrid != nullptr) {
+            isEditMode = 1 - isEditMode;
 
-        if(isEditMode) {
-            enter_edit_mode();
+            if(isEditMode) {
+                enter_edit_mode();
+            } else {
+                info.camera.flags = CAMERA_ALLOW_PANNING | CAMERA_ALLOW_ROTATION | CAMERA_ALLOW_ZOOMING;
+            }
+        } else {
+            ERROR("You are trying to enter edit mode, while nothing is selected!");
         }
     }
 

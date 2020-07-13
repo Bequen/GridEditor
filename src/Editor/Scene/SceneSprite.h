@@ -3,6 +3,7 @@
 #include "Editor/Sprite.h"
 #include "System/Grid2D.h"
 #include "Editor/Color.h"
+#include "SceneSpriteAnimation.h"
 
 // TODO
 // Grid should be just and only grid, without texture
@@ -17,9 +18,18 @@ struct SceneSprite {
     Sprite sprite;
     Grid2D<char> grid;
 
+    SceneSpriteAnimation* animations;
+    uint32_t animationBufferSize;
+    uint32_t animationsCount;
+    uint32_t currentAnimation;
+
+    uint32_t width, height;
+
     SceneSprite();
     SceneSprite(uint32_t size);
     SceneSprite(uint32_t width, uint32_t height);
+
+    void add_animation(char* name);
 
     void set(uint32_t index, uint32_t value);
     void set(glm::vec2 position, uint32_t value);
@@ -29,10 +39,9 @@ struct SceneSprite {
     const int32_t get(glm::vec2 position) const;
     const int32_t get(uint32_t x, uint32_t y) const;
 
-    const int32_t width() const { return grid.width; }
-    const int32_t height() const { return grid.height; }
-
     void update_texture() const;
 
     const bool intersects(glm::vec2 position) const;
+
+    void resize(uint32_t width, uint32_t height);
 };

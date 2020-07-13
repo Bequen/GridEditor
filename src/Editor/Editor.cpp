@@ -17,6 +17,7 @@
 #include "Editor/Tiles/PaletteTile.h"
 #include "System/ContentPipeline.h"
 #include "Tiles/PaletteTile.h"
+#include "Tiles/TimelineTile.h"
 #include "Tiles/SceneExplorerTile.h"
 #include "Tiles/PropertiesTile.h"
 
@@ -26,7 +27,6 @@ void Editor::init() {
     scene.init(10);
 
     RenderLib::init();
-    RenderLib::print_extensions();
 
     #pragma region INPUT INITIALIZATION
     Input.init(32);
@@ -85,6 +85,13 @@ void Editor::init() {
     viewport.editors->init();
     viewport.editorCount = 1;
     windowManager.tiles.insert_window(viewport, 1);
+    
+    _WindowTile timeline;
+    timeline.init();
+    timeline.editors = new TimelineTile(&scene, renderInfo);
+    timeline.editors->init();
+    timeline.editorCount = 1;
+    windowManager.tiles.children[1].insert_window(timeline, 1);
 
     _WindowTile sceneExplorer;
     sceneExplorer.init();

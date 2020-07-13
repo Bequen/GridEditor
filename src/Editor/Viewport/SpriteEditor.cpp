@@ -54,7 +54,7 @@ void SpriteEditor::solve_painting() {
     Input.get_mapped_cursor(viewport->tileInfo, &cursorX, &cursorY);
 
     Ray ray = viewport->camera.create_ray(glm::vec3(cursorX, cursorY, 1.0f));
-    
+
     if(Input.get(GLFW_KEY_LEFT_SHIFT))
         drawMode = DRAW_MODE_SHAPE;
     else if(Input.get(GLFW_KEY_LEFT_ALT))
@@ -75,13 +75,13 @@ void SpriteEditor::solve_painting() {
         } else {
             if(isDrawing) {
                 isDrawing = false;
-                memcpy(sprite->grid.buffer, tempSprite.grid.buffer, tempSprite.width() * tempSprite.height());
+                memcpy(sprite->grid.buffer, tempSprite.grid.buffer, tempSprite.width * tempSprite.height);
             }
         }
     } else if(drawMode == DRAW_MODE_SHAPE) {
         if(Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_HELD) {
             if(isDrawing) {
-                memcpy(tempSprite.grid.buffer, sprite->grid.buffer, tempSprite.width() * tempSprite.height());
+                memcpy(tempSprite.grid.buffer, sprite->grid.buffer, tempSprite.width * tempSprite.height);
 
                 solve_shape(&tempSprite, shape.start, shape.end);
 
@@ -95,7 +95,7 @@ void SpriteEditor::solve_painting() {
                 isDrawing = false;
 
                 solve_shape(&tempSprite, shape.start, shape.end);
-                memcpy(sprite->grid.buffer, tempSprite.grid.buffer, tempSprite.width() * tempSprite.height());
+                memcpy(sprite->grid.buffer, tempSprite.grid.buffer, tempSprite.width * tempSprite.height);
                 sprite->update_texture();
             }
         }
@@ -194,9 +194,7 @@ void SpriteEditor::menu_bar() {
 }
 
 void SpriteEditor::tool_bar() {
-    ImGui::Button("Add", ImVec2(24, 24));
-    ImGui::Button("Erase", ImVec2(24, 24));
-    ImGui::Button("Paint", ImVec2(24, 24));
+
 }
 
 void SpriteEditor::refresh_callback() {

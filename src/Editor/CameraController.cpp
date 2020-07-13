@@ -6,6 +6,10 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <avg/Debug.h>
 
+// TODO Split into multiple camera modes like:
+//          - Fly camera
+//          - Focus camera
+//          - etc.
 void CameraController::init() {
     // Set some initial values
     // TODO Make these adjustable
@@ -28,11 +32,9 @@ void CameraController::init() {
     RenderLib::buffer_binding_range(cameraBuffer, 0, 0, sizeof(Camera));
     camera->projection = glm::perspective(glm::radians(45.0f), 720.0f / (480.0f), 0.1f, 100.0f);
     camera->view = glm::lookAt(origin + (-direction * offset), origin, glm::vec3(0.0f, 0.0f, 1.0f));
-    /* camera->position = glm::vec4(origin + (-direction * offset), 1.0f); */
 }
 
 void CameraController::update() {
-    //aspect = Input.windowWidth / Input.windowHeight;
     // Camera Panning
     if((flags & CAMERA_ALLOW_PANNING) && Input.get(GLFW_MOUSE_BUTTON_3) == KEY_STATE_HELD && Input.get(GLFW_KEY_LEFT_SHIFT) == KEY_STATE_HELD) {
         origin += (float)Input.mouseDeltaY * panSpeed * glm::normalize(glm::vec3(camera->view[0][1], camera->view[1][1], camera->view[2][1]));
@@ -52,9 +54,8 @@ void CameraController::update() {
 
     camera->view = glm::lookAt(origin + (-direction * offset), origin, glm::vec3(0.0f, 0.0f, 1.0f));
     if(mode == CAMERA_MODE_ORTHOGRAPHIC) {
-        //aspect = width / height;
         camera->projection = glm::ortho(-offset / 2.0f * aspect, offset / 2.0f * aspect, -offset / 2.0f, offset / 2.0f, 0.1f, 1000.0f);
-    } /* camera->position = glm::vec4(origin + (-direction * offset), 1.0f); */
+    }
 }
 
 void CameraController::terminate() {

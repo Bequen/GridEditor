@@ -113,3 +113,17 @@ void TextureLib::framebuffer_attachment(uint32_t texture, uint32_t target, uint3
 void TextureLib::delete_texture(uint32_t texture) {
     glDeleteTextures(1, &texture);
 }
+
+uint32_t TextureLib::texture_size(uint32_t width, uint32_t height) {
+    uint32_t power = 2;
+    for(; power < width && power < height; power *= 2) { }
+    
+    return power;
+}
+
+uint32_t TextureLib::texture_size(uint32_t width, uint32_t depth, uint32_t height) {
+    uint32_t power = 2;
+    for(; power < width && power < depth && power < height; power *= 2) { }
+    
+    return power;
+}

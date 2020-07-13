@@ -7,7 +7,7 @@
 
 /**
  * @brief  Ray is simple vector going from point to direction
- * @note   Ray is often used to determine what is in front of user in the scene
+ * @note   Ray is often used to determine what is in front of user in the scene and intersections
  * @retval None
  */
 struct Ray {
