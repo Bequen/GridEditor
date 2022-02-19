@@ -3,7 +3,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
-#include <ImGui/imgui.h>
+#include <imgui/imgui.h>
 #include <string>
 #include <avg/Debug.h>
 
@@ -86,7 +86,7 @@ void _WindowTile::update(float offsetX, float offsetY, float height) {
     }
 }
 
-void _WindowTile::draw(float offsetX, float offsetY, float height, uint32_t flow) {
+void _WindowTile::draw(float offsetX, float offsetY, float height, uint32_t flow, int32_t index) {
     if(childrenCount == 0) {
         float w = width;
 
@@ -98,8 +98,13 @@ void _WindowTile::draw(float offsetX, float offsetY, float height, uint32_t flow
 
         ImGui::Begin(label.c_str(), NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
-        ImGui::SetWindowPos(ImVec2(offsetX * Input.windowWidth, (offsetY) * Input.windowHeight));
-        ImGui::SetWindowSize(ImVec2((w - offsetX) * Input.windowWidth, (height - offsetY) * Input.windowHeight));
+
+        float sizeOffsetX = 0.0;
+//        if((uint32_t)(w * Input.windowWidth) % 2 == 0)
+//            sizeOffsetX = ((index) % 2 == 0) ? 2.0 / Input.windowWidth : 0.0f;
+
+        ImGui::SetWindowPos(ImVec2((offsetX - sizeOffsetX / 2.0) * Input.windowWidth, (offsetY) * Input.windowHeight));
+        ImGui::SetWindowSize(ImVec2((w - offsetX + sizeOffsetX) * Input.windowWidth, (height - offsetY) * Input.windowHeight));
 
         tileInfo.x = offsetX;
         tileInfo.y = offsetY;
@@ -110,13 +115,13 @@ void _WindowTile::draw(float offsetX, float offsetY, float height, uint32_t flow
         if(ImGui::BeginTabBar(label.c_str(), ImGuiTabBarFlags_None)) {
             label = "tile_tab_item##" + std::to_string(id);
             if(ImGui::BeginTabItem("TestTab")) {
-                #if WINDOW_MANAGER_TEST
+#if WINDOW_MANAGER_TEST
                     ImGui::Text("%f:%f = %f:%f", offsetX, offsetY, w - offsetX, height - offsetY);
                     if(state == TILE_STATE_RESIZE) {
                         ImGui::Text("Resizing");
                         ImGui::Text("Min: %f, Max: %f", resizeLowestBound, resizeHighestBound);
                     } 
-                #endif
+#endif
                 if(editorCount == 0) {
                     ImGui::Text("Select Editor");
                 } else {
@@ -140,7 +145,7 @@ void _WindowTile::draw(float offsetX, float offsetY, float height, uint32_t flow
     } else {
         float offset = offsetY;
         for(uint32_t i = 0; i < childrenCount; i++) {
-            children[i].draw(offset, offsetX, width, 1 - flow);
+            children[i].draw(offset, offsetX, width, 1 - flow, i);
             offset = children[i].width;
         }
     }

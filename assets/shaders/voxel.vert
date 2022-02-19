@@ -3,6 +3,8 @@
 layout(location = 0) in vec3 vPos;
 layout(location = 1) in vec3 vNormal;
 
+//layout(location = 2) in int index;
+
 layout(binding = 0, std140) uniform Camera {
     mat4 projection;
     mat4 view;
@@ -11,6 +13,8 @@ layout(binding = 0, std140) uniform Camera {
 
 uniform mat4 model;
 uniform int index;
+uniform int subgrid;
+uniform int subgridLength;
 uniform vec3 cameraPos;
 
 out vec3 pos;
@@ -39,12 +43,15 @@ void main() {
     camPos = (vec4(view[3][0], view[3][1], view[3][2], 1.0) * transpose(view)).xyz;
     camPos = cameraPos;
 
+    vec3 subgridOffset = vec3(subgrid % subgridLength, (subgrid % (subgridLength * subgridLength)) / subgridLength, subgrid / (subgridLength * subgridLength));
+
     int offset = index + gl_InstanceID;
     pos = vec3(offset % size.x, offset % (size.x * size.y) / size.z, offset / (size.x * size.y));
     vec3 p = pos + normal;
 
     shadow = vec3(0.0, 0.0, 0.0);
 
+    // Ambient occlusion
     shadowValue = 0.0;
     if(texelFetch(grid, ivec3(p.x + coords.x - normal.x, p.y, p.z), 0).r != 0)  {
         shadow += vec3(SHADOW_FACTOR, SHADOW_FACTOR, SHADOW_FACTOR);
@@ -60,6 +67,6 @@ void main() {
         shadowValue += 0.3;
     } 
 
-    fragPos = (vec4(vPos + pos + vec3(0.5), 1.0)).xyz;
-    gl_Position = projection * view * vec4(vPos + pos + vec3(0.5), 1.0);
+    fragPos = (vec4(vPos + pos + subgridOffset * 8 + vec3(0.5), 1.0)).xyz;
+    gl_Position = projection * view * vec4(vPos + pos + subgridOffset * 8 + vec3(0.5), 1.0);
 }

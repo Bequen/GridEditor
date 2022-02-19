@@ -2,7 +2,7 @@
 
 #include <Rendering/ShaderLib.h>
 #include <glad/glad.h>
-#include <ImGui/imgui.h>
+#include <imgui/imgui.h>
 #include <avg/StringLib.h>
 #include <avg/Debug.h>
 
@@ -41,7 +41,7 @@ void PropertiesTile::draw(WindowTileInfo tileInfo) {
                 
                 SceneGrid* grid = (SceneGrid*)scene->selected->data;
 
-                float size[] = {grid->width, grid->depth, grid->height};
+                float size[] = {(float)grid->width, (float)grid->depth, (float)grid->height};
                 char* text = new char[256];
                 memset(text, 0, 256);
 
@@ -130,35 +130,49 @@ ImGui::SliderFloat("light_strength", &light->ambient.w, 0.0, 100.0);
                     }
                 }
 
-                ImGui::BeginChild("sprite_animation_list", ImVec2(0.0f, 0.0f), true);
+                ImGui::BeginChild("sprite_animation_box");
+                    ImGui::ListBoxHeader("Sprite Animations");
 
-                for(uint32_t i = 0; i < sprite->animationsCount; i++) {
-                    ImGui::Text(sprite->animations[i].name);
-                }
+                    #pragma region Animations {
+                        for(uint32_t i = 0; i < sprite->animationsCount; i++) {
+                            //WARNING(sprite->currentAnimation << " " << i);
+                            if(ImGui::Selectable(text, i == sprite->currentAnimation, ImGuiSelectableFlags_AllowDoubleClick)) {
+                                MESSAGE("Selected " << i << ". animation");
+                                sprite->change_animation(i);
+                            }
+                        }
 
-                if(ImGui::Button("Add")) {
-                    sprite->add_animation("Test");
-                }
+                        ImGui::ListBoxFooter();
+                        if(ImGui::Button("Add Animation")) {
+                            sprite->add_animation("Animation");
+                        }
+                    #pragma endregion }
 
+                    #pragma region Animation Frames {
+                        if(sprite->animations) {
+                            ImGui::ListBoxHeader("Sprite Animation Frames");
+
+                            for(uint32_t i = 0; i < sprite->animations[sprite->currentAnimation].frameCount; i++) {
+                                char* text = new char[1024];
+                                sprintf(text, "Frame %i-%f\0", i, sprite->animations[sprite->currentAnimation].frames[i].frameLength);
+            
+                                if(ImGui::Selectable(text, (sprite->currentAnimation == i), ImGuiSelectableFlags_AllowDoubleClick)) {
+                                    MESSAGE("Selected " << i << ". frame");
+                                    sprite->animations[sprite->currentAnimation].currentFrame = i;
+                                }
+                            }
+
+                            ImGui::ListBoxFooter();
+                            if(ImGui::Button("Add Frame")) {
+                                sprite->animations[sprite->currentAnimation].add_frame(sprite->width, sprite->height);
+                            }
+                        }
+                    #pragma endregion } 
                 ImGui::EndChild();
 
-                if(sprite->animations) {
-                    ImGui::BeginChild("sprite_animation_frame_list", ImVec2(0.0f, 0.0f), true);
-
-                    for(uint32_t i = 0; i < sprite->animations[sprite->currentAnimation].frameCount; i++) {
-                        char* text = new char[1024];
-                        sprintf(text, "Frame %i-%f", i, sprite->animations[sprite->currentAnimation].frames[i].frameLength);
-
-                        ImGui::Text(sprite->animations[i].name);
-                    }
-                    if(ImGui::Button("Add")) {
-                        sprite->add_animation("Test");
-                    }
-
-                    ImGui::EndChild();
-                }
-
                 break;
+            } default: {
+                ImGui::Text("Nothing selected");
             }
         }
     }

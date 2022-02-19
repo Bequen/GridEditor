@@ -8,7 +8,7 @@
 #include <glm/gtx/intersect.hpp>
 #include <avg/Debug.h>
 #include <chrono>
-#include "ImGui/imgui.h"
+#include <imgui/imgui.h>
 #include "Rendering/TextureLib.h"
 #include "Editor/Viewport/SpriteEditor.h"
 #include "System/Math.h"
@@ -29,7 +29,7 @@ void Viewport::init() {
     snappingSwitch = 0;
     transformMode = TRANSFORM_MODE_NONE;
     viewportEditor = nullptr;
-    isEditMode = 0;
+    scene->isEditMode = 0;
 
     init_framebuffer();
 }
@@ -106,7 +106,7 @@ void Viewport::draw(WindowTileInfo tileInfo) {
     double cursorX, cursorY;
     Input.get_mapped_cursor(tileInfo, &cursorX, &cursorY);
 
-    if(isEditMode) {
+    if(scene->isEditMode) {
         assert_msg(viewportEditor != nullptr, "You are trying to access edit mode, but no viewport editor is initialized");
         viewportEditor->draw(renderInfo, tileInfo);
 
@@ -119,9 +119,12 @@ void Viewport::draw(WindowTileInfo tileInfo) {
         RenderLib::draw_sky(renderInfo, info.camera.mode);
         draw_scene_object(&scene->sceneGraph);
 
-        if(Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_PRESS) {
-            WARNING("Selecting");
-            select_scene_object(&scene->sceneGraph);
+        if(cursorX > -1.0 && cursorX < 1.0 &&
+        cursorY > -1.0 && cursorY < 1.0) {
+            if(Input.get(GLFW_MOUSE_BUTTON_1) == KEY_STATE_PRESS) {
+                WARNING("Selecting");
+                select_scene_object(&scene->sceneGraph);
+            }
         }
     }
 
@@ -276,9 +279,15 @@ bool Viewport::select_scene_object(SceneObject* sceneObject) {
             return true;
         }
     }
+
+    return false;
 }
 
 void Viewport::draw_scene_object(const SceneObject* sceneObject) {
+
+    if(!sceneObject)
+        return;
+
     RenderLib::bind_vertex_array(renderInfo.voxelVAO);
 
     glm::vec3 size = glm::vec3(0.0f);
@@ -292,7 +301,7 @@ void Viewport::draw_scene_object(const SceneObject* sceneObject) {
         }
     }
 
-    RenderLib::draw_voxel(renderInfo.boxProgram, scene->selected->transform.transform, size);
+    RenderLib::draw_voxel(renderInfo.boxProgram, sceneObject->transform.transform, size);
 
     for(uint32_t i = 0; i < sceneObject->childrenCount; i++) {
         draw_scene_object(&sceneObject->children[i]);
@@ -304,7 +313,7 @@ void Viewport::draw_ui() {
 }
 
 void Viewport::extrude(int32_t height) {
-    if(height > 0) {
+    /* if(height > 0) {
         for(uint32_t i = 0; i < selection.selectedCount; i++) {
             for(int32_t x = 0; x < height; x++) {
                 tempGrid.set(selection.selection[i] + x * shapeNormalOffset, scene->colorSelected);
@@ -316,9 +325,10 @@ void Viewport::extrude(int32_t height) {
                 tempGrid.set(selection.selection[i] + x * shapeNormalOffset, 0);
             }
         }
-    }
+    } */
 }
 
+// TODO: Switch to https://github.com/francisengelmann/fast_voxel_traversal/blob/master/main.cpp
 RayHit Viewport::ray_cast(Ray ray) {
     RayHit result;
 
@@ -359,7 +369,7 @@ RayHit Viewport::ray_cast(Ray ray) {
 }
 
 void Viewport::flood_fill(glm::vec3 position, glm::vec3 normal, int8_t brush) {
-    Grid* grid = selectedGrid;
+    /* Grid* grid = selectedGrid;
 
     if(position.x < 0 || position.x > tempGrid.width ||
         position.y  < 0 || position.y > tempGrid.depth ||
@@ -390,7 +400,7 @@ void Viewport::flood_fill(glm::vec3 position, glm::vec3 normal, int8_t brush) {
         flood_fill(position + forward, normal, brush);
         flood_fill(position - right, normal, brush);
         flood_fill(position - forward, normal, brush);
-    }
+    } */
 
     return;
 }
@@ -398,10 +408,10 @@ void Viewport::flood_fill(glm::vec3 position, glm::vec3 normal, int8_t brush) {
 void Viewport::solve_input() {
     // Switch edit mode
     if(Input.get(GLFW_KEY_TAB) == KEY_STATE_PRESS) {
-        if(selectedGrid != nullptr) {
-            isEditMode = 1 - isEditMode;
+        if(scene->selected != nullptr) {
+            scene->isEditMode = !scene->isEditMode;
 
-            if(isEditMode) {
+            if(scene->isEditMode) {
                 enter_edit_mode();
             } else {
                 info.camera.flags = CAMERA_ALLOW_PANNING | CAMERA_ALLOW_ROTATION | CAMERA_ALLOW_ZOOMING;

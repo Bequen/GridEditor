@@ -11,13 +11,13 @@ class PaletteTile : public WindowEditor {
         
         PaletteTile(Scene* scene, RenderInfo renderInfo);
 
-        void init();
-        void update();
+        void init() override;
+        void update() override;
         void draw(WindowTileInfo tileInfo) override;
         void terminate();
 
-        void refresh();
+        void refresh() override;
 
         void update_palette();
-        void resize_callback(uint32_t width, uint32_t height);
+        void resize_callback(uint32_t width, uint32_t height) override;
 };

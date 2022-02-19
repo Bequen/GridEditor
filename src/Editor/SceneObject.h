@@ -36,6 +36,7 @@ struct SceneObject {
     ObjectType type;
     void* data;
 
+    /* Children tree */
     SceneObject* children;
     uint32_t childrenCount;
     uint32_t childrenBufferSize;
@@ -50,4 +51,6 @@ struct SceneObject {
 
     const char* get_name();
     void set_name(char* name);
+
+    SceneObject* remove(SceneObject* obj);
 };

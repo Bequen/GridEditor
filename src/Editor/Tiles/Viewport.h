@@ -40,7 +40,6 @@ typedef uint32_t BrushMode;
 
 class Viewport : public WindowEditor {
     public:
-        uint32_t isEditMode;
         uint32_t requireUpdate;
 
         DrawMode drawMode;

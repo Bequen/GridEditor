@@ -2,6 +2,9 @@
 
 #include <cstdint>
 
+/*
+ * Size limited string
+ */
 struct string256 {
     char str[256];
     uint32_t length = 0;

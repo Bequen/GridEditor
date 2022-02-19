@@ -19,7 +19,7 @@ void WindowManager::update() {
 
 void WindowManager::draw() {
     float offset = 19.0 / Input.windowHeight;
-    tiles.draw(offset, 0.0, 1.0 - offset, TILE_FLOW_HORIZONTAL);
+    tiles.draw(offset, 0.0, 1.0 - offset, TILE_FLOW_HORIZONTAL, 0);
 }
 
 void WindowManager::resize_callback() {

@@ -8,7 +8,7 @@
 #include "Rendering/RenderLib.h"
 #include "Rendering/ShaderLib.h"
 #include "Editor/Tiles/Viewport.h"
-#include <ImGui/imgui.h>
+#include <imgui/imgui.h>
 
 uint32_t EditorView::lastId = 0;
 
@@ -31,9 +31,11 @@ void EditorView::init(uint32_t bufferSize) {
 }
 
 // How does it work?
-// First, we run through all the nodes and check, if the cursor is not close enough to border for resizing
-// If so, change state to resize, which will then be handled by parent, that has all the children in one row
-// If some of these children have another children, simple rotate by 90deg to create immersion
+// First, we run through all the nodes and check, if the cursor is not
+// close enough to border for resizing. If so, change state to resize,
+// which will then be handled by parent, that has all the children in
+// one row. If some of these children have another children, simple
+// rotate by 90deg to create immersion
 uint32_t EditorView::update(float offsetX, float offsetY, float height, uint32_t flow) {
     // Resets the state
     uint32_t result = EDITOR_WINDOW_STATE_NONE;
@@ -72,8 +74,8 @@ uint32_t EditorView::update(float offsetX, float offsetY, float height, uint32_t
         highestBound = children[childrenCount - 1].crossHighestBound;
         lowestBound = children[0].crossLowestBound;
 
+        assert_msg(children, "Children are NOT initialized");
         for(uint32_t i = 0; i < childrenCount; i++) {
-            assert_msg(children, "Children are NOT initialized");
             // Move the window to the cursor position
             
             if(children[i].state == EDITOR_WINDOW_STATE_RESIZE) {

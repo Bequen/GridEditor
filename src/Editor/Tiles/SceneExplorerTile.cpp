@@ -2,7 +2,7 @@
 
 #include <Rendering/ShaderLib.h>
 #include <glad/glad.h>
-#include <ImGui/imgui.h>
+#include <imgui/imgui.h>
 #include <avg/Debug.h>
 #include <Rendering/RenderLib.h>
 
@@ -58,6 +58,10 @@ void SceneExplorerTile::tree_node(SceneObject* sceneObject) {
                 update_lights();
             } if (ImGui::MenuItem("Add Sprite")) {
                 sceneObject->add_child(SceneObject(OBJECT_TYPE_SPRITE, scene->add_sprite(SceneSprite(32, 32))));
+            } if (ImGui::MenuItem("Delete")) {
+                WARNING("deleting");
+                scene->selected = nullptr;
+                scene->sceneGraph.remove(sceneObject);
             }
             ImGui::EndPopup();
         }
@@ -73,6 +77,36 @@ void SceneExplorerTile::tree_node(SceneObject* sceneObject) {
         if(ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
             scene->selected = sceneObject;
             ERROR("Selected " << sceneObject->id << " of type " << sceneObject->type);
+        }
+
+        if (ImGui::BeginPopupContextItem("Item context menu")) {
+            if (ImGui::MenuItem("Add Grid")) {
+                sceneObject->add_child(SceneObject("new grid", OBJECT_TYPE_GRID, scene->add_grid(SceneGrid(32))));
+            } if (ImGui::MenuItem("Add Light")) {
+                Light light = Light();
+                light.direction = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+                light.ambient = glm::vec4(23.47f, 21.31f, 20.79f, 1.0f);
+
+                sceneObject->add_child(SceneObject(OBJECT_TYPE_LIGHT, scene->add_light(light)));
+                update_lights();
+            } if (ImGui::MenuItem("Add Sprite")) {
+                sceneObject->add_child(SceneObject(OBJECT_TYPE_SPRITE, scene->add_sprite(SceneSprite(32, 32))));
+            } if (ImGui::MenuItem("Delete")) {
+                if(!scene->isEditMode) {
+                    WARNING("Deleting");
+                    if(scene->selected == sceneObject) {
+                        scene->selected = nullptr;
+                    }
+                    scene->sceneGraph.remove(sceneObject);
+                } else {
+                    if (ImGui::BeginPopup("Options"))
+                    {
+                        ImGui::Text("You cannot remove item when in edit mode");
+                        ImGui::EndPopup();
+                    }
+                }
+            }
+            ImGui::EndPopup();
         }
     }
 }

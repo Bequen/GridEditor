@@ -12,11 +12,6 @@ struct _CacheCell {
     int8_t oldValue;
 };
 
-struct SubGrid {
-    int8_t buffer[16 * 16 * 16];
-    
-};
-
 /**
  * @brief  Grid containing buffer of indexes to palette
  * @note   

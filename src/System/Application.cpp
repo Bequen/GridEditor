@@ -4,15 +4,16 @@
 
 #include "Rendering/RenderLib.h"
 
-#include "ImGui/imgui.h"
-#include "ImGui/imgui_impl_glfw.h"
-#include "ImGui/imgui_impl_opengl3.h"
+#include <imgui/imgui.h>
+#include <imgui/backends/imgui_impl_glfw.h>
+#include <imgui/backends/imgui_impl_opengl3.h>
 
 void Application::init() {
     MESSAGE("Application initialization has started");
 
     window.init(PROJECT_NAME, 720, 480);
 
+    // TODO: What the fuck?
     memcpy(&Input + 0, &window, sizeof(Window));
     editor.init();
 
@@ -41,6 +42,8 @@ void Application::update() {
         deltaTime = glfwGetTime() - lastTime;
         lastTime = glfwGetTime();
 
+        // We check window size every frame, probably
+        // should be implemented by some callback or some event queue
         int32_t width, height;
         glfwGetFramebufferSize(window.window, &width, &height);
         if(window.width != width || window.height != height) {
@@ -49,6 +52,7 @@ void Application::update() {
             window.height = height;
         }
 
+        // Prepare the ImGui
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
@@ -58,6 +62,7 @@ void Application::update() {
 
         editor.update();
 
+        // Render the ImGui
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         // End of tick code
@@ -68,7 +73,7 @@ void Application::update() {
 }
 
 void Application::terminate() {
-    ERROR("Terminating the application");
+    WARNING("Terminating the application");
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();

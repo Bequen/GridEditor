@@ -38,8 +38,24 @@ void SceneSprite::add_animation(char* name) {
 
     SceneSpriteAnimation animation;
     animation.name = name;
+    animation.add_frame(grid.width, grid.height);
 
     animations[animationsCount++] = animation;
+}
+
+void SceneSprite::change_animation(uint32_t index) {
+    if(index >= animationsCount)
+        index = animationsCount - 1;
+
+    currentAnimation = index;
+
+    //memcpy(grid.buffer, animations[currentAnimation].frames[animations[currentAnimation].currentFrame].grid.buffer, grid.width * grid.height);
+    if(grid.buffer) {
+        delete [] grid.buffer;
+        grid.buffer = animations[currentAnimation].frames[animations[currentAnimation].currentFrame].grid.buffer;
+    }
+
+    update_texture();
 }
 
 void SceneSprite::set(uint32_t index, uint32_t value) {

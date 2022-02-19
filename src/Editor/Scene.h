@@ -45,7 +45,6 @@ struct Scene {
         #pragma region Scene objects
             SceneObject sceneGraph;
             SceneObject* selected;
-            bool isEditMode;
         #pragma endregion
 
         #pragma region Sprites
@@ -53,6 +52,10 @@ struct Scene {
             uint32_t spriteCount;
             uint32_t spriteBufferSize;
         #pragma endregion
+    #pragma endregion
+
+    #pragma region Viewport
+        uint32_t isEditMode;
     #pragma endregion
 
     void init(uint32_t gridCount);

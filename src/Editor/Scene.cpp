@@ -61,7 +61,7 @@ SceneGrid* Scene::add_grid(SceneGrid grid) {
     }
 
     _grids[_gridCount] = grid;
-    MESSAGE("Adding grid at " << _gridCount);
+    MESSAGE("Adding grid of size " << grid.width << " at " << _gridCount);
     return &_grids[_gridCount++];
 }
 

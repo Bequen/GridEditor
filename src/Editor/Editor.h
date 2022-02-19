@@ -31,6 +31,8 @@ class Editor {
         RenderingPipeline render;
         RenderInfo renderInfo;
 
+        bool isDemo;
+
         void init();
         void update();
         void terminate();

@@ -3,4 +3,14 @@ GridEditor.exe
 
 .vscode/
 .idea/
+.cache/
 obj/
+
+compile_commands.json
+imgui.ini
+
+# third-party
+third-party/glfw/
+third-party/glm/
+third-party/imgui/
+third-party/ImGuizmo/

@@ -2,7 +2,7 @@
 
 #include <cstring>
 #include <avg/Debug.h>
-#include <ImGui/imgui.h>
+#include <imgui/imgui.h>
 
 #include "Rendering/TextureLib.h"
 #include "Rendering/RenderLib.h"

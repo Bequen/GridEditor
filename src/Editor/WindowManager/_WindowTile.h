@@ -37,7 +37,7 @@ struct _WindowTile {
 
     void init();
     void update(float offsetX, float offsetY, float height);
-    void draw(float offsetX, float offsetY, float height, uint32_t flow);
+    void draw(float offsetX, float offsetY, float height, uint32_t flow, int32_t index);
 
     void insert_window(_WindowTile tile, uint32_t index);
 

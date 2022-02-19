@@ -63,6 +63,9 @@ void CameraController::terminate() {
 }
 
 void CameraController::resize_callback(uint32_t width, uint32_t height) {
+    if(width == 0 || height == 0)
+        return;
+
     this->width = width;
     this->height = height;
     MESSAGE("Resizing camera");

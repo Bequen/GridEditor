@@ -8,21 +8,26 @@
 #include "RayHit.h"
 #include "Editor/Scene/SceneGrid.h"
 #include "Editor/Ray.h"
+#include "Editor/Viewport/ExtrusionInfo.h"
 
 class VoxelGridEditor : public ViewportEditor {
     public:
+        /* What are we editing */
         SceneGrid* grid;
         SceneGrid tempGrid;
 
         Scene* scene;
         ViewportInfo* viewport;
 
+        ExtrusionInfo extrusion;
+
+#pragma region Modes
         DrawMode drawMode;
         BrushMode brushMode;
         ShapeMode shapeMode;
         SelectMode selectMode;
+#pragma endregion
 
-        Selection selection;
         Shape shape;
         glm::vec3 shapeEndTemp;
 

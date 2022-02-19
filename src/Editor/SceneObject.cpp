@@ -2,7 +2,7 @@
 
 #include <cstring>
 #include <string>
-#include <ImGui/imgui.h>
+#include <imgui/imgui.h>
 #include <avg/Debug.h>
 
 #include "Rendering/Light.h"
@@ -85,8 +85,27 @@ void SceneObject::set_name(char* name) {
     if(length > 256)
         length = 256;
     memcpy(this->name, name, length);
+    this->name[length] = '\0';
 }
 
 const char* SceneObject::get_name() {
     return name;
+}
+
+SceneObject* SceneObject::remove(SceneObject* obj) {
+    SceneObject* result = nullptr;
+    
+    for(uint32_t i = 0; i < childrenCount; i++) {
+        if(result != nullptr)
+            break;
+        else if(children[i].id == obj->id) {
+            // TODO Figure out if order matters, otherwise just move the very last element here
+            memmove(children + i, children + i + 1, (childrenCount - i) * sizeof(SceneObject));
+            childrenCount--;
+        } else {
+            result = children[i].remove(obj);
+        }
+    }
+
+    return result;
 }

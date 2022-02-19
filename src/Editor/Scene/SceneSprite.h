@@ -40,8 +40,9 @@ struct SceneSprite {
     const int32_t get(uint32_t x, uint32_t y) const;
 
     void update_texture() const;
-
+    void resize(uint32_t width, uint32_t height);
     const bool intersects(glm::vec2 position) const;
 
-    void resize(uint32_t width, uint32_t height);
+    void change_animation(uint32_t index);
+    void change_frame(uint32_t frame);
 };

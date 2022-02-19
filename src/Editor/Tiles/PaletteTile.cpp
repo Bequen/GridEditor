@@ -2,7 +2,7 @@
 
 #include <Rendering/ShaderLib.h>
 #include <glad/glad.h>
-#include <ImGui/imgui.h>
+#include <imgui/imgui.h>
 #include <avg/Debug.h>
 
 #include "Editor/InputManager.h"

@@ -1,0 +1,13 @@
+# Editor's metafiles, please, feel free to add here if you find some more, like Atom etc.
+.vscode/
+
+# Executables
+avgLib
+avgLib.exe
+
+# The library
+libAvgLib.a
+
+# Files that should be excluded
+*.o
+*.a

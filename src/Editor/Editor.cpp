@@ -1,8 +1,8 @@
 #include "Editor.h"
 
-#include "ImGui/imgui.h"
-#include "ImGui/imgui_impl_glfw.h"
-#include "ImGui/imgui_impl_opengl3.h"
+#include <imgui/imgui.h>
+#include <imgui/backends/imgui_impl_glfw.h>
+#include <imgui/backends/imgui_impl_opengl3.h>
 
 #include <avg/Debug.h>
 #include <avg/Random/PermutationTable.h>
@@ -25,6 +25,7 @@ void Editor::init() {
     MESSAGE("Starting the editor initialization");
     scene = Scene();
     scene.init(10);
+    isDemo = false;
 
     RenderLib::init();
 
@@ -55,7 +56,7 @@ void Editor::init() {
     #pragma endregion
 
     scene.colorSelected = 2;
-    scene.sceneGraph.add_child(SceneObject(OBJECT_TYPE_GRID, scene.add_grid(SceneGrid(32, 32, 32))));
+    scene.sceneGraph.add_child(SceneObject(OBJECT_TYPE_GRID, scene.add_grid(SceneGrid(32))));
     scene.selected = &scene.sceneGraph.children[0];
 
     #pragma region RENDERING PIPELINE INITIALIZATION
@@ -91,7 +92,7 @@ void Editor::init() {
     timeline.editors = new TimelineTile(&scene, renderInfo);
     timeline.editors->init();
     timeline.editorCount = 1;
-    windowManager.tiles.children[1].insert_window(timeline, 1);
+    // windowManager.tiles.children[1].insert_window(timeline, 1);
 
     _WindowTile sceneExplorer;
     sceneExplorer.init();
@@ -126,6 +127,9 @@ void Editor::update() {
 
     windowManager.update();
     windowManager.draw();
+
+    if(isDemo)
+        ImGui::ShowDemoWindow();
 }
 
 
@@ -133,15 +137,19 @@ void Editor::draw_menubar() {
     if(ImGui::BeginMainMenuBar()) {
         if(ImGui::BeginMenu("File")) {
             if(ImGui::MenuItem("Load", NULL)) {
-                scene = ContentPipeline::load_grid("/home/martin/test.grid");
                 windowManager.refresh();
             }
             if(ImGui::BeginMenu("Save")) {
                 if(ImGui::MenuItem(".grid", NULL)) {
-                    ContentPipeline::save_grid(scene, "/home/martin/test.grid");
+
                 }
                 ImGui::MenuItem(".obj", NULL);
                 ImGui::EndMenu();
+            }
+
+            if (ImGui::MenuItem("Show Demo", NULL)) {
+                isDemo = !isDemo;
+                ERROR("Switching Demo");
             }
             
             if(ImGui::MenuItem("Quit", NULL)) {

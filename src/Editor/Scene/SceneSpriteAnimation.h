@@ -18,10 +18,11 @@ struct SceneSpriteAnimation {
     SceneSpriteAnimationFrame* frames;
     uint32_t frameBufferSize;
     uint32_t frameCount;
+    uint32_t currentFrame;
 
     SceneSpriteAnimation() :
     frames(nullptr), frameBufferSize(0), frameCount(0) {
-        
+        currentFrame = 0;
     }
 
     void add_frame(uint32_t width, uint32_t height) {

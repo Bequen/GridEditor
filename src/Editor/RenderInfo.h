@@ -12,4 +12,6 @@ struct RenderInfo {
 
     uint32_t voxelVAO;
     uint32_t quadVAO;
+
+    uint32_t currentProgram;
 };
